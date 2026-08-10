@@ -20,5 +20,12 @@ public class AppUserRoleConfiguration : IEntityTypeConfiguration<AppUserRole>
             .WithMany(x => x.UserRoles)
             .HasForeignKey(x => x.RoleId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Gán role Admin (Id=1) cho tài khoản admin demo seed ở AppUserConfiguration.
+        builder.HasData(new AppUserRole
+        {
+            UserId = Guid.Parse("00000000-0000-0000-0000-000000000001"),
+            RoleId = 1
+        });
     }
 }
