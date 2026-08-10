@@ -23,5 +23,18 @@ public class FaqConfiguration : IEntityTypeConfiguration<Faq>
             .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasQueryFilter(x => !x.IsDeleted);
+
+        // Dữ liệu mẫu — gắn với ServiceCategory Id=1 (VPS) đã seed ở Phase 2.
+        builder.HasData(new Faq
+        {
+            Id = 1,
+            Question = "VPS SSD khác gì Hosting thông thường?",
+            Answer = "VPS SSD cấp cho bạn tài nguyên riêng (CPU/RAM/SSD) và quyền quản trị toàn bộ máy chủ ảo, trong khi Hosting dùng chung tài nguyên với nhiều khách hàng khác.",
+            ServiceCategoryId = 1,
+            DisplayOrder = 1,
+            IsActive = true,
+            IsDeleted = false,
+            CreatedAt = new DateTime(2026, 8, 10, 0, 0, 0, DateTimeKind.Utc)
+        });
     }
 }

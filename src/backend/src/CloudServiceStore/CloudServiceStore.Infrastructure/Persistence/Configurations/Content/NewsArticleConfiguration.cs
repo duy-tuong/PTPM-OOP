@@ -33,5 +33,22 @@ public class NewsArticleConfiguration : IEntityTypeConfiguration<NewsArticle>
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasQueryFilter(x => !x.IsDeleted);
+
+        // Dữ liệu mẫu — AuthorId dùng đúng GUID Admin đã seed ở Phase 2 (AppUserConfiguration).
+        builder.HasData(new NewsArticle
+        {
+            Id = 1,
+            AuthorId = Guid.Parse("00000000-0000-0000-0000-000000000001"),
+            NewsCategoryId = 1,
+            Title = "Ra mắt chương trình ưu đãi VPS đầu năm 2026",
+            Slug = "ra-mat-uu-dai-vps-dau-nam-2026",
+            Summary = "Giảm giá đến 10% cho các gói VPS SSD trong tháng 1/2026.",
+            Content = "Nhân dịp đầu năm 2026, CloudServiceStore triển khai chương trình ưu đãi giảm giá lên đến 10% cho toàn bộ gói VPS SSD. Chương trình áp dụng cho khách hàng đăng ký mới trong suốt năm 2026.",
+            ViewCount = 0,
+            IsPublished = true,
+            PublishedAt = new DateTime(2026, 8, 10, 0, 0, 0, DateTimeKind.Utc),
+            IsDeleted = false,
+            CreatedAt = new DateTime(2026, 8, 10, 0, 0, 0, DateTimeKind.Utc)
+        });
     }
 }

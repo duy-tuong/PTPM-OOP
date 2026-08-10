@@ -25,5 +25,20 @@ public class TestimonialConfiguration : IEntityTypeConfiguration<Testimonial>
             .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasQueryFilter(x => !x.IsDeleted);
+
+        // Dữ liệu mẫu.
+        builder.HasData(new Testimonial
+        {
+            Id = 1,
+            CustomerId = null,
+            DisplayName = "Nguyễn Văn A",
+            CompanyName = "Công ty TNHH ABC",
+            Content = "Dịch vụ VPS ổn định, hỗ trợ kỹ thuật nhanh chóng. Rất hài lòng!",
+            Rating = 5,
+            DisplayOrder = 1,
+            IsActive = true,
+            IsDeleted = false,
+            CreatedAt = new DateTime(2026, 8, 10, 0, 0, 0, DateTimeKind.Utc)
+        });
     }
 }
