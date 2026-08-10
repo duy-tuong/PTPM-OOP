@@ -1,0 +1,19 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+
+# appsettings chứa secret cá nhân — không commit
+appsettings.Development.json
+appsettings.*.local.json
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+.env
+.env.local
+
+# OS/editor
+.DS_Store
