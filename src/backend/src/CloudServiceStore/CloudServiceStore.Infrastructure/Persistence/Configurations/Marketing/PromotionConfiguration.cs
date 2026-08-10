@@ -1,4 +1,5 @@
 using CloudServiceStore.Domain.Entities.Marketing;
+using CloudServiceStore.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -24,5 +25,25 @@ public class PromotionConfiguration : IEntityTypeConfiguration<Promotion>
         builder.HasIndex(x => new { x.IsActive, x.StartDate, x.EndDate });
 
         builder.HasQueryFilter(x => !x.IsDeleted);
+
+        // Dữ liệu mẫu — 1 khuyến mãi đang hiệu lực (khoảng ngày rộng để không tự hết hạn lúc demo).
+        builder.HasData(new Promotion
+        {
+            Id = 1,
+            Code = "WELCOME2026",
+            Name = "Ưu đãi chào năm mới 2026",
+            Description = "Giảm giá cho khách hàng đăng ký mới trong năm 2026.",
+            DiscountType = DiscountType.Percentage,
+            DiscountValue = 10m,
+            MaxDiscountAmount = 500000m,
+            MinOrderValue = null,
+            StartDate = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+            EndDate = new DateTime(2026, 12, 31, 23, 59, 59, DateTimeKind.Utc),
+            UsageLimit = null,
+            UsageCount = 0,
+            IsActive = true,
+            IsDeleted = false,
+            CreatedAt = new DateTime(2026, 8, 10, 0, 0, 0, DateTimeKind.Utc)
+        });
     }
 }

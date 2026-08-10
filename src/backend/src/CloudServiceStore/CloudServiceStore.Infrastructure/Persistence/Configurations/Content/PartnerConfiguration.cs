@@ -19,5 +19,18 @@ public class PartnerConfiguration : IEntityTypeConfiguration<Partner>
         builder.HasIndex(x => new { x.IsActive, x.DisplayOrder });
 
         builder.HasQueryFilter(x => !x.IsDeleted);
+
+        // Dữ liệu mẫu.
+        builder.HasData(new Partner
+        {
+            Id = 1,
+            Name = "TechCorp Vietnam",
+            LogoUrl = "https://cloudservicestore.local/partners/techcorp.png",
+            WebsiteUrl = "https://techcorp.example.com",
+            DisplayOrder = 1,
+            IsActive = true,
+            IsDeleted = false,
+            CreatedAt = new DateTime(2026, 8, 10, 0, 0, 0, DateTimeKind.Utc)
+        });
     }
 }
