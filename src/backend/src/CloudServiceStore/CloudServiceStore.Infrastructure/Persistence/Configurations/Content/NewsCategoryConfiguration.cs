@@ -17,5 +17,17 @@ public class NewsCategoryConfiguration : IEntityTypeConfiguration<NewsCategory>
         builder.HasIndex(x => x.Slug).IsUnique();
 
         builder.HasQueryFilter(x => !x.IsDeleted);
+
+        // Dữ liệu mẫu.
+        builder.HasData(new NewsCategory
+        {
+            Id = 1,
+            Name = "Khuyến mãi",
+            Slug = "khuyen-mai",
+            Description = "Tin tức khuyến mãi, ưu đãi mới nhất.",
+            DisplayOrder = 1,
+            IsActive = true,
+            IsDeleted = false
+        });
     }
 }
