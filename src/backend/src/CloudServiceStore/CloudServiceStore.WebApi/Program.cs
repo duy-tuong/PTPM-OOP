@@ -1,6 +1,8 @@
 using System.Text;
 using CloudServiceStore.Application;
+using CloudServiceStore.Application.Common.Interfaces;
 using CloudServiceStore.Infrastructure;
+using CloudServiceStore.WebApi.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -58,6 +60,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 builder.Services.AddAuthorization();
 
+builder.Services.AddExceptionHandler<AppExceptionHandler>();
+builder.Services.AddProblemDetails();
+builder.Services.AddHealthChecks();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -67,11 +73,21 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseExceptionHandler();
+
+// Nạp cache SiteSetting (Singleton) 1 lần lúc khởi động để có dữ liệu ngay từ request đầu tiên.
+using (var scope = app.Services.CreateScope())
+{
+    var siteSettingsCache = scope.ServiceProvider.GetRequiredService<ISiteSettingsCache>();
+    await siteSettingsCache.RefreshAsync();
+}
+
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 app.Run();
