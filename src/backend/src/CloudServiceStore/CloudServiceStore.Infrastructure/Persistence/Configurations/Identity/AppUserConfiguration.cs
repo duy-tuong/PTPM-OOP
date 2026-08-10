@@ -23,5 +23,19 @@ public class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
         builder.HasIndex(x => x.Email).IsUnique();
 
         builder.HasQueryFilter(x => !x.IsDeleted);
+
+        // Tài khoản Admin demo cho báo cáo/nộp bài — mật khẩu "Admin@123" (hash BCrypt tính sẵn,
+        // không gọi BCrypt.HashPassword() trực tiếp ở đây vì salt ngẫu nhiên sẽ đổi mỗi lần add-migration).
+        builder.HasData(new AppUser
+        {
+            Id = Guid.Parse("00000000-0000-0000-0000-000000000001"),
+            Username = "admin",
+            Email = "admin@cloudservicestore.local",
+            PasswordHash = "$2a$12$5HZRDTIWE.Z5SFHppw.joeiJgmEq4xF8SPF842cptbiiRInG7YAHy",
+            FullName = "System Administrator",
+            IsActive = true,
+            IsDeleted = false,
+            CreatedAt = new DateTime(2026, 8, 10, 0, 0, 0, DateTimeKind.Utc)
+        });
     }
 }

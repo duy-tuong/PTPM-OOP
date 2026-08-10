@@ -1,7 +1,10 @@
 using CloudServiceStore.Application.Common.Interfaces;
+using CloudServiceStore.Infrastructure.Caching;
 using CloudServiceStore.Infrastructure.Persistence;
+using CloudServiceStore.Infrastructure.Observers;
 using CloudServiceStore.Infrastructure.Persistence.Repositories;
 using CloudServiceStore.Infrastructure.Security;
+using CloudServiceStore.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +23,9 @@ public static class DependencyInjection
         services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
         services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
+        services.AddSingleton<ISiteSettingsCache, SiteSettingsCache>();
+        services.AddSingleton<IQrCodeFactory, QrCodeFactory>();
+        services.AddScoped<IOrderStatusObserver, AuditLogOrderObserver>();
 
         return services;
     }
