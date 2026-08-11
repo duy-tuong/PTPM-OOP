@@ -1,6 +1,15 @@
 using CloudServiceStore.Application.Common.Services;
 using CloudServiceStore.Application.Features.Auth;
+using CloudServiceStore.Application.Features.Catalog.ServiceCategories;
 using CloudServiceStore.Application.Features.Catalog.ServicePlans;
+using CloudServiceStore.Application.Features.Catalog.TldPricings;
+using CloudServiceStore.Application.Features.Content.ContentPages;
+using CloudServiceStore.Application.Features.Content.Faqs;
+using CloudServiceStore.Application.Features.Content.NewsArticles;
+using CloudServiceStore.Application.Features.Content.NewsCategories;
+using CloudServiceStore.Application.Features.Content.Partners;
+using CloudServiceStore.Application.Features.Content.Testimonials;
+using CloudServiceStore.Application.Features.Marketing.Promotions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CloudServiceStore.Application;
@@ -11,7 +20,17 @@ public static class DependencyInjection
     {
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<OrderStatusNotifier>();
+
+        services.AddScoped<IServiceCategoryService, ServiceCategoryService>();
         services.AddScoped<IServicePlanService, ServicePlanService>();
+        services.AddScoped<ITldPricingService, TldPricingService>();
+        services.AddScoped<IPromotionService, PromotionService>();
+        services.AddScoped<INewsCategoryService, NewsCategoryService>();
+        services.AddScoped<INewsArticleService, NewsArticleService>();
+        services.AddScoped<IFaqService, FaqService>();
+        services.AddScoped<ITestimonialService, TestimonialService>();
+        services.AddScoped<IPartnerService, PartnerService>();
+        services.AddScoped<IContentPageService, ContentPageService>();
 
         return services;
     }
