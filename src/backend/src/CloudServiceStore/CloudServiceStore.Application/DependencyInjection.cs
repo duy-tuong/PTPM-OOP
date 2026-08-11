@@ -10,6 +10,9 @@ using CloudServiceStore.Application.Features.Content.NewsCategories;
 using CloudServiceStore.Application.Features.Content.Partners;
 using CloudServiceStore.Application.Features.Content.Testimonials;
 using CloudServiceStore.Application.Features.Marketing.Promotions;
+using CloudServiceStore.Application.Features.Sales.AffiliateApplications;
+using CloudServiceStore.Application.Features.Sales.ConsultationRequests;
+using CloudServiceStore.Application.Features.Sales.OrderRequests;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CloudServiceStore.Application;
@@ -31,6 +34,10 @@ public static class DependencyInjection
         services.AddScoped<ITestimonialService, TestimonialService>();
         services.AddScoped<IPartnerService, PartnerService>();
         services.AddScoped<IContentPageService, ContentPageService>();
+
+        services.AddScoped<IOrderRequestService, OrderRequestService>();
+        services.AddScoped<IConsultationRequestService, ConsultationRequestService>();
+        services.AddScoped<IAffiliateApplicationService, AffiliateApplicationService>();
 
         return services;
     }
