@@ -1,6 +1,10 @@
 using CloudServiceStore.Application.Common.Services;
 using CloudServiceStore.Application.Features.Admin.Catalog.ServiceCategories;
 using CloudServiceStore.Application.Features.Admin.Catalog.ServicePlans;
+using CloudServiceStore.Application.Features.Admin.Content.ContentPages;
+using CloudServiceStore.Application.Features.Admin.Content.Faqs;
+using CloudServiceStore.Application.Features.Admin.Content.NewsArticles;
+using CloudServiceStore.Application.Features.Admin.Content.NewsCategories;
 using CloudServiceStore.Application.Features.Admin.Marketing.Promotions;
 using CloudServiceStore.Application.Features.Auth;
 using CloudServiceStore.Application.Features.Catalog.ServiceCategories;
@@ -45,6 +49,11 @@ public static class DependencyInjection
         services.AddScoped<IAdminServiceCategoryService, AdminServiceCategoryService>();
         services.AddScoped<IAdminServicePlanService, AdminServicePlanService>();
         services.AddScoped<IAdminPromotionService, AdminPromotionService>();
+
+        services.AddScoped<IAdminNewsCategoryService, AdminNewsCategoryService>();
+        services.AddScoped<IAdminNewsArticleService, AdminNewsArticleService>();
+        services.AddScoped<IAdminFaqService, AdminFaqService>();
+        services.AddScoped<IAdminContentPageService, AdminContentPageService>();
 
         return services;
     }
