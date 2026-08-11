@@ -1,4 +1,7 @@
 using CloudServiceStore.Application.Common.Services;
+using CloudServiceStore.Application.Features.Admin.Catalog.ServiceCategories;
+using CloudServiceStore.Application.Features.Admin.Catalog.ServicePlans;
+using CloudServiceStore.Application.Features.Admin.Marketing.Promotions;
 using CloudServiceStore.Application.Features.Auth;
 using CloudServiceStore.Application.Features.Catalog.ServiceCategories;
 using CloudServiceStore.Application.Features.Catalog.ServicePlans;
@@ -38,6 +41,10 @@ public static class DependencyInjection
         services.AddScoped<IOrderRequestService, OrderRequestService>();
         services.AddScoped<IConsultationRequestService, ConsultationRequestService>();
         services.AddScoped<IAffiliateApplicationService, AffiliateApplicationService>();
+
+        services.AddScoped<IAdminServiceCategoryService, AdminServiceCategoryService>();
+        services.AddScoped<IAdminServicePlanService, AdminServicePlanService>();
+        services.AddScoped<IAdminPromotionService, AdminPromotionService>();
 
         return services;
     }

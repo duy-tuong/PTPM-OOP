@@ -14,7 +14,9 @@ public class ServicePlanConfiguration : IEntityTypeConfiguration<ServicePlan>
         builder.Property(x => x.Name).HasMaxLength(100).IsRequired();
         builder.Property(x => x.Slug).HasMaxLength(120).IsRequired();
         builder.Property(x => x.ShortDescription).HasMaxLength(500);
-        builder.Property(x => x.QrCodeUrl).HasMaxLength(500);
+        // QrCodeUrl lưu base64 data URI (data:image/png;base64,...) chứ không phải URL thường —
+        // dài hơn nhiều so với 500 ký tự ban đầu, cần nvarchar(max).
+        builder.Property(x => x.QrCodeUrl).HasColumnType("nvarchar(max)");
         builder.Property(x => x.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
 
         builder.HasIndex(x => x.Slug).IsUnique();
