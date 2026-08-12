@@ -1,4 +1,5 @@
 using CloudServiceStore.Application.Common.Interfaces;
+using CloudServiceStore.Application.Features.Admin.Sales.OrderRequests;
 using CloudServiceStore.Infrastructure.Caching;
 using CloudServiceStore.Infrastructure.Persistence;
 using CloudServiceStore.Infrastructure.Observers;
@@ -26,6 +27,7 @@ public static class DependencyInjection
         services.AddSingleton<ISiteSettingsCache, SiteSettingsCache>();
         services.AddSingleton<IQrCodeFactory, QrCodeFactory>();
         services.AddScoped<IOrderStatusObserver, AuditLogOrderObserver>();
+        services.AddScoped<IOrderRequestExportService, OrderRequestExportService>();
 
         return services;
     }
