@@ -1,6 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Content.NewsArticles;
 using CloudServiceStore.Application.Features.Admin.Content.NewsArticles.Dtos;
+using CloudServiceStore.Application.Features.Content.NewsArticles.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,6 +18,18 @@ public class AdminNewsArticlesController : ControllerBase
     public AdminNewsArticlesController(IAdminNewsArticleService service)
     {
         _service = service;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<PagedResult<AdminNewsArticleDto>>> GetList([FromQuery] NewsArticleQueryParams query, CancellationToken cancellationToken)
+    {
+        return Ok(await _service.GetListAsync(query, cancellationToken));
+    }
+
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<AdminNewsArticleDto>> GetById(int id, CancellationToken cancellationToken)
+    {
+        return Ok(await _service.GetByIdAsync(id, cancellationToken));
     }
 
     [HttpPost]

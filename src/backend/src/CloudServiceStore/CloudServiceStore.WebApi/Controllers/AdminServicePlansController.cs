@@ -1,5 +1,7 @@
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Catalog.ServicePlans;
 using CloudServiceStore.Application.Features.Admin.Catalog.ServicePlans.Dtos;
+using CloudServiceStore.Application.Features.Catalog.ServicePlans.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,6 +17,18 @@ public class AdminServicePlansController : ControllerBase
     public AdminServicePlansController(IAdminServicePlanService service)
     {
         _service = service;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<PagedResult<AdminServicePlanDto>>> GetList([FromQuery] ServicePlanQueryParams query, CancellationToken cancellationToken)
+    {
+        return Ok(await _service.GetListAsync(query, cancellationToken));
+    }
+
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<AdminServicePlanDto>> GetById(int id, CancellationToken cancellationToken)
+    {
+        return Ok(await _service.GetByIdAsync(id, cancellationToken));
     }
 
     [HttpPost]
