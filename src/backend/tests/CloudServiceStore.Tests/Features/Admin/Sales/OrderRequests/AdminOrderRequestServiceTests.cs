@@ -1,0 +1,98 @@
+using CloudServiceStore.Application.Common.Exceptions;
+using CloudServiceStore.Application.Common.Interfaces;
+using CloudServiceStore.Application.Common.Services;
+using CloudServiceStore.Application.Features.Admin.Sales.OrderRequests;
+using CloudServiceStore.Application.Features.Admin.Sales.OrderRequests.Dtos;
+using CloudServiceStore.Domain.Entities.Sales;
+using CloudServiceStore.Domain.Enums;
+using CloudServiceStore.Infrastructure.Persistence;
+using CloudServiceStore.Tests.TestHelpers;
+using Moq;
+
+namespace CloudServiceStore.Tests.Features.Admin.Sales.OrderRequests;
+
+public class AdminOrderRequestServiceTests
+{
+    private static async Task<OrderRequest> SeedOrderRequestAsync(
+        AppDbContext context,
+        OrderRequestStatus status = OrderRequestStatus.New,
+        Guid? assignedToUserId = null)
+    {
+        var order = new OrderRequest
+        {
+            OrderCode = "ORD-TEST-001",
+            CustomerType = CustomerType.Individual,
+            CustomerName = "Test Customer",
+            CustomerEmail = "test@example.com",
+            CustomerPhone = "0900000000",
+            Quantity = 1,
+            TotalPrice = 100000m,
+            Status = status,
+            AssignedToUserId = assignedToUserId,
+            CreatedAt = DateTime.UtcNow
+        };
+        context.OrderRequests.Add(order);
+        await context.SaveChangesAsync();
+        return order;
+    }
+
+    private static AdminOrderRequestService CreateSut(AppDbContext context, Mock<IOrderStatusObserver> observerMock)
+    {
+        var notifier = new OrderStatusNotifier([observerMock.Object]);
+        return new AdminOrderRequestService(TestDbContextFactory.CreateUnitOfWork(context), notifier);
+    }
+
+    [Fact]
+    public async Task UpdateStatusAsync_NotFound_ThrowsNotFoundException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var sut = CreateSut(context, new Mock<IOrderStatusObserver>());
+
+        await Assert.ThrowsAsync<NotFoundException>(() =>
+            sut.UpdateStatusAsync(9999, new UpdateOrderRequestStatusDto { NewStatus = OrderRequestStatus.Contacted }, Guid.NewGuid()));
+    }
+
+    [Fact]
+    public async Task UpdateStatusAsync_Success_NotifiesObserverWithOldAndNewStatus()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var order = await SeedOrderRequestAsync(context, status: OrderRequestStatus.New);
+        var observerMock = new Mock<IOrderStatusObserver>();
+        var sut = CreateSut(context, observerMock);
+        var changedByUserId = Guid.NewGuid();
+
+        var result = await sut.UpdateStatusAsync(order.Id, new UpdateOrderRequestStatusDto { NewStatus = OrderRequestStatus.Contacted }, changedByUserId);
+
+        observerMock.Verify(o => o.OnStatusChangedAsync(
+            order.Id, OrderRequestStatus.New, OrderRequestStatus.Contacted, changedByUserId, It.IsAny<CancellationToken>()), Times.Once);
+        Assert.Equal(nameof(OrderRequestStatus.Contacted), result.Status);
+    }
+
+    [Fact]
+    public async Task UpdateStatusAsync_UnassignedOrder_AssignsToChangedByUser()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var order = await SeedOrderRequestAsync(context, assignedToUserId: null);
+        var sut = CreateSut(context, new Mock<IOrderStatusObserver>());
+        var changedByUserId = Guid.NewGuid();
+
+        await sut.UpdateStatusAsync(order.Id, new UpdateOrderRequestStatusDto { NewStatus = OrderRequestStatus.Contacted }, changedByUserId);
+
+        var persisted = context.OrderRequests.Single(o => o.Id == order.Id);
+        Assert.Equal(changedByUserId, persisted.AssignedToUserId);
+    }
+
+    [Fact]
+    public async Task UpdateStatusAsync_AlreadyAssignedOrder_DoesNotOverwriteAssignee()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var existingAssignee = Guid.NewGuid();
+        var order = await SeedOrderRequestAsync(context, assignedToUserId: existingAssignee);
+        var sut = CreateSut(context, new Mock<IOrderStatusObserver>());
+
+        await sut.UpdateStatusAsync(order.Id, new UpdateOrderRequestStatusDto { NewStatus = OrderRequestStatus.Confirmed }, Guid.NewGuid());
+
+        var persisted = context.OrderRequests.Single(o => o.Id == order.Id);
+        Assert.Equal(existingAssignee, persisted.AssignedToUserId);
+    }
+}
