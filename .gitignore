@@ -3,6 +3,7 @@ bin/
 obj/
 *.user
 .vs/
+TestResults/
 
 # appsettings chứa secret cá nhân — không commit
 appsettings.Development.json
