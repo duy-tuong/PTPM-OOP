@@ -1,0 +1,340 @@
+import type { PaginationParams } from "./common";
+import type { PlanFeatureDto, PlanPriceDto } from "./catalog";
+import type {
+  AffiliateApplicationStatus,
+  ConsultationStatus,
+  DiscountType,
+  OrderRequestStatus,
+} from "./enums";
+
+// ---- Admin Catalog: Service Categories ----
+// Khớp Application/Features/Admin/Catalog/ServiceCategories/Dtos/*.cs
+export interface AdminServiceCategoryDto {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string | null;
+  iconUrl?: string | null;
+  displayOrder: number;
+  isActive: boolean;
+}
+
+export interface CreateServiceCategoryDto {
+  name: string;
+  slug: string;
+  description?: string;
+  iconUrl?: string;
+  displayOrder: number;
+  isActive: boolean;
+}
+
+export type UpdateServiceCategoryDto = CreateServiceCategoryDto;
+
+// ---- Admin Catalog: Service Plans ----
+// Khớp Application/Features/Admin/Catalog/ServicePlans/Dtos/*.cs
+export interface AdminServicePlanDto {
+  id: number;
+  categoryId: number;
+  name: string;
+  slug: string;
+  shortDescription?: string | null;
+  description?: string | null;
+  isFeatured: boolean;
+  isActive: boolean;
+  displayOrder: number;
+  qrCodeUrl?: string | null;
+  features: PlanFeatureDto[];
+  prices: PlanPriceDto[];
+}
+
+export interface PlanFeatureInputDto {
+  featureKey: string;
+  featureLabel: string;
+  featureValueText: string;
+  featureValueNumeric?: number;
+  featureUnit?: string;
+  displayOrder: number;
+  isHighlighted: boolean;
+}
+
+export interface PlanPriceInputDto {
+  periodMonths: number;
+  price: number;
+  promotionalPrice?: number;
+  currency: string;
+  isDefault: boolean;
+  isActive: boolean;
+}
+
+export interface CreateServicePlanDto {
+  categoryId: number;
+  name: string;
+  slug: string;
+  shortDescription?: string;
+  description?: string;
+  isFeatured: boolean;
+  isActive: boolean;
+  displayOrder: number;
+  features: PlanFeatureInputDto[];
+  prices: PlanPriceInputDto[];
+}
+
+export type UpdateServicePlanDto = CreateServicePlanDto;
+
+// ---- Admin Marketing: Promotions ----
+// Khớp Application/Features/Admin/Marketing/Promotions/Dtos/*.cs
+export interface AdminPromotionDto {
+  id: number;
+  code: string;
+  name: string;
+  description?: string | null;
+  discountType: string;
+  discountValue: number;
+  maxDiscountAmount?: number | null;
+  minOrderValue?: number | null;
+  startDate: string;
+  endDate: string;
+  usageLimit?: number | null;
+  usageCount: number;
+  isActive: boolean;
+}
+
+export interface CreatePromotionDto {
+  code: string;
+  name: string;
+  description?: string;
+  discountType: DiscountType;
+  discountValue: number;
+  maxDiscountAmount?: number;
+  minOrderValue?: number;
+  startDate: string;
+  endDate: string;
+  usageLimit?: number;
+  isActive: boolean;
+}
+
+export type UpdatePromotionDto = CreatePromotionDto;
+
+// ---- Admin Content: Content Pages ----
+// Khớp Application/Features/Admin/Content/ContentPages/Dtos/*.cs
+export interface AdminContentPageDto {
+  id: number;
+  slug: string;
+  title: string;
+  content: string;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  authorId: string;
+  isPublished: boolean;
+  publishedAt?: string | null;
+  displayOrder: number;
+}
+
+export interface CreateContentPageDto {
+  slug: string;
+  title: string;
+  content: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  isPublished: boolean;
+  displayOrder: number;
+}
+
+export type UpdateContentPageDto = CreateContentPageDto;
+
+// ---- Admin Content: FAQs ----
+// Khớp Application/Features/Admin/Content/Faqs/Dtos/*.cs
+export interface AdminFaqDto {
+  id: number;
+  question: string;
+  answer: string;
+  serviceCategoryId?: number | null;
+  displayOrder: number;
+  isActive: boolean;
+}
+
+export interface CreateFaqDto {
+  question: string;
+  answer: string;
+  serviceCategoryId?: number;
+  displayOrder: number;
+  isActive: boolean;
+}
+
+export type UpdateFaqDto = CreateFaqDto;
+
+// ---- Admin Content: News Categories ----
+// Khớp Application/Features/Admin/Content/NewsCategories/Dtos/*.cs
+export interface AdminNewsCategoryDto {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string | null;
+  displayOrder: number;
+  isActive: boolean;
+}
+
+export interface CreateNewsCategoryDto {
+  name: string;
+  slug: string;
+  description?: string;
+  displayOrder: number;
+  isActive: boolean;
+}
+
+export type UpdateNewsCategoryDto = CreateNewsCategoryDto;
+
+// ---- Admin Content: News Articles ----
+// Khớp Application/Features/Admin/Content/NewsArticles/Dtos/*.cs
+export interface AdminNewsArticleDto {
+  id: number;
+  newsCategoryId: number;
+  title: string;
+  slug: string;
+  summary?: string | null;
+  content: string;
+  thumbnailUrl?: string | null;
+  isPublished: boolean;
+  publishedAt: string;
+  viewCount: number;
+  authorId: string;
+  tags: string[];
+}
+
+export interface CreateNewsArticleDto {
+  newsCategoryId: number;
+  title: string;
+  slug: string;
+  summary?: string;
+  content: string;
+  thumbnailUrl?: string;
+  isPublished: boolean;
+  publishedAt?: string;
+  tagNames: string[];
+}
+
+export type UpdateNewsArticleDto = CreateNewsArticleDto;
+
+// Query params dùng chung cho GET /api/admin/service-plans, /admin/news-articles (thêm ở Phase 6.0)
+export interface AdminServicePlanQueryParams extends PaginationParams {
+  categorySlug?: string;
+  isFeatured?: boolean;
+}
+
+export interface AdminNewsArticleQueryParams extends PaginationParams {
+  categorySlug?: string;
+  tagSlug?: string;
+  search?: string;
+}
+
+// ---- Admin Sales: Order Requests ----
+// Khớp Application/Features/Admin/Sales/OrderRequests/Dtos/*.cs
+export interface AdminOrderRequestDto {
+  id: number;
+  orderCode: string;
+  customerType: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  companyName?: string | null;
+  servicePlanId?: number | null;
+  servicePlanName?: string | null;
+  periodMonths?: number | null;
+  quantity: number;
+  totalPrice: number;
+  note?: string | null;
+  status: string;
+  assignedToUserId?: string | null;
+  assignedToUserName?: string | null;
+  source?: string | null;
+  createdAt: string;
+}
+
+export interface OrderRequestQueryParams extends PaginationParams {
+  status?: OrderRequestStatus;
+}
+
+export interface UpdateOrderRequestStatusDto {
+  newStatus: OrderRequestStatus;
+}
+
+// ---- Admin Sales: Consultation Requests ----
+// Khớp Application/Features/Admin/Sales/ConsultationRequests/Dtos/*.cs
+export interface AdminConsultationRequestDto {
+  id: number;
+  requestCode: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  companyName?: string | null;
+  subject: string;
+  message: string;
+  status: string;
+  assignedToUserName?: string | null;
+  createdAt: string;
+}
+
+export interface UpdateConsultationRequestStatusDto {
+  newStatus: ConsultationStatus;
+}
+
+// ---- Admin Sales: Affiliate Applications ----
+// Khớp Application/Features/Admin/Sales/AffiliateApplications/Dtos/*.cs
+export interface AdminAffiliateApplicationDto {
+  id: number;
+  fullName: string;
+  email: string;
+  phone: string;
+  websiteUrl?: string | null;
+  promotionPlan?: string | null;
+  status: string;
+  reviewedByUserName?: string | null;
+  reviewedAt?: string | null;
+  reviewNote?: string | null;
+  createdAt: string;
+}
+
+export interface UpdateAffiliateApplicationStatusDto {
+  newStatus: AffiliateApplicationStatus;
+  reviewNote?: string;
+}
+
+// ---- Admin Reporting ----
+// Khớp Application/Features/Admin/Reporting/DashboardStats/Dtos/*.cs
+export interface MonthlyRequestStatDto {
+  month: string;
+  orderRequestCount: number;
+  consultationRequestCount: number;
+}
+
+export interface TopServicePlanStatDto {
+  servicePlanId: number;
+  servicePlanName: string;
+  requestCount: number;
+}
+
+export interface DashboardStatsDto {
+  totalOrderRequests: number;
+  totalConsultationRequests: number;
+  totalAffiliateApplications: number;
+  pendingOrderRequests: number;
+  monthlyStats: MonthlyRequestStatDto[];
+  topServicePlans: TopServicePlanStatDto[];
+}
+
+// Khớp Application/Features/Admin/Reporting/AuditLogs/Dtos/*.cs
+export interface AuditLogQueryParams extends PaginationParams {
+  entityName?: string;
+}
+
+export interface AdminAuditLogDto {
+  id: number;
+  userId?: string | null;
+  userName?: string | null;
+  action: string;
+  entityName: string;
+  entityId: string;
+  oldValues?: string | null;
+  newValues?: string | null;
+  timestamp: string;
+}
