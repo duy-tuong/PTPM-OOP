@@ -1,5 +1,6 @@
 using CloudServiceStore.Application.Common.Exceptions;
 using CloudServiceStore.Application.Common.Interfaces;
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Catalog.ServicePlans.Dtos;
 using CloudServiceStore.Application.Features.Catalog.ServicePlans.Dtos;
 using CloudServiceStore.Domain.Entities.Catalog;
@@ -16,6 +17,45 @@ public class AdminServicePlanService : IAdminServicePlanService
     {
         _unitOfWork = unitOfWork;
         _qrCodeFactory = qrCodeFactory;
+    }
+
+    // Không lọc IsActive (khác bản public ServicePlanService) — Admin cần thấy cả gói đã tắt để bật lại.
+    public async Task<PagedResult<AdminServicePlanDto>> GetListAsync(ServicePlanQueryParams query, CancellationToken cancellationToken = default)
+    {
+        var repository = _unitOfWork.Repository<ServicePlan, int>();
+
+        var baseQuery = repository.Query()
+            .Include(p => p.Features)
+            .Include(p => p.Prices)
+            .Where(p => (query.CategorySlug == null || p.Category.Slug == query.CategorySlug)
+                && (query.IsFeatured == null || p.IsFeatured == query.IsFeatured))
+            .OrderBy(p => p.DisplayOrder);
+
+        var totalCount = await baseQuery.CountAsync(cancellationToken);
+        var entities = await baseQuery
+            .Skip((query.PageNumber - 1) * query.PageSize)
+            .Take(query.PageSize)
+            .ToListAsync(cancellationToken);
+
+        var dtos = entities.Select(MapToDto).ToList();
+        return PagedResult<AdminServicePlanDto>.Create(dtos, totalCount, query.PageNumber, query.PageSize);
+    }
+
+    public async Task<AdminServicePlanDto> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var repository = _unitOfWork.Repository<ServicePlan, int>();
+
+        var entity = await repository.Query()
+            .Include(p => p.Features)
+            .Include(p => p.Prices)
+            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+
+        if (entity is null)
+        {
+            throw new NotFoundException(nameof(ServicePlan), id);
+        }
+
+        return MapToDto(entity);
     }
 
     public async Task<AdminServicePlanDto> CreateAsync(CreateServicePlanDto dto, CancellationToken cancellationToken = default)
