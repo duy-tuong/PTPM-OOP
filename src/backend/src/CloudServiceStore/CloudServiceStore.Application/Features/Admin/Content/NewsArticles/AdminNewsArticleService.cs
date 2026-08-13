@@ -1,7 +1,9 @@
 using CloudServiceStore.Application.Common.Exceptions;
 using CloudServiceStore.Application.Common.Interfaces;
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Common.Utils;
 using CloudServiceStore.Application.Features.Admin.Content.NewsArticles.Dtos;
+using CloudServiceStore.Application.Features.Content.NewsArticles.Dtos;
 using CloudServiceStore.Domain.Entities.Content;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,6 +16,47 @@ public class AdminNewsArticleService : IAdminNewsArticleService
     public AdminNewsArticleService(IUnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
+    }
+
+    // Không lọc IsPublished/PublishedAt (khác bản public NewsArticleService) — Admin cần thấy cả
+    // bài nháp/lên lịch tương lai để chỉnh sửa; sắp xếp theo CreatedAt vì PublishedAt không phản
+    // ánh đúng thứ tự quản trị khi bài chưa xuất bản.
+    public async Task<PagedResult<AdminNewsArticleDto>> GetListAsync(NewsArticleQueryParams query, CancellationToken cancellationToken = default)
+    {
+        var repository = _unitOfWork.Repository<NewsArticle, int>();
+        var search = query.Search;
+
+        var baseQuery = repository.Query()
+            .Include(a => a.ArticleTags).ThenInclude(at => at.Tag)
+            .Where(a => (query.CategorySlug == null || a.NewsCategory.Slug == query.CategorySlug)
+                && (query.TagSlug == null || a.ArticleTags.Any(at => at.Tag.Slug == query.TagSlug))
+                && (search == null || a.Title.Contains(search) || (a.Summary != null && a.Summary.Contains(search))))
+            .OrderByDescending(a => a.CreatedAt);
+
+        var totalCount = await baseQuery.CountAsync(cancellationToken);
+        var entities = await baseQuery
+            .Skip((query.PageNumber - 1) * query.PageSize)
+            .Take(query.PageSize)
+            .ToListAsync(cancellationToken);
+
+        var dtos = entities.Select(MapToDto).ToList();
+        return PagedResult<AdminNewsArticleDto>.Create(dtos, totalCount, query.PageNumber, query.PageSize);
+    }
+
+    public async Task<AdminNewsArticleDto> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var repository = _unitOfWork.Repository<NewsArticle, int>();
+
+        var entity = await repository.Query()
+            .Include(a => a.ArticleTags).ThenInclude(at => at.Tag)
+            .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+
+        if (entity is null)
+        {
+            throw new NotFoundException(nameof(NewsArticle), id);
+        }
+
+        return MapToDto(entity);
     }
 
     public async Task<AdminNewsArticleDto> CreateAsync(CreateNewsArticleDto dto, Guid authorId, CancellationToken cancellationToken = default)
