@@ -11,4 +11,6 @@ public class ServicePlanListItemDto
     public string CategoryName { get; init; } = string.Empty;
     public string CategorySlug { get; init; } = string.Empty;
     public decimal? StartingPrice { get; init; }
+    public List<PlanFeatureDto> Features { get; init; } = [];
+    public List<PlanPriceDto> Prices { get; init; } = [];
 }
