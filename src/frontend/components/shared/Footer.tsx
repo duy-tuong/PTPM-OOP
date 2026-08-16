@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Logo } from "@/components/shared/Logo";
 
 const SERVICE_LINKS = [
   { href: "/dich-vu", label: "Dịch vụ" },
@@ -20,7 +21,7 @@ export function Footer() {
     <footer className="border-t border-border bg-muted/30">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-4 lg:px-8">
         <div className="lg:col-span-2">
-          <span className="text-lg font-semibold tracking-tight">CloudServiceStore</span>
+          <Logo />
           <p className="mt-3 max-w-sm text-sm text-muted-foreground">
             Nhà cung cấp dịch vụ VPS, Hosting, Domain, Email doanh nghiệp, SSL và Firewall chống
             DDoS cho doanh nghiệp và cá nhân tại Việt Nam.
@@ -55,9 +56,7 @@ export function Footer() {
       </div>
 
       <div className="border-t border-border px-4 py-6 sm:px-6 lg:px-8">
-        <p className="text-sm text-muted-foreground">
-          © {year} CloudServiceStore. Bảo lưu mọi quyền.
-        </p>
+        <p className="text-sm text-muted-foreground">© {year} Claudverse. Bảo lưu mọi quyền.</p>
       </div>
     </footer>
   );

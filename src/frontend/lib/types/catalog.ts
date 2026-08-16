@@ -43,6 +43,8 @@ export interface ServicePlanListItemDto {
   categoryName: string;
   categorySlug: string;
   startingPrice?: number | null;
+  features: PlanFeatureDto[];
+  prices: PlanPriceDto[];
 }
 
 export interface ServicePlanDetailDto {

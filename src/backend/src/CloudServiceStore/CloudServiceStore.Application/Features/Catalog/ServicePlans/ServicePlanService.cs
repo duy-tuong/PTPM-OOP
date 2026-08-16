@@ -23,6 +23,7 @@ public class ServicePlanService : IServicePlanService
         var baseQuery = repository.Query()
             .Include(p => p.Category)
             .Include(p => p.Prices)
+            .Include(p => p.Features)
             .Where(p => p.IsActive
                 && (query.CategorySlug == null || p.Category.Slug == query.CategorySlug)
                 && (query.IsFeatured == null || p.IsFeatured == query.IsFeatured))
@@ -72,7 +73,29 @@ public class ServicePlanService : IServicePlanService
             CategorySlug = plan.Category.Slug,
             StartingPrice = activePrices.Count == 0
                 ? null
-                : activePrices.Min(x => x.PromotionalPrice ?? x.Price)
+                : activePrices.Min(x => x.PromotionalPrice ?? x.Price),
+            Features = plan.Features
+                .OrderBy(f => f.DisplayOrder)
+                .Select(f => new PlanFeatureDto
+                {
+                    FeatureKey = f.FeatureKey,
+                    FeatureLabel = f.FeatureLabel,
+                    FeatureValueText = f.FeatureValueText,
+                    FeatureValueNumeric = f.FeatureValueNumeric,
+                    FeatureUnit = f.FeatureUnit,
+                    IsHighlighted = f.IsHighlighted
+                })
+                .ToList(),
+            Prices = activePrices
+                .Select(p => new PlanPriceDto
+                {
+                    PeriodMonths = p.PeriodMonths,
+                    Price = p.Price,
+                    PromotionalPrice = p.PromotionalPrice,
+                    Currency = p.Currency,
+                    IsDefault = p.IsDefault
+                })
+                .ToList()
         };
     }
 

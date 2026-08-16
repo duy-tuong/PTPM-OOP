@@ -21,6 +21,7 @@ using CloudServiceStore.Application.Features.Content.NewsArticles;
 using CloudServiceStore.Application.Features.Content.NewsCategories;
 using CloudServiceStore.Application.Features.Content.Partners;
 using CloudServiceStore.Application.Features.Content.Testimonials;
+using CloudServiceStore.Application.Features.Customers.Auth;
 using CloudServiceStore.Application.Features.Marketing.Promotions;
 using CloudServiceStore.Application.Features.Sales.AffiliateApplications;
 using CloudServiceStore.Application.Features.Sales.ConsultationRequests;
@@ -34,6 +35,7 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<ICustomerAuthService, CustomerAuthService>();
         services.AddScoped<OrderStatusNotifier>();
 
         services.AddScoped<IServiceCategoryService, ServiceCategoryService>();
