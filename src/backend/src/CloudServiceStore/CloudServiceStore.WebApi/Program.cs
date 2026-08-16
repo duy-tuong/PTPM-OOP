@@ -97,7 +97,13 @@ using (var scope = app.Services.CreateScope())
     await siteSettingsCache.RefreshAsync();
 }
 
-app.UseHttpsRedirection();
+// Không redirect sang HTTPS khi Development: frontend Next.js (Server Component fetch + form public)
+// gọi thẳng http://localhost:5137 theo đúng .env.local/.env.example - redirect sang cổng HTTPS dùng
+// dev cert tự ký sẽ khiến fetch phía Node (undici) báo lỗi DEPTH_ZERO_SELF_SIGNED_CERT.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseCors(FrontendCorsPolicy);
 
