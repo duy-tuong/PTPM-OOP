@@ -384,3 +384,28 @@ export interface CreatePartnerDto {
 }
 
 export type UpdatePartnerDto = CreatePartnerDto;
+
+// ---- Admin Catalog: TLD Pricing ----
+// Khớp Application/Features/Admin/Catalog/TldPricings/Dtos/*.cs
+export interface AdminTldPricingDto {
+  id: number;
+  tld: string;
+  serviceCategoryId?: number | null;
+  registerPrice: number;
+  renewPrice: number;
+  transferPrice: number;
+  currency: string;
+  isActive: boolean;
+}
+
+export interface CreateTldPricingDto {
+  tld: string;
+  serviceCategoryId?: number;
+  registerPrice: number;
+  renewPrice: number;
+  transferPrice: number;
+  currency: string;
+  isActive: boolean;
+}
+
+export type UpdateTldPricingDto = CreateTldPricingDto;

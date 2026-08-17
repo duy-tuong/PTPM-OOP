@@ -1,6 +1,7 @@
 using CloudServiceStore.Application.Common.Services;
 using CloudServiceStore.Application.Features.Admin.Catalog.ServiceCategories;
 using CloudServiceStore.Application.Features.Admin.Catalog.ServicePlans;
+using CloudServiceStore.Application.Features.Admin.Catalog.TldPricings;
 using CloudServiceStore.Application.Features.Admin.Content.ContentPages;
 using CloudServiceStore.Application.Features.Admin.Content.Faqs;
 using CloudServiceStore.Application.Features.Admin.Content.NewsArticles;
@@ -57,6 +58,7 @@ public static class DependencyInjection
 
         services.AddScoped<IAdminServiceCategoryService, AdminServiceCategoryService>();
         services.AddScoped<IAdminServicePlanService, AdminServicePlanService>();
+        services.AddScoped<IAdminTldPricingService, AdminTldPricingService>();
         services.AddScoped<IAdminPromotionService, AdminPromotionService>();
 
         services.AddScoped<IAdminNewsCategoryService, AdminNewsCategoryService>();
