@@ -33,11 +33,11 @@ export default async function AdminEditServicePlanPage({ params }: AdminEditServ
   if (!plan) notFound();
 
   return (
-    <div className="min-h-full bg-gray-100 px-4 py-8 sm:px-6 lg:px-8">
+    <div className="min-h-full px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-4xl flex-col gap-6">
         <div>
-          <h1 className="font-heading text-2xl font-semibold text-gray-900">Sửa gói dịch vụ</h1>
-          <p className="mt-1 text-sm text-gray-500">{plan.name}</p>
+          <h1 className="font-heading text-2xl font-semibold tracking-tight text-zinc-900">Sửa gói dịch vụ</h1>
+          <p className="mt-1 text-[14px] text-zinc-500">{plan.name}</p>
         </div>
         <ServicePlanForm mode="edit" initialData={plan} categories={categories} />
       </div>
