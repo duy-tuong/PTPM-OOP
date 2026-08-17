@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 
-// Port kỹ thuật mouse-parallax theo lớp (`data-depth`) của bản Stitch Claudverse: lớp nền di chuyển
+// Port kỹ thuật mouse-parallax theo lớp (`data-depth`) của bản Stitch Cloudverse: lớp nền di chuyển
 // ngược hướng con trỏ, tính từ tâm viewport, lớp có `depth` càng lớn di chuyển càng nhiều. Dùng cho
 // blob nền + ảnh orb ở Hero. Tự tắt khi prefers-reduced-motion.
 export function ParallaxLayer({

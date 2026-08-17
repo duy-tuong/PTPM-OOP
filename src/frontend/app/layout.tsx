@@ -15,7 +15,7 @@ const THEME_INIT_SCRIPT = `
   }
 `;
 
-// Pivot 2 (theme "Claudverse", xem plan Phase 6.2): 3 font đúng bản Stitch dán vào - đã verify cả 3
+// Pivot 2 (theme "Cloudverse", xem plan Phase 6.2): 3 font đúng bản Stitch dán vào - đã verify cả 3
 // đều có subset "vietnamese" trên Google Fonts (khác Geist/Outfit ở pivot 1 - không có subset này).
 // Inter = body, Space Grotesk = display/headline, JetBrains Mono = số liệu/countdown/mono.
 const bodyFont = Inter({
@@ -38,13 +38,13 @@ const monoFont = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Claudverse - Dịch vụ VPS, Hosting, Domain",
-    template: "%s | Claudverse",
+    default: "Cloudverse - Dịch vụ VPS, Hosting, Domain",
+    template: "%s | Cloudverse",
   },
   description:
     "Nhà cung cấp dịch vụ VPS, Hosting, Domain, Email doanh nghiệp, SSL và Firewall chống DDoS cho doanh nghiệp và cá nhân tại Việt Nam.",
   icons: {
-    icon: "/logo.svg",
+    icon: "/logo_new.png",
   },
 };
 

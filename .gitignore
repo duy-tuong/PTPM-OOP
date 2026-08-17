@@ -21,3 +21,6 @@ out/
 
 # Claude Code local config
 .claude/
+
+# Antigravity/Agents configuration
+.agents/

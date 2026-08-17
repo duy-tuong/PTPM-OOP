@@ -338,3 +338,49 @@ export interface AdminAuditLogDto {
   newValues?: string | null;
   timestamp: string;
 }
+
+// ---- Admin Content: Testimonials ----
+// Khớp Application/Features/Admin/Content/Testimonials/Dtos/*.cs
+export interface AdminTestimonialDto {
+  id: number;
+  displayName: string;
+  companyName?: string | null;
+  avatarUrl?: string | null;
+  content: string;
+  rating?: number | null;
+  displayOrder: number;
+  isActive: boolean;
+}
+
+export interface CreateTestimonialDto {
+  displayName: string;
+  companyName?: string;
+  avatarUrl?: string;
+  content: string;
+  rating?: number;
+  displayOrder: number;
+  isActive: boolean;
+}
+
+export type UpdateTestimonialDto = CreateTestimonialDto;
+
+// ---- Admin Content: Partners ----
+// Khớp Application/Features/Admin/Content/Partners/Dtos/*.cs
+export interface AdminPartnerDto {
+  id: number;
+  name: string;
+  logoUrl: string;
+  websiteUrl?: string | null;
+  displayOrder: number;
+  isActive: boolean;
+}
+
+export interface CreatePartnerDto {
+  name: string;
+  logoUrl: string;
+  websiteUrl?: string;
+  displayOrder: number;
+  isActive: boolean;
+}
+
+export type UpdatePartnerDto = CreatePartnerDto;

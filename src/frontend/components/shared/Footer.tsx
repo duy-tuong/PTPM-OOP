@@ -56,7 +56,7 @@ export function Footer() {
       </div>
 
       <div className="border-t border-border px-4 py-6 sm:px-6 lg:px-8">
-        <p className="text-sm text-muted-foreground">© {year} Claudverse. Bảo lưu mọi quyền.</p>
+        <p className="text-sm text-muted-foreground">© {year} Cloudverse. Bảo lưu mọi quyền.</p>
       </div>
     </footer>
   );
