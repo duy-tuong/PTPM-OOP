@@ -50,9 +50,11 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* :root = token trung tính gốc của shadcn (base color "neutral"), dành cho các phần chưa gắn brand
-   riêng (Admin panel, Phase 6.6+). Trang public dùng theme tối "Claudverse" qua class .dark bên dưới,
-   được gắn scoped ở app/(public)/layout.tsx - không phải toàn site. */
+/* :root = token trung tính gốc của shadcn (base color "neutral"), dùng cho Admin panel (Phase 6.5+).
+   Trang public dùng theme tối "Claudverse" qua class .dark bên dưới - phân theo route (không phải 1
+   div lồng) bằng THEME_INIT_SCRIPT ở app/layout.tsx (script chặn-paint theo pathname, xem comment ở đó).
+   --primary/--primary-foreground/--ring dùng lại đúng 3 giá trị cyan của .dark (không đổi gì khác) để
+   nút/link chính trên Admin vẫn cùng màu thương hiệu thay vì xám đen mặc định của preset "neutral". */
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -60,8 +62,8 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
+  --primary: #00f0ff;
+  --primary-foreground: #0b0f19;
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
@@ -71,7 +73,7 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --ring: #00f0ff;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);

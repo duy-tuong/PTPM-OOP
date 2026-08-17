@@ -1,7 +1,19 @@
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
+import Script from "next/script";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
+
+// Chạy trước khi paint (next/script strategy="beforeInteractive" - Next tự chèn vào <head> bất kể vị
+// trí trong JSX, đã verify qua node_modules/next/dist/docs) để quyết định dark/light theo pathname
+// TRƯỚC khi React hydrate - không dùng headers()/cookies() ở Server Component vì sẽ ép toàn site
+// thành dynamic render, mất SSG (bài học từ Phase 6.2c). Admin (/admin/**) giữ nguyên :root (sáng);
+// mọi route khác (public) được thêm .dark.
+const THEME_INIT_SCRIPT = `
+  if (!location.pathname.startsWith('/admin')) {
+    document.documentElement.classList.add('dark');
+  }
+`;
 
 // Pivot 2 (theme "Claudverse", xem plan Phase 6.2): 3 font đúng bản Stitch dán vào - đã verify cả 3
 // đều có subset "vietnamese" trên Google Fonts (khác Geist/Outfit ở pivot 1 - không có subset này).
@@ -36,11 +48,13 @@ export const metadata: Metadata = {
   },
 };
 
-// "dark" đặt ở <html> (không phải 1 div lồng trong (public)/layout.tsx như dự kiến ban đầu trong
-// plan): Sheet/Dialog/Dropdown (base-ui) portal thẳng ra document.body, là anh em (sibling) chứ không
-// phải hậu duệ của wrapper div đó - đặt dark ở div lồng sẽ khiến menu mobile (Sheet) không nhận đúng
-// biến CSS theme, vẫn hiện sáng dù nền trang đã tối. Đặt ở <html> là quy ước chuẩn của shadcn/next-themes
-// cho đúng lý do này. An toàn cho hiện tại vì Admin (Phase 6.6+) chưa có nội dung thật, chỉ placeholder.
+// "dark" KHÔNG còn hardcode tĩnh ở <html> (khác Phase 6.2) - giờ Admin (Phase 6.5) đã có nội dung thật
+// cần theme sáng, phải phân biệt theo route. "dark" vẫn phải đặt ở <html> (không phải 1 div lồng trong
+// (public)/layout.tsx) vì lý do portal: Sheet/Dialog/Dropdown (base-ui) portal thẳng ra document.body,
+// là anh em (sibling) chứ không phải hậu duệ của bất kỳ wrapper div nào - đặt dark ở div lồng sẽ khiến
+// portal (menu mobile...) không nhận đúng theme. Giải pháp: THEME_INIT_SCRIPT (script chặn-paint, xem
+// trên) tự thêm/bỏ class "dark" ở <html> theo pathname trước khi React hydrate - suppressHydrationWarning
+// báo cho React biết class này do script ngoài React quản lý, không phải lỗi mismatch thật.
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -49,9 +63,11 @@ export default function RootLayout({
   return (
     <html
       lang="vi"
-      className={`dark ${bodyFont.variable} ${displayFont.variable} ${monoFont.variable} h-full antialiased`}
+      suppressHydrationWarning
+      className={`${bodyFont.variable} ${displayFont.variable} ${monoFont.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <Script id="theme-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         {children}
         <Toaster />
       </body>
