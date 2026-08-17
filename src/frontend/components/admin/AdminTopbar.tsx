@@ -84,12 +84,14 @@ export function AdminTopbar({ session, onMenuClick }: { session: SessionUser; on
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56 rounded-2xl border-zinc-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
-            <DropdownMenuLabel className="font-normal">
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none text-zinc-900">{session.fullName}</p>
-                <p className="text-xs leading-none text-slate-500">{session.roles.join(", ")}</p>
-              </div>
-            </DropdownMenuLabel>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none text-zinc-900">{session.fullName}</p>
+                  <p className="text-xs leading-none text-slate-500">{session.roles.join(", ")}</p>
+                </div>
+              </DropdownMenuLabel>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator className="bg-slate-100" />
             <DropdownMenuGroup>
               <DropdownMenuItem className="cursor-pointer text-[13px] text-slate-600 focus:bg-slate-50 focus:text-zinc-900">
