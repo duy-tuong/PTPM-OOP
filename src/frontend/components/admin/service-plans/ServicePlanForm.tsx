@@ -180,9 +180,9 @@ export function ServicePlanForm({ mode, initialData, categories }: ServicePlanFo
 
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-6">
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="font-heading text-base font-semibold text-gray-900">Thông tin cơ bản</h2>
-        <FieldGroup className="mt-4">
+      <div className="rounded-[24px] border border-zinc-200/60 bg-white p-8 shadow-sm ring-1 ring-zinc-950/5">
+        <h2 className="font-heading text-lg font-semibold text-zinc-900">Thông tin cơ bản</h2>
+        <FieldGroup className="mt-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <Field>
               <Label htmlFor="plan-category">Danh mục</Label>
@@ -259,38 +259,40 @@ export function ServicePlanForm({ mode, initialData, categories }: ServicePlanFo
             />
           </Field>
 
-          <div className="flex flex-wrap gap-6">
+          <div className="flex flex-wrap gap-8 pt-4">
             <label
               htmlFor="plan-featured"
-              className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground"
+              className="flex cursor-pointer items-center gap-3 text-sm font-medium text-zinc-700"
             >
-              <input
-                id="plan-featured"
-                type="checkbox"
-                checked={isFeatured}
-                onChange={(e) => setIsFeatured(e.target.checked)}
-                className="peer sr-only"
-              />
-              <span className="flex size-4 items-center justify-center rounded border border-input bg-transparent transition-colors peer-checked:border-primary peer-checked:bg-primary">
-                {isFeatured && <Check className="size-3 text-primary-foreground" strokeWidth={3} />}
-              </span>
+              <div className="relative flex items-center">
+                <input
+                  id="plan-featured"
+                  type="checkbox"
+                  checked={isFeatured}
+                  onChange={(e) => setIsFeatured(e.target.checked)}
+                  className="peer sr-only"
+                />
+                <div className="h-5 w-9 rounded-full bg-zinc-200 transition-colors peer-checked:bg-zinc-900 peer-focus-visible:ring-2 peer-focus-visible:ring-zinc-900/20" />
+                <div className="absolute left-0.5 top-0.5 size-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-4" />
+              </div>
               Gói nổi bật
             </label>
 
             <label
               htmlFor="plan-active"
-              className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground"
+              className="flex cursor-pointer items-center gap-3 text-sm font-medium text-zinc-700"
             >
-              <input
-                id="plan-active"
-                type="checkbox"
-                checked={isActive}
-                onChange={(e) => setIsActive(e.target.checked)}
-                className="peer sr-only"
-              />
-              <span className="flex size-4 items-center justify-center rounded border border-input bg-transparent transition-colors peer-checked:border-primary peer-checked:bg-primary">
-                {isActive && <Check className="size-3 text-primary-foreground" strokeWidth={3} />}
-              </span>
+              <div className="relative flex items-center">
+                <input
+                  id="plan-active"
+                  type="checkbox"
+                  checked={isActive}
+                  onChange={(e) => setIsActive(e.target.checked)}
+                  className="peer sr-only"
+                />
+                <div className="h-5 w-9 rounded-full bg-zinc-200 transition-colors peer-checked:bg-emerald-600 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-600/20" />
+                <div className="absolute left-0.5 top-0.5 size-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-4" />
+              </div>
               Đang hoạt động
             </label>
           </div>
@@ -311,92 +313,99 @@ export function ServicePlanForm({ mode, initialData, categories }: ServicePlanFo
         )}
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="rounded-[24px] border border-zinc-200/60 bg-white p-8 shadow-sm ring-1 ring-zinc-950/5">
         <div className="flex items-center justify-between">
-          <h2 className="font-heading text-base font-semibold text-gray-900">Tính năng</h2>
-          <Button type="button" variant="outline" size="sm" onClick={addFeature}>
+          <h2 className="font-heading text-lg font-semibold text-zinc-900">Tính năng</h2>
+          <Button type="button" variant="outline" size="sm" className="border-dashed" onClick={addFeature}>
             <Plus className="size-4" data-icon="inline-start" />
             Thêm tính năng
           </Button>
         </div>
 
-        <div className="mt-4 flex flex-col gap-3">
-          {features.length === 0 && <p className="text-sm text-gray-500">Chưa có tính năng nào.</p>}
+        <div className="mt-6 flex flex-col gap-4">
+          {features.length === 0 && <p className="text-sm text-zinc-500">Chưa có tính năng nào.</p>}
           {features.map((feature, index) => (
             <div
               key={index}
-              className="grid grid-cols-1 gap-2 rounded-lg border border-gray-200 p-3 sm:grid-cols-[1fr_1fr_1fr_7rem_auto_auto]"
+              className="group grid grid-cols-1 gap-3 rounded-2xl border border-zinc-200/60 bg-zinc-50/50 p-4 transition-colors hover:bg-zinc-50 sm:grid-cols-[1fr_1fr_1fr_7rem_auto_auto] sm:items-center"
             >
               <Input
                 placeholder="Khoá (vd: cpu)"
                 value={feature.featureKey}
+                className="bg-white"
                 onChange={(e) => updateFeature(index, { featureKey: e.target.value })}
               />
               <Input
-                placeholder="Nhãn hiển thị (vd: CPU)"
+                placeholder="Nhãn (vd: CPU)"
                 value={feature.featureLabel}
+                className="bg-white"
                 onChange={(e) => updateFeature(index, { featureLabel: e.target.value })}
               />
               <Input
                 placeholder="Giá trị (vd: 2 vCPU)"
                 value={feature.featureValueText}
+                className="bg-white"
                 onChange={(e) => updateFeature(index, { featureValueText: e.target.value })}
               />
               <Input
                 type="number"
                 placeholder="Số (tuỳ chọn)"
                 value={feature.featureValueNumeric ?? ""}
+                className="bg-white"
                 onChange={(e) =>
                   updateFeature(index, { featureValueNumeric: e.target.value ? Number(e.target.value) : undefined })
                 }
               />
-              <label className="flex cursor-pointer items-center gap-2 self-center text-sm whitespace-nowrap text-muted-foreground">
-                <input
-                  type="checkbox"
-                  checked={feature.isHighlighted}
-                  onChange={(e) => updateFeature(index, { isHighlighted: e.target.checked })}
-                  className="peer sr-only"
-                />
-                <span className="flex size-4 items-center justify-center rounded border border-input bg-transparent transition-colors peer-checked:border-primary peer-checked:bg-primary">
-                  {feature.isHighlighted && <Check className="size-3 text-primary-foreground" strokeWidth={3} />}
-                </span>
+              <label className="flex cursor-pointer items-center gap-2 self-center px-2 text-sm font-medium whitespace-nowrap text-zinc-700">
+                <div className="relative flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={feature.isHighlighted}
+                    onChange={(e) => updateFeature(index, { isHighlighted: e.target.checked })}
+                    className="peer sr-only"
+                  />
+                  <div className="h-5 w-9 rounded-full bg-zinc-200 transition-colors peer-checked:bg-amber-500 peer-focus-visible:ring-2 peer-focus-visible:ring-amber-500/20" />
+                  <div className="absolute left-0.5 top-0.5 size-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-4" />
+                </div>
                 Nổi bật
               </label>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon-sm"
+                className="self-center text-zinc-400 hover:bg-rose-50 hover:text-rose-600"
                 aria-label="Xoá tính năng"
                 onClick={() => removeFeature(index)}
               >
-                <Trash2 className="size-4 text-destructive" />
+                <Trash2 className="size-4" />
               </Button>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="rounded-[24px] border border-zinc-200/60 bg-white p-8 shadow-sm ring-1 ring-zinc-950/5">
         <div className="flex items-center justify-between">
-          <h2 className="font-heading text-base font-semibold text-gray-900">Mức giá</h2>
-          <Button type="button" variant="outline" size="sm" onClick={addPrice}>
+          <h2 className="font-heading text-lg font-semibold text-zinc-900">Mức giá</h2>
+          <Button type="button" variant="outline" size="sm" className="border-dashed" onClick={addPrice}>
             <Plus className="size-4" data-icon="inline-start" />
             Thêm mức giá
           </Button>
         </div>
 
-        <div className="mt-4 flex flex-col gap-3">
-          {prices.length === 0 && <p className="text-sm text-gray-500">Chưa có mức giá nào.</p>}
+        <div className="mt-6 flex flex-col gap-4">
+          {prices.length === 0 && <p className="text-sm text-zinc-500">Chưa có mức giá nào.</p>}
           {prices.map((price, index) => (
             <div
               key={index}
-              className="grid grid-cols-1 gap-2 rounded-lg border border-gray-200 p-3 sm:grid-cols-[6rem_1fr_1fr_auto_auto_auto]"
+              className="group grid grid-cols-1 gap-3 rounded-2xl border border-zinc-200/60 bg-zinc-50/50 p-4 transition-colors hover:bg-zinc-50 sm:grid-cols-[6rem_1fr_1fr_auto_auto_auto] sm:items-center"
             >
               <Input
                 type="number"
                 min={1}
                 max={60}
                 value={price.periodMonths}
+                className="bg-white"
                 onChange={(e) => updatePrice(index, { periodMonths: Number(e.target.value) })}
                 aria-label="Số tháng"
               />
@@ -405,6 +414,7 @@ export function ServicePlanForm({ mode, initialData, categories }: ServicePlanFo
                 min={0}
                 placeholder="Giá (VNĐ)"
                 value={price.price}
+                className="bg-white"
                 onChange={(e) => updatePrice(index, { price: Number(e.target.value) })}
               />
               <Input
@@ -412,54 +422,58 @@ export function ServicePlanForm({ mode, initialData, categories }: ServicePlanFo
                 min={0}
                 placeholder="Giá khuyến mãi (tuỳ chọn)"
                 value={price.promotionalPrice ?? ""}
+                className="bg-white"
                 onChange={(e) =>
                   updatePrice(index, { promotionalPrice: e.target.value ? Number(e.target.value) : undefined })
                 }
               />
-              <label className="flex cursor-pointer items-center gap-2 self-center text-sm whitespace-nowrap text-muted-foreground">
-                <input
-                  type="checkbox"
-                  checked={price.isDefault}
-                  onChange={(e) => updatePrice(index, { isDefault: e.target.checked })}
-                  className="peer sr-only"
-                />
-                <span className="flex size-4 items-center justify-center rounded border border-input bg-transparent transition-colors peer-checked:border-primary peer-checked:bg-primary">
-                  {price.isDefault && <Check className="size-3 text-primary-foreground" strokeWidth={3} />}
-                </span>
+              <label className="flex cursor-pointer items-center gap-2 self-center px-2 text-sm font-medium whitespace-nowrap text-zinc-700">
+                <div className="relative flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={price.isDefault}
+                    onChange={(e) => updatePrice(index, { isDefault: e.target.checked })}
+                    className="peer sr-only"
+                  />
+                  <div className="h-5 w-9 rounded-full bg-zinc-200 transition-colors peer-checked:bg-zinc-900 peer-focus-visible:ring-2 peer-focus-visible:ring-zinc-900/20" />
+                  <div className="absolute left-0.5 top-0.5 size-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-4" />
+                </div>
                 Mặc định
               </label>
-              <label className="flex cursor-pointer items-center gap-2 self-center text-sm whitespace-nowrap text-muted-foreground">
-                <input
-                  type="checkbox"
-                  checked={price.isActive}
-                  onChange={(e) => updatePrice(index, { isActive: e.target.checked })}
-                  className="peer sr-only"
-                />
-                <span className="flex size-4 items-center justify-center rounded border border-input bg-transparent transition-colors peer-checked:border-primary peer-checked:bg-primary">
-                  {price.isActive && <Check className="size-3 text-primary-foreground" strokeWidth={3} />}
-                </span>
+              <label className="flex cursor-pointer items-center gap-2 self-center px-2 text-sm font-medium whitespace-nowrap text-zinc-700">
+                <div className="relative flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={price.isActive}
+                    onChange={(e) => updatePrice(index, { isActive: e.target.checked })}
+                    className="peer sr-only"
+                  />
+                  <div className="h-5 w-9 rounded-full bg-zinc-200 transition-colors peer-checked:bg-emerald-600 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-600/20" />
+                  <div className="absolute left-0.5 top-0.5 size-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-4" />
+                </div>
                 Hoạt động
               </label>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon-sm"
+                className="self-center text-zinc-400 hover:bg-rose-50 hover:text-rose-600"
                 aria-label="Xoá mức giá"
                 onClick={() => removePrice(index)}
               >
-                <Trash2 className="size-4 text-destructive" />
+                <Trash2 className="size-4" />
               </Button>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="flex justify-end gap-3">
-        <Button type="button" variant="outline" onClick={() => router.push("/admin/service-plans")}>
+      <div className="flex justify-end gap-3 pt-2">
+        <Button type="button" variant="outline" className="rounded-full px-6" onClick={() => router.push("/admin/service-plans")}>
           Huỷ
         </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Đang lưu..." : "Lưu"}
+        <Button type="submit" disabled={isSubmitting} className="rounded-full bg-zinc-900 px-6 text-white hover:bg-zinc-800">
+          {isSubmitting ? "Đang lưu..." : "Lưu gói dịch vụ"}
         </Button>
       </div>
     </form>

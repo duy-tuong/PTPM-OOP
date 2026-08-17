@@ -117,7 +117,7 @@ export function ServiceCategoryDialog({ open, onOpenChange, category }: ServiceC
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md rounded-[24px]">
         <form onSubmit={handleSubmit} noValidate>
           <DialogHeader>
             <DialogTitle>{category ? "Sửa danh mục dịch vụ" : "Thêm danh mục dịch vụ"}</DialogTitle>
@@ -180,25 +180,26 @@ export function ServiceCategoryDialog({ open, onOpenChange, category }: ServiceC
 
             <label
               htmlFor="category-active"
-              className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground"
+              className="flex cursor-pointer items-center gap-3 text-sm font-medium text-zinc-700"
             >
-              <input
-                id="category-active"
-                type="checkbox"
-                checked={form.isActive}
-                onChange={(e) => setForm((prev) => ({ ...prev, isActive: e.target.checked }))}
-                className="peer sr-only"
-              />
-              <span className="flex size-4 items-center justify-center rounded border border-input bg-transparent transition-colors peer-checked:border-primary peer-checked:bg-primary">
-                {form.isActive && <Check className="size-3 text-primary-foreground" strokeWidth={3} />}
-              </span>
+              <div className="relative flex items-center">
+                <input
+                  id="category-active"
+                  type="checkbox"
+                  checked={form.isActive}
+                  onChange={(e) => setForm((prev) => ({ ...prev, isActive: e.target.checked }))}
+                  className="peer sr-only"
+                />
+                <div className="h-5 w-9 rounded-full bg-zinc-200 transition-colors peer-checked:bg-emerald-600 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-600/20" />
+                <div className="absolute left-0.5 top-0.5 size-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-4" />
+              </div>
               Đang hoạt động
             </label>
           </FieldGroup>
 
           <DialogFooter>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Đang lưu..." : "Lưu"}
+            <Button type="submit" disabled={isSubmitting} className="rounded-full bg-zinc-900 px-6 text-white hover:bg-zinc-800">
+              {isSubmitting ? "Đang lưu..." : "Lưu danh mục"}
             </Button>
           </DialogFooter>
         </form>

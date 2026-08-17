@@ -4,13 +4,11 @@ import { cn } from "@/lib/utils";
 // thái riêng của OrderRequest, xem components/admin/OrderStatusBadge.tsx).
 export function StatusBadge({ isActive }: { isActive: boolean }) {
   return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
-        isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600",
-      )}
-    >
-      {isActive ? "Đang hoạt động" : "Đã tắt"}
-    </span>
+    <div className="flex items-center gap-1.5">
+      <div className={cn("size-1.5 rounded-full", isActive ? "bg-emerald-500" : "bg-slate-300")} />
+      <span className={cn("text-[13px] font-medium", isActive ? "text-slate-700" : "text-slate-500")}>
+        {isActive ? "Đang hoạt động" : "Đã tắt"}
+      </span>
+    </div>
   );
 }

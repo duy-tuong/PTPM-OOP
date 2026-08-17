@@ -35,8 +35,8 @@ export function ConfirmDeleteButton({ itemLabel, onConfirm }: ConfirmDeleteButto
   }
 
   return (
-    <Button variant="ghost" size="icon-sm" onClick={handleClick} disabled={isDeleting} aria-label={`Xoá ${itemLabel}`}>
-      <Trash2 className="size-4 text-destructive" />
+    <Button variant="ghost" size="icon-sm" onClick={handleClick} disabled={isDeleting} aria-label={`Xoá ${itemLabel}`} className="text-slate-400 hover:text-red-500 transition-colors">
+      <Trash2 className="size-3.5" />
     </Button>
   );
 }
