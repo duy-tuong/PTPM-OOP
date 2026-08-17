@@ -6,7 +6,7 @@ import { CountdownBadge } from "@/components/home/CountdownBadge";
 import { MagneticButton } from "@/components/shared/MagneticButton";
 import { Button } from "@/components/ui/button";
 
-// Section 5/9 của Trang chủ (pivot 2 - theme "Claudverse"). Thay countdown tĩnh giả "02:14:45:30" của
+// Section 5/9 của Trang chủ (pivot 2 - theme "Cloudverse"). Thay countdown tĩnh giả "02:14:45:30" của
 // bản Stitch gốc bằng CountdownBadge đếm thật tới endDate. Chỉ render nếu có khuyến mãi đang hiệu lực
 // thật (getPromotions() đã lọc IsActive+trong khoảng ngày ở backend, sắp theo EndDate tăng dần) - bỏ
 // hẳn section nếu không có, không bịa khuyến mãi.

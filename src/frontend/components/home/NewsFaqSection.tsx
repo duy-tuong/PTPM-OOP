@@ -6,7 +6,7 @@ import { Reveal } from "@/components/shared/Reveal";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { formatDate } from "@/lib/utils";
 
-// Section 7/9 của Trang chủ (pivot 2 - theme "Claudverse"). Cột trái: tin tức thật (thay blog giả).
+// Section 7/9 của Trang chủ (pivot 2 - theme "Cloudverse"). Cột trái: tin tức thật (thay blog giả).
 // Cột phải: FAQ thật dùng Accordion component chuẩn của dự án (click-toggle, hoạt động trên
 // mobile/touch) thay cho cơ chế group-hover:max-h chỉ hoạt động bằng chuột của bản Stitch gốc.
 export async function NewsFaqSection() {

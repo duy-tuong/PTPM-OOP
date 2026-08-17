@@ -3,7 +3,7 @@ import { safeFetch } from "@/lib/api/safe";
 import { Reveal } from "@/components/shared/Reveal";
 import { PlanPricingGrid } from "@/components/home/PlanPricingGrid";
 
-// Section 4/9 của Trang chủ (pivot 2 - theme "Claudverse"). Thay 3 card Starter/Professional/Enterprise
+// Section 4/9 của Trang chủ (pivot 2 - theme "Cloudverse"). Thay 3 card Starter/Professional/Enterprise
 // giá USD + thông số bịa (2 vCPU/4GB RAM...) của bản Stitch gốc bằng gói dịch vụ thật (VND). Đây là
 // spotlight teaser (không phải bảng so sánh đầy đủ - dành cho trang /bang-gia riêng). Toggle Hàng
 // tháng/Hàng năm + danh sách tính năng nằm trong `PlanPricingGrid` (client component, cần useState).

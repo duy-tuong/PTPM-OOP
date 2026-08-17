@@ -4,12 +4,12 @@ import { RegisterForm } from "@/components/auth/RegisterForm";
 
 export const metadata: Metadata = {
   title: "Đăng ký",
-  description: "Tạo tài khoản Claudverse để bắt đầu triển khai dịch vụ VPS, Hosting, Domain.",
+  description: "Tạo tài khoản Cloudverse để bắt đầu triển khai dịch vụ VPS, Hosting, Domain.",
 };
 
 export default function RegisterPage() {
   return (
-    <AuthPageShell title="Tạo tài khoản mới" subtitle="Bắt đầu hành trình cùng Claudverse">
+    <AuthPageShell title="Tạo tài khoản mới" subtitle="Bắt đầu hành trình cùng Cloudverse">
       <RegisterForm />
     </AuthPageShell>
   );

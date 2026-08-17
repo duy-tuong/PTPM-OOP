@@ -15,15 +15,18 @@ import {
   FileText,
   Tag,
   History,
+  Quote,
+  Building2,
   X,
 } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
 import { cn } from "@/lib/utils";
 
-// 12 mục, dùng route thật đã scaffold sẵn dưới app/admin/ - 3 mục không có route thật trong đề xuất
+// 14 mục, dùng route thật đã scaffold sẵn dưới app/admin/ - 3 mục không có route thật trong đề xuất
 // gốc (VPS, Người dùng, Cài đặt) được thay bằng route liên quan gần nhất (xem plan Phase 6.6). Bổ
 // sung ở Phase 6.9: news-categories/faqs/content-pages (làm ở 6.8 nhưng quên thêm vào sidebar) +
-// affiliate-applications/audit-logs (route mới của chính 6.9).
+// affiliate-applications/audit-logs (route mới của chính 6.9). Bổ sung ở Phase 6.10 nhóm A:
+// testimonials/partners - sẽ tái cấu trúc thành nhóm có tiêu đề khi đủ 19 mục (hết 6.10).
 const NAV_ITEMS = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/service-plans", label: "Dịch vụ", icon: Package },
@@ -36,6 +39,8 @@ const NAV_ITEMS = [
   { href: "/admin/news-categories", label: "Danh mục tin tức", icon: FolderOpen },
   { href: "/admin/faqs", label: "Câu hỏi thường gặp", icon: HelpCircle },
   { href: "/admin/content-pages", label: "Trang nội dung", icon: FileText },
+  { href: "/admin/testimonials", label: "Đánh giá khách hàng", icon: Quote },
+  { href: "/admin/partners", label: "Đối tác", icon: Building2 },
   { href: "/admin/audit-logs", label: "Nhật ký hệ thống", icon: History },
 ];
 

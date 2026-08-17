@@ -5,7 +5,7 @@ import type { PointerEvent, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 // Spotlight cyan theo vị trí chuột, giới hạn trong section bao ngoài (port từ .mouse-glow của bản
-// Stitch Claudverse, dùng cho Final CTA). Tự tắt khi prefers-reduced-motion.
+// Stitch Cloudverse, dùng cho Final CTA). Tự tắt khi prefers-reduced-motion.
 export function MouseGlow({ children, className }: { children: ReactNode; className?: string }) {
   const glowRef = useRef<HTMLDivElement>(null);
 
