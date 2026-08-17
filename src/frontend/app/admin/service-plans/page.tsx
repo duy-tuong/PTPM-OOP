@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import {
   Pagination,
   PaginationContent,
+  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -58,14 +59,15 @@ export default async function AdminServicePlansPage({ searchParams }: AdminServi
   }
 
   return (
-    <div className="min-h-full bg-gray-100 px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto flex max-w-7xl flex-col gap-6">
+    <div className="min-h-full px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full flex-col gap-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="font-heading text-2xl font-semibold text-gray-900">Gói dịch vụ</h1>
-            <p className="mt-1 text-sm text-gray-500">Quản lý gói VPS/Hosting/... kèm tính năng và mức giá.</p>
+            <h1 className="font-heading text-2xl font-semibold tracking-tight text-zinc-900">Gói dịch vụ</h1>
+            <p className="mt-1 text-[14px] text-zinc-500">Quản lý gói VPS/Hosting/... kèm tính năng và mức giá.</p>
           </div>
           <Button
+            className="rounded-full bg-zinc-900 px-6 text-white shadow-sm hover:bg-zinc-800"
             nativeButton={false}
             render={
               <Link href="/admin/service-plans/new">
@@ -76,13 +78,18 @@ export default async function AdminServicePlansPage({ searchParams }: AdminServi
           />
         </div>
 
-        <ServicePlansFilterBar
-          categories={categories}
-          currentCategorySlug={params.categorySlug}
-          currentIsFeatured={params.isFeatured}
-        />
-
-        <ServicePlansTable plans={plans.items} categoryNameById={categoryNameById} />
+        <div className="overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
+          <div className="border-b border-zinc-100 bg-zinc-50/30 p-4">
+            <ServicePlansFilterBar
+              categories={categories}
+              currentCategorySlug={params.categorySlug}
+              currentIsFeatured={params.isFeatured}
+            />
+          </div>
+          <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0">
+            <ServicePlansTable plans={plans.items} categoryNameById={categoryNameById} />
+          </div>
+        </div>
 
         {plans.totalPages > 1 && (
           <Pagination>
@@ -93,13 +100,33 @@ export default async function AdminServicePlansPage({ searchParams }: AdminServi
                   aria-disabled={!plans.hasPreviousPage}
                 />
               </PaginationItem>
-              {Array.from({ length: plans.totalPages }, (_, i) => i + 1).map((page) => (
-                <PaginationItem key={page}>
-                  <PaginationLink href={buildPageHref(page)} isActive={page === pageNumber}>
-                    {page}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
+              {(() => {
+                const total = plans.totalPages;
+                const current = pageNumber;
+                let pages: (number | string)[] = [];
+                
+                if (total <= 7) {
+                  pages = Array.from({ length: total }, (_, i) => i + 1);
+                } else if (current <= 3) {
+                  pages = [1, 2, 3, 4, "...", total];
+                } else if (current >= total - 2) {
+                  pages = [1, "...", total - 3, total - 2, total - 1, total];
+                } else {
+                  pages = [1, "...", current - 1, current, current + 1, "...", total];
+                }
+
+                return pages.map((page, index) => (
+                  <PaginationItem key={`${page}-${index}`}>
+                    {page === "..." ? (
+                      <PaginationEllipsis />
+                    ) : (
+                      <PaginationLink href={buildPageHref(page as number)} isActive={page === pageNumber}>
+                        {page}
+                      </PaginationLink>
+                    )}
+                  </PaginationItem>
+                ));
+              })()}
               <PaginationItem>
                 <PaginationNext
                   href={buildPageHref(Math.min(plans.totalPages, pageNumber + 1))}

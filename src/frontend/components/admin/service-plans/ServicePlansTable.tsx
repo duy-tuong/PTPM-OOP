@@ -28,8 +28,8 @@ export function ServicePlansTable({ plans, categoryNameById }: ServicePlansTable
       header: "Gói dịch vụ",
       cell: (row) => (
         <div className="flex flex-col">
-          <span className="font-medium text-gray-900">{row.name}</span>
-          <span className="text-xs text-gray-500">{row.slug}</span>
+          <span className="font-medium text-zinc-900">{row.name}</span>
+          <span className="text-xs text-zinc-500">{row.slug}</span>
         </div>
       ),
     },
@@ -50,7 +50,12 @@ export function ServicePlansTable({ plans, categoryNameById }: ServicePlansTable
     {
       key: "featured",
       header: "Nổi bật",
-      cell: (row) => (row.isFeatured ? <Badge variant="outline">Nổi bật</Badge> : null),
+      cell: (row) => (row.isFeatured ? (
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 ring-1 ring-inset ring-amber-500/20">
+          <div className="size-1.5 rounded-full bg-amber-500" />
+          <span className="text-[12px] font-medium text-amber-700">Nổi bật</span>
+        </div>
+      ) : null),
     },
     {
       key: "status",
@@ -60,21 +65,20 @@ export function ServicePlansTable({ plans, categoryNameById }: ServicePlansTable
     {
       key: "actions",
       header: "",
-      className: "text-right",
+      className: "text-right w-24",
       cell: (row) => (
-        <div className="flex justify-end gap-1">
+        <div className="flex justify-end gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity duration-200">
           <Button
             variant="ghost"
             size="icon-sm"
             nativeButton={false}
+            className="text-slate-400 hover:text-zinc-900 transition-colors"
             render={
               <Link href={`/admin/service-plans/${row.id}/edit`} aria-label={`Sửa ${row.name}`}>
-                <Pencil className="size-4" />
+                <Pencil className="size-3.5" />
               </Link>
             }
           />
-          {/* .bind(): ServicePlansTable là Server Component, chỉ Server Action (hoặc bind của nó) mới
-              được truyền làm prop function sang Client Component (ConfirmDeleteButton). */}
           <ConfirmDeleteButton itemLabel={row.name} onConfirm={deleteServicePlanAction.bind(null, row.id)} />
         </div>
       ),

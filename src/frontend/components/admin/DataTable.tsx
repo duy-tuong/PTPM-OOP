@@ -22,21 +22,21 @@ interface DataTableProps<T> {
 export function DataTable<T>({ columns, data, emptyMessage, getRowKey }: DataTableProps<T>) {
   if (data.length === 0) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white p-10 text-center text-sm text-gray-500 shadow-sm">
-        {emptyMessage}
+      <div className="flex min-h-[400px] flex-col items-center justify-center rounded-[24px] border border-zinc-200/60 bg-white p-10 text-center shadow-sm ring-1 ring-zinc-950/5">
+        <p className="text-sm font-medium text-zinc-500">{emptyMessage}</p>
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
       <Table>
         <TableHeader>
-          <TableRow className="border-gray-200 bg-gray-50 hover:bg-gray-50">
+          <TableRow className="border-b border-zinc-200/60 bg-zinc-50/50 hover:bg-zinc-50/50">
             {columns.map((column) => (
               <TableHead
                 key={column.key}
-                className={cn("text-xs font-medium tracking-wider text-gray-500 uppercase", column.className)}
+                className={cn("h-12 px-6 text-xs font-semibold text-zinc-500", column.className)}
               >
                 {column.header}
               </TableHead>
@@ -45,9 +45,12 @@ export function DataTable<T>({ columns, data, emptyMessage, getRowKey }: DataTab
         </TableHeader>
         <TableBody>
           {data.map((row) => (
-            <TableRow key={getRowKey(row)} className="border-gray-100">
+            <TableRow 
+              key={getRowKey(row)} 
+              className="group/row border-b border-zinc-100 last:border-0 hover:bg-zinc-50/80 transition-colors"
+            >
               {columns.map((column) => (
-                <TableCell key={column.key} className={column.className}>
+                <TableCell key={column.key} className={cn("px-6 py-4 text-[14px] text-zinc-700", column.className)}>
                   {column.cell(row)}
                 </TableCell>
               ))}

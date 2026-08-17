@@ -24,6 +24,22 @@ export function formatDate(value: string | Date): string {
   return dateFormatter.format(typeof value === "string" ? new Date(value) : value);
 }
 
+// Dùng cho auto-fill Slug từ Name (Admin Catalog CRUD, Phase 6.7) - bỏ dấu tiếng Việt, lowercase,
+// nối dấu gạch ngang. User vẫn có thể tự sửa Slug thủ công sau khi auto-fill.
+const COMBINING_DIACRITICS = new RegExp("[\\u0300-\\u036f]", "g");
+
+export function slugify(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(COMBINING_DIACRITICS, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 // Dùng cho ExportButton (Phase 6.9) - trigger tải file nhị phân (vd .xlsx) từ 1 Blob đã fetch sẵn.
 export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
