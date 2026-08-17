@@ -2,20 +2,41 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Package, FolderTree, ShoppingCart, MessageSquare, Newspaper, Tag, X } from "lucide-react";
+import {
+  LayoutDashboard,
+  Package,
+  FolderTree,
+  ShoppingCart,
+  MessageSquare,
+  Handshake,
+  Newspaper,
+  FolderOpen,
+  HelpCircle,
+  FileText,
+  Tag,
+  History,
+  X,
+} from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
 import { cn } from "@/lib/utils";
 
-// 7 mục, dùng route thật đã scaffold sẵn dưới app/admin/ - 3 mục không có route thật trong đề xuất
-// gốc (VPS, Người dùng, Cài đặt) được thay bằng route liên quan gần nhất (xem plan Phase 6.6).
+// 12 mục, dùng route thật đã scaffold sẵn dưới app/admin/ - 3 mục không có route thật trong đề xuất
+// gốc (VPS, Người dùng, Cài đặt) được thay bằng route liên quan gần nhất (xem plan Phase 6.6). Bổ
+// sung ở Phase 6.9: news-categories/faqs/content-pages (làm ở 6.8 nhưng quên thêm vào sidebar) +
+// affiliate-applications/audit-logs (route mới của chính 6.9).
 const NAV_ITEMS = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/service-plans", label: "Dịch vụ", icon: Package },
   { href: "/admin/service-categories", label: "Danh mục dịch vụ", icon: FolderTree },
+  { href: "/admin/promotions", label: "Khuyến mãi", icon: Tag },
   { href: "/admin/order-requests", label: "Đơn hàng", icon: ShoppingCart },
   { href: "/admin/consultation-requests", label: "Yêu cầu tư vấn", icon: MessageSquare },
+  { href: "/admin/affiliate-applications", label: "Đăng ký affiliate", icon: Handshake },
   { href: "/admin/news-articles", label: "Bài viết", icon: Newspaper },
-  { href: "/admin/promotions", label: "Khuyến mãi", icon: Tag },
+  { href: "/admin/news-categories", label: "Danh mục tin tức", icon: FolderOpen },
+  { href: "/admin/faqs", label: "Câu hỏi thường gặp", icon: HelpCircle },
+  { href: "/admin/content-pages", label: "Trang nội dung", icon: FileText },
+  { href: "/admin/audit-logs", label: "Nhật ký hệ thống", icon: History },
 ];
 
 export function AdminSidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
