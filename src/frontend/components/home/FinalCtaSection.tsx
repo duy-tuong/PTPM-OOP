@@ -4,7 +4,7 @@ import { RippleButton } from "@/components/shared/RippleButton";
 import { Button } from "@/components/ui/button";
 import { MouseGlow } from "@/components/home/effects/MouseGlow";
 
-// Section 8/9 của Trang chủ (pivot 2 - theme "Claudverse"). Khớp lại đúng bản Stitch: KHÔNG bọc trong
+// Section 8/9 của Trang chủ (pivot 2 - theme "Cloudverse"). Khớp lại đúng bản Stitch: KHÔNG bọc trong
 // glass-card (nội dung nằm trực tiếp trên nền, để lộ data mesh cố định phía sau qua NetworkField ở
 // page.tsx), glow tập trung phía trên (ellipse_at_top) thay vì tâm section. Giữ mouse-glow + RippleButton
 // của bản gốc. Bỏ form "nhập email" giả (không có backend endpoint newsletter) - link "đối tác tiếp

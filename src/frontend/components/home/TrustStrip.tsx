@@ -4,7 +4,7 @@ import { FallbackImage } from "@/components/shared/FallbackImage";
 import { Marquee } from "@/components/shared/Marquee";
 import type { PartnerDto } from "@/lib/types/content";
 
-// Section 2/9 của Trang chủ (pivot 2 - theme "Claudverse"). Dữ liệu thật từ getPartners() - marquee
+// Section 2/9 của Trang chủ (pivot 2 - theme "Cloudverse"). Dữ liệu thật từ getPartners() - marquee
 // (component dùng chung `Marquee`) là bố cục mặc định (chạy ngang liên tục vô tận) theo đúng thiết kế
 // Stitch tham khảo, chỉ tắt khi có đúng 1 đối tác (nhân đôi 1 logo để chạy marquee không có ý nghĩa).
 // Bọc safeFetch: backend gián đoạn thì ẩn section thay vì sập cả trang.

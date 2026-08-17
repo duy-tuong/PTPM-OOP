@@ -5,10 +5,10 @@ import { AdminLoginForm } from "@/components/admin/AdminLoginForm";
 
 export const metadata: Metadata = {
   title: "Đăng nhập quản trị",
-  description: "Đăng nhập dành cho Admin/Editor quản lý hệ thống Claudverse.",
+  description: "Đăng nhập dành cho Admin/Editor quản lý hệ thống Cloudverse.",
 };
 
-// Giao diện light mode (khác hẳn theme tối Claudverse của trang public) - dùng thẳng :root neutral
+// Giao diện light mode (khác hẳn theme tối Cloudverse của trang public) - dùng thẳng :root neutral
 // tokens của shadcn, không tái dùng .glass-card/.text-gradient-primary (thiết kế cho nền tối nhiều lớp
 // trang trí, trên nền sáng phẳng sẽ gần như vô hình/xám xịt). Bố cục tối giản, không blob nền/Parallax
 // như AuthPageShell của Customer - Admin cần cảm giác "công cụ làm việc", không phải landing page.

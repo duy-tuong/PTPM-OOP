@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { MagneticButton } from "@/components/shared/MagneticButton";
 import { ParallaxLayer } from "@/components/shared/ParallaxLayer";
 
-// Section 1/9 của Trang chủ (pivot 2 - theme "Claudverse", xem plan Phase 6.2). Bố cục center/stack
+// Section 1/9 của Trang chủ (pivot 2 - theme "Cloudverse", xem plan Phase 6.2). Bố cục center/stack
 // (khác bản split 2 cột của pivot 1): 2 blob nền cyan/tím trôi chậm + ảnh orb thật (mix-blend-screen,
 // mask tròn) qua ParallaxLayer. `NetworkField` (data mesh) không đặt ở đây nữa - đã chuyển lên mount 1
 // lần ở app/(public)/page.tsx làm nền cố định (fixed) xuyên suốt trang thay cho ShaderBackground (hiệu

@@ -5,7 +5,7 @@ import { getServiceCategories } from "@/lib/api/catalog";
 import { safeFetch } from "@/lib/api/safe";
 import { Reveal } from "@/components/shared/Reveal";
 
-// Section 3/9 của Trang chủ (pivot 2 - theme "Claudverse"). Thay 4 ô "Cloud Compute/Quantum
+// Section 3/9 của Trang chủ (pivot 2 - theme "Cloudverse"). Thay 4 ô "Cloud Compute/Quantum
 // Storage/Global Edge/Cyber Security" giả (sản phẩm hư cấu) bằng 6 ServiceCategory thật của hệ thống.
 const CATEGORY_ICONS: Record<string, ComponentType<{ className?: string; weight?: "fill" }>> = {
   vps: Cpu,

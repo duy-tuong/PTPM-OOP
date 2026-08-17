@@ -51,7 +51,7 @@
 }
 
 /* :root = token trung tính gốc của shadcn (base color "neutral"), dùng cho Admin panel (Phase 6.5+).
-   Trang public dùng theme tối "Claudverse" qua class .dark bên dưới - phân theo route (không phải 1
+   Trang public dùng theme tối "Cloudverse" qua class .dark bên dưới - phân theo route (không phải 1
    div lồng) bằng THEME_INIT_SCRIPT ở app/layout.tsx (script chặn-paint theo pathname, xem comment ở đó).
    --primary/--primary-foreground/--ring dùng lại đúng 3 giá trị cyan của .dark (không đổi gì khác) để
    nút/link chính trên Admin vẫn cùng màu thương hiệu thay vì xám đen mặc định của preset "neutral". */
@@ -90,7 +90,7 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
-/* Theme tối "Claudverse" (pivot 2, thay tông sky-blue "CloudArt" của pivot 1) - màu lấy trực tiếp từ
+/* Theme tối "Cloudverse" (pivot 2, thay tông sky-blue "CloudArt" của pivot 1) - màu lấy trực tiếp từ
    hex thật trong bản Stitch dán vào (không suy đoán): nền #0B0F19, accent cyan #00F0FF, tím #6B46C1
    dùng cho gradient chữ. Gắn class "dark" ở app/(public)/layout.tsx để scope riêng cho public site. */
 .dark {
@@ -181,7 +181,7 @@
   animation: float-shadow 6s ease-in-out infinite;
 }
 
-/* Blob nền phát sáng trôi chậm (Hero, pivot 2 Claudverse) - port từ .ambient-blob của bản Stitch */
+/* Blob nền phát sáng trôi chậm (Hero, pivot 2 Cloudverse) - port từ .ambient-blob của bản Stitch */
 @keyframes ambient-blob {
   0% {
     transform: translate(0, 0) scale(1);
@@ -204,7 +204,7 @@
   box-shadow: 0 8px 40px color-mix(in oklch, var(--primary) 12%, transparent);
 }
 
-/* Chữ gradient cyan -> tím (Hero headline, pivot 2 Claudverse) */
+/* Chữ gradient cyan -> tím (Hero headline, pivot 2 Cloudverse) */
 .text-gradient-primary {
   background: linear-gradient(135deg, var(--primary) 0%, var(--accent-purple, var(--chart-2)) 100%);
   background-clip: text;
@@ -213,7 +213,7 @@
   -webkit-text-fill-color: transparent;
 }
 
-/* Ánh sáng lướt ngang khi hover (Hero CTA, pivot 2 Claudverse) - dải sáng chéo quét qua nút bằng
+/* Ánh sáng lướt ngang khi hover (Hero CTA, pivot 2 Cloudverse) - dải sáng chéo quét qua nút bằng
    ::after + hover-triggered translateX, không cần JS. */
 .btn-shine {
   position: relative;
