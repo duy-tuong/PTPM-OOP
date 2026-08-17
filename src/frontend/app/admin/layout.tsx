@@ -1,5 +1,15 @@
-// Chưa có sidebar/topbar/role-gating ở đây - sẽ dựng ở Phase 6.6. Route protection (redirect về
-// /admin/login khi chưa đăng nhập) sẽ nằm ở proxy.ts, dựng ở Phase 6.5.
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return <div className="min-h-full">{children}</div>;
+import { getAdminSession } from "@/lib/auth/adminSession";
+import { AdminShell } from "@/components/admin/AdminShell";
+
+// Sidebar+Topbar thật (Phase 6.6, thay thanh session tối giản trước đó). Không render AdminShell khi
+// không có session (route /admin/login) - trang đó tự render layout căn giữa riêng, không cần
+// Sidebar/Topbar bao quanh.
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const session = await getAdminSession();
+
+  if (!session) {
+    return <>{children}</>;
+  }
+
+  return <AdminShell session={session}>{children}</AdminShell>;
 }

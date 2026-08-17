@@ -1,5 +1,31 @@
-import { PagePlaceholder } from "@/components/shared/PagePlaceholder";
+import type { Metadata } from "next";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Logo } from "@/components/shared/Logo";
+import { AdminLoginForm } from "@/components/admin/AdminLoginForm";
 
+export const metadata: Metadata = {
+  title: "Đăng nhập quản trị",
+  description: "Đăng nhập dành cho Admin/Editor quản lý hệ thống Claudverse.",
+};
+
+// Giao diện light mode (khác hẳn theme tối Claudverse của trang public) - dùng thẳng :root neutral
+// tokens của shadcn, không tái dùng .glass-card/.text-gradient-primary (thiết kế cho nền tối nhiều lớp
+// trang trí, trên nền sáng phẳng sẽ gần như vô hình/xám xịt). Bố cục tối giản, không blob nền/Parallax
+// như AuthPageShell của Customer - Admin cần cảm giác "công cụ làm việc", không phải landing page.
 export default function AdminLoginPage() {
-  return <PagePlaceholder title="Đăng nhập quản trị" phase="Phase 6.5" />;
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center gap-8 bg-muted/30 px-4 py-16">
+      <Logo />
+
+      <Card className="w-full max-w-sm shadow-lg">
+        <CardHeader className="text-center">
+          <CardTitle className="text-xl">Đăng nhập quản trị</CardTitle>
+          <CardDescription>Dành cho Admin/Editor quản lý hệ thống</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <AdminLoginForm />
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
