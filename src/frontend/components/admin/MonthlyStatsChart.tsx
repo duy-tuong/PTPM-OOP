@@ -1,6 +1,6 @@
 "use client";
 
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import {
   ChartContainer,
   ChartTooltip,
@@ -27,15 +27,55 @@ export function MonthlyStatsChart({ data }: { data: MonthlyRequestStatDto[] }) {
 
   return (
     <ChartContainer config={chartConfig} className="aspect-auto h-72 w-full">
-      <BarChart data={chartData} margin={{ left: 0, right: 8 }}>
-        <CartesianGrid vertical={false} strokeDasharray="3 3" />
-        <XAxis dataKey="monthLabel" tickFormatter={(value: string) => `Th.${value}`} tickLine={false} axisLine={false} />
-        <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={28} />
-        <ChartTooltip content={<ChartTooltipContent labelFormatter={(value) => `Tháng ${value}`} />} />
+      <AreaChart data={chartData} margin={{ left: 0, right: 8, top: 20 }}>
+        <defs>
+          <linearGradient id="fillOrder" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor="var(--color-orderRequestCount)" stopOpacity={0.8} />
+            <stop offset="95%" stopColor="var(--color-orderRequestCount)" stopOpacity={0.0} />
+          </linearGradient>
+          <linearGradient id="fillConsultation" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor="var(--color-consultationRequestCount)" stopOpacity={0.8} />
+            <stop offset="95%" stopColor="var(--color-consultationRequestCount)" stopOpacity={0.0} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#e4e4e7" />
+        <XAxis 
+          dataKey="monthLabel" 
+          tickFormatter={(value: string) => `Th.${value}`} 
+          tickLine={false} 
+          axisLine={false} 
+          tick={{ fill: "#71717a", fontSize: 12 }} 
+          tickMargin={12}
+        />
+        <YAxis 
+          allowDecimals={false} 
+          tickLine={false} 
+          axisLine={false} 
+          width={32} 
+          tick={{ fill: "#71717a", fontSize: 12 }} 
+        />
+        <ChartTooltip 
+          cursor={{ stroke: '#a1a1aa', strokeWidth: 1, strokeDasharray: '4 4' }}
+          content={<ChartTooltipContent labelFormatter={(value) => `Tháng ${value}`} />} 
+        />
         <ChartLegend content={<ChartLegendContent />} />
-        <Bar dataKey="orderRequestCount" fill="var(--color-orderRequestCount)" radius={4} />
-        <Bar dataKey="consultationRequestCount" fill="var(--color-consultationRequestCount)" radius={4} />
-      </BarChart>
+        <Area 
+          type="monotone" 
+          dataKey="orderRequestCount" 
+          stroke="var(--color-orderRequestCount)" 
+          strokeWidth={2}
+          fillOpacity={1} 
+          fill="url(#fillOrder)" 
+        />
+        <Area 
+          type="monotone" 
+          dataKey="consultationRequestCount" 
+          stroke="var(--color-consultationRequestCount)" 
+          strokeWidth={2}
+          fillOpacity={1} 
+          fill="url(#fillConsultation)" 
+        />
+      </AreaChart>
     </ChartContainer>
   );
 }

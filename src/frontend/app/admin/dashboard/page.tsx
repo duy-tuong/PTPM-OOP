@@ -52,11 +52,11 @@ export default async function AdminDashboardPage() {
   ]);
 
   return (
-    <div className="min-h-full bg-gray-100 px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto flex max-w-7xl flex-col gap-8">
+    <div className="min-h-full px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-[1400px] flex-col gap-8">
         <div>
-          <h1 className="font-heading text-2xl font-semibold text-gray-900">Dashboard Overview</h1>
-          <p className="mt-1 text-sm text-gray-500 capitalize">{TODAY_FORMATTER.format(new Date())}</p>
+          <h1 className="font-heading text-3xl font-semibold tracking-tight text-zinc-900">Tổng quan</h1>
+          <p className="mt-2 text-sm text-zinc-500 capitalize">{TODAY_FORMATTER.format(new Date())}</p>
         </div>
 
         {stats ? (
@@ -78,9 +78,11 @@ export default async function AdminDashboardPage() {
               <MetricCard label="Yêu cầu đang chờ xử lý" value={stats.pendingOrderRequests} icon={Clock} />
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h2 className="font-heading text-base font-semibold text-gray-900">Yêu cầu theo tháng</h2>
-              <p className="mb-4 text-sm text-gray-500">6 tháng gần nhất</p>
+            <div className="rounded-[24px] border border-zinc-200/60 bg-white p-8 shadow-sm ring-1 ring-zinc-950/5">
+              <div className="mb-8">
+                <h2 className="font-heading text-lg font-semibold text-zinc-900">Yêu cầu theo tháng</h2>
+                <p className="mt-1 text-sm text-zinc-500">Thống kê 6 tháng gần nhất</p>
+              </div>
               <MonthlyStatsChart data={stats.monthlyStats} />
             </div>
           </>
@@ -92,7 +94,7 @@ export default async function AdminDashboardPage() {
         )}
 
         <div>
-          <h2 className="mb-4 font-heading text-base font-semibold text-gray-900">Đơn hàng gần đây</h2>
+          <h2 className="mb-4 font-heading text-lg font-semibold text-zinc-900">Đơn hàng gần đây</h2>
           <RecentOrdersTable orders={recentOrders.items} />
         </div>
       </div>

@@ -15,14 +15,8 @@ export default async function AdminServiceCategoriesPage() {
   const categories = await getAdminServiceCategories(getApiUrl(), token);
 
   return (
-    <div className="min-h-full bg-gray-100 px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto flex max-w-5xl flex-col gap-6">
-        <div>
-          <h1 className="font-heading text-2xl font-semibold text-gray-900">Danh mục dịch vụ</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Quản lý các nhóm dịch vụ hiển thị trên trang chủ và trang Dịch vụ.
-          </p>
-        </div>
+    <div className="min-h-full px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-[1400px] flex-col gap-6">
         <ServiceCategoriesManager categories={categories} />
       </div>
     </div>
