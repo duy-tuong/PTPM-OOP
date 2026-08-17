@@ -3,24 +3,25 @@ import { cn } from "@/lib/utils";
 
 // 5 màu cho đúng 5 trạng thái thật OrderRequestStatus (New/Contacted/Confirmed/Cancelled/Completed) -
 // KHÔNG phải Active/Pending/Suspended (không khớp domain thật của hệ thống này). Giữ tinh thần
-// xanh=trạng thái tốt/đỏ=trạng thái xấu. Tái dùng được ở trang /admin/order-requests (Phase 6.9).
-const STATUS_STYLES: Record<string, string> = {
-  New: "bg-slate-100 text-slate-700",
-  Contacted: "bg-blue-100 text-blue-800",
-  Confirmed: "bg-indigo-100 text-indigo-800",
-  Completed: "bg-green-100 text-green-800",
-  Cancelled: "bg-red-100 text-red-800",
+// xanh=trạng thái tốt/đỏ=trạng thái xấu. Dùng ở /admin/order-requests (Phase 6.9) và
+// RecentOrdersTable.tsx (Dashboard, Phase 6.6). Style dot-pill khớp StatusBadge.tsx/PublishBadge.tsx.
+const STATUS_STYLES: Record<string, { dot: string; text: string }> = {
+  New: { dot: "bg-slate-400", text: "text-slate-600" },
+  Contacted: { dot: "bg-blue-500", text: "text-blue-700" },
+  Confirmed: { dot: "bg-indigo-500", text: "text-indigo-700" },
+  Completed: { dot: "bg-emerald-500", text: "text-emerald-700" },
+  Cancelled: { dot: "bg-red-500", text: "text-red-700" },
 };
 
 export function OrderStatusBadge({ status }: { status: string }) {
+  const style = STATUS_STYLES[status] ?? { dot: "bg-zinc-400", text: "text-zinc-600" };
+
   return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
-        STATUS_STYLES[status] ?? "bg-gray-100 text-gray-700",
-      )}
-    >
-      {ORDER_REQUEST_STATUS_LABELS[status] ?? status}
-    </span>
+    <div className="flex items-center gap-1.5">
+      <div className={cn("size-1.5 rounded-full", style.dot)} />
+      <span className={cn("text-[13px] font-medium", style.text)}>
+        {ORDER_REQUEST_STATUS_LABELS[status] ?? status}
+      </span>
+    </div>
   );
 }
