@@ -426,3 +426,26 @@ export interface CreateTldPricingDto {
 }
 
 export type UpdateTldPricingDto = CreateTldPricingDto;
+
+// ---- Admin Content: News Comments ----
+// Khớp Application/Features/Admin/Content/NewsComments/Dtos/*.cs
+export interface AdminNewsCommentDto {
+  id: number;
+  newsArticleId: number;
+  newsArticleTitle: string;
+  parentCommentId?: number | null;
+  authorDisplayName: string;
+  authorEmail?: string | null;
+  content: string;
+  isApproved: boolean;
+  createdAt: string;
+}
+
+export interface NewsCommentQueryParams extends PaginationParams {
+  newsArticleId?: number;
+  isApproved?: boolean;
+}
+
+export interface UpdateNewsCommentApprovalDto {
+  isApproved: boolean;
+}
