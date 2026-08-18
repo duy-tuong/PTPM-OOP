@@ -472,3 +472,37 @@ export interface CustomerQueryParams extends PaginationParams {
 export interface UpdateCustomerActiveStatusDto {
   isActive: boolean;
 }
+
+// ---- Admin Identity: Users (nhân viên - Admin/Editor) ----
+// Khớp Application/Features/Admin/Identity/Users/Dtos/*.cs
+export interface AdminUserDto {
+  id: string;
+  username: string;
+  email: string;
+  fullName: string;
+  phoneNumber?: string | null;
+  isActive: boolean;
+  roles: string[];
+  createdAt: string;
+}
+
+export interface CreateUserDto {
+  username: string;
+  email: string;
+  fullName: string;
+  phoneNumber?: string;
+  password: string;
+  roleIds: number[];
+}
+
+export interface UpdateUserDto {
+  fullName: string;
+  email: string;
+  phoneNumber?: string;
+  isActive: boolean;
+  roleIds: number[];
+}
+
+export interface ResetUserPasswordDto {
+  newPassword: string;
+}
