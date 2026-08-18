@@ -33,4 +33,6 @@ public class CreatePromotionDto
     public int? UsageLimit { get; set; }
 
     public bool IsActive { get; set; } = true;
+
+    public List<PromotionScopeInputDto> Scopes { get; set; } = new();
 }

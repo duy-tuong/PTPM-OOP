@@ -15,4 +15,5 @@ public class AdminPromotionDto
     public int? UsageLimit { get; init; }
     public int UsageCount { get; init; }
     public bool IsActive { get; init; }
+    public List<PromotionScopeDto> Scopes { get; init; } = new();
 }

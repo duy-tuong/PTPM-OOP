@@ -33,4 +33,6 @@ public class UpdatePromotionDto
     public int? UsageLimit { get; set; }
 
     public bool IsActive { get; set; }
+
+    public List<PromotionScopeInputDto> Scopes { get; set; } = new();
 }
