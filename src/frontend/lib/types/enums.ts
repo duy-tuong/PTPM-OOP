@@ -33,6 +33,12 @@ export enum DiscountType {
   FixedAmount = 2,
 }
 
+export enum ScopeType {
+  All = 1,
+  Category = 2,
+  Plan = 3,
+}
+
 export const CUSTOMER_TYPE_LABELS: Record<string, string> = {
   Individual: "Cá nhân",
   Business: "Doanh nghiệp",
@@ -62,4 +68,10 @@ export const AFFILIATE_APPLICATION_STATUS_LABELS: Record<string, string> = {
 export const DISCOUNT_TYPE_LABELS: Record<string, string> = {
   Percentage: "Giảm theo %",
   FixedAmount: "Giảm số tiền cố định",
+};
+
+export const SCOPE_TYPE_LABELS: Record<string, string> = {
+  All: "Toàn bộ",
+  Category: "Theo danh mục",
+  Plan: "Theo gói dịch vụ",
 };
