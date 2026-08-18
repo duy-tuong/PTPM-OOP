@@ -449,3 +449,26 @@ export interface NewsCommentQueryParams extends PaginationParams {
 export interface UpdateNewsCommentApprovalDto {
   isApproved: boolean;
 }
+
+// ---- Admin Identity: Customers ----
+// Khớp Application/Features/Admin/Identity/Customers/Dtos/*.cs
+export interface AdminCustomerDto {
+  id: string;
+  email: string;
+  fullName: string;
+  phone: string;
+  customerType: string;
+  companyName?: string | null;
+  taxCode?: string | null;
+  isEmailVerified: boolean;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface CustomerQueryParams extends PaginationParams {
+  search?: string;
+}
+
+export interface UpdateCustomerActiveStatusDto {
+  isActive: boolean;
+}

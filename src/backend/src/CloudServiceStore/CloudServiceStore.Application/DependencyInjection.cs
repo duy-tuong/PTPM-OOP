@@ -8,6 +8,7 @@ using CloudServiceStore.Application.Features.Admin.Content.NewsArticles;
 using CloudServiceStore.Application.Features.Admin.Content.NewsCategories;
 using CloudServiceStore.Application.Features.Admin.Content.NewsComments;
 using CloudServiceStore.Application.Features.Admin.Content.Partners;
+using CloudServiceStore.Application.Features.Admin.Identity.Customers;
 using CloudServiceStore.Application.Features.Admin.Content.Testimonials;
 using CloudServiceStore.Application.Features.Admin.Marketing.Promotions;
 using CloudServiceStore.Application.Features.Admin.Reporting.AuditLogs;
@@ -69,6 +70,8 @@ public static class DependencyInjection
         services.AddScoped<IAdminContentPageService, AdminContentPageService>();
         services.AddScoped<IAdminTestimonialService, AdminTestimonialService>();
         services.AddScoped<IAdminPartnerService, AdminPartnerService>();
+
+        services.AddScoped<IAdminCustomerService, AdminCustomerService>();
 
         services.AddScoped<IAdminOrderRequestService, AdminOrderRequestService>();
         services.AddScoped<IAdminAffiliateApplicationService, AdminAffiliateApplicationService>();
