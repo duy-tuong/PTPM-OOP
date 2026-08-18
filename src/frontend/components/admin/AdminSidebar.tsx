@@ -20,6 +20,7 @@ import {
   Building2,
   Globe,
   Users,
+  UserCog,
   X,
 } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
@@ -47,6 +48,7 @@ const NAV_ITEMS = [
   { href: "/admin/content-pages", label: "Trang nội dung", icon: FileText },
   { href: "/admin/testimonials", label: "Đánh giá khách hàng", icon: Quote },
   { href: "/admin/partners", label: "Đối tác", icon: Building2 },
+  { href: "/admin/users", label: "Nhân viên", icon: UserCog },
   { href: "/admin/audit-logs", label: "Nhật ký hệ thống", icon: History },
 ];
 
