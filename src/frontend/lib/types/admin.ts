@@ -5,6 +5,7 @@ import type {
   ConsultationStatus,
   DiscountType,
   OrderRequestStatus,
+  ScopeType,
 } from "./enums";
 
 // ---- Admin Catalog: Service Categories ----
@@ -83,6 +84,20 @@ export type UpdateServicePlanDto = CreateServicePlanDto;
 
 // ---- Admin Marketing: Promotions ----
 // Khớp Application/Features/Admin/Marketing/Promotions/Dtos/*.cs
+export interface PromotionScopeDto {
+  scopeType: string;
+  serviceCategoryId?: number | null;
+  serviceCategoryName?: string | null;
+  servicePlanId?: number | null;
+  servicePlanName?: string | null;
+}
+
+export interface PromotionScopeInputDto {
+  scopeType: ScopeType;
+  serviceCategoryId?: number;
+  servicePlanId?: number;
+}
+
 export interface AdminPromotionDto {
   id: number;
   code: string;
@@ -97,6 +112,7 @@ export interface AdminPromotionDto {
   usageLimit?: number | null;
   usageCount: number;
   isActive: boolean;
+  scopes: PromotionScopeDto[];
 }
 
 export interface CreatePromotionDto {
@@ -111,6 +127,7 @@ export interface CreatePromotionDto {
   endDate: string;
   usageLimit?: number;
   isActive: boolean;
+  scopes: PromotionScopeInputDto[];
 }
 
 export type UpdatePromotionDto = CreatePromotionDto;
