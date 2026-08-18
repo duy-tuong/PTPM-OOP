@@ -19,6 +19,7 @@ import {
   Quote,
   Building2,
   Globe,
+  Users,
   X,
 } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
@@ -38,6 +39,7 @@ const NAV_ITEMS = [
   { href: "/admin/order-requests", label: "Đơn hàng", icon: ShoppingCart },
   { href: "/admin/consultation-requests", label: "Yêu cầu tư vấn", icon: MessageSquare },
   { href: "/admin/affiliate-applications", label: "Đăng ký affiliate", icon: Handshake },
+  { href: "/admin/customers", label: "Khách hàng", icon: Users },
   { href: "/admin/news-articles", label: "Bài viết", icon: Newspaper },
   { href: "/admin/news-comments", label: "Bình luận", icon: MessageCircle },
   { href: "/admin/news-categories", label: "Danh mục tin tức", icon: FolderOpen },
