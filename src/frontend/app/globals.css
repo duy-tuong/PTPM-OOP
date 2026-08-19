@@ -204,6 +204,37 @@
   box-shadow: 0 8px 40px color-mix(in oklch, var(--primary) 12%, transparent);
 }
 
+/* Viền phát sáng bám theo con trỏ (Bento "Danh mục dịch vụ", Trang chủ) - toạ độ --spot-x/--spot-y do
+   SpotlightCard.tsx set qua JS onPointerMove. Kỹ thuật mask-composite: exclude để glow chỉ hiện ở viền
+   (padding 1px), không tô cả nền thẻ. Chỉ dùng var(--primary) - không đổi màu theo brand khác. */
+.spotlight-border {
+  position: relative;
+  isolation: isolate;
+}
+.spotlight-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: radial-gradient(
+    220px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+    color-mix(in oklch, var(--primary) 70%, transparent),
+    transparent 70%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.spotlight-border:hover::before {
+  opacity: 1;
+}
+
 /* Chữ gradient cyan -> tím (Hero headline, pivot 2 Cloudverse) */
 .text-gradient-primary {
   background: linear-gradient(135deg, var(--primary) 0%, var(--accent-purple, var(--chart-2)) 100%);
