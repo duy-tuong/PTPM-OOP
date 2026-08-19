@@ -245,6 +245,16 @@
   box-shadow: 0 8px 40px color-mix(in oklch, var(--primary) 12%, transparent);
 }
 
+/* Chất liệu "Floating Pill" Header (Navbar) - khác .glass-card: nền đậm hơn (85% thay vì 78%), viền
+   trung tính var(--border) thay vì viền cyan-tint, KHÔNG box-shadow glow (pill nổi lên nhờ blur+viền,
+   không cần đổ bóng gắt). */
+.glass-pill {
+  background-color: color-mix(in oklch, var(--card) 85%, transparent);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid var(--border);
+}
+
 /* Viền phát sáng bám theo con trỏ (Bento "Danh mục dịch vụ", Trang chủ) - toạ độ --spot-x/--spot-y do
    SpotlightCard.tsx set qua JS onPointerMove. Kỹ thuật mask-composite: exclude để glow chỉ hiện ở viền
    (padding 1px), không tô cả nền thẻ. Chỉ dùng var(--primary) - không đổi màu theo brand khác. */
