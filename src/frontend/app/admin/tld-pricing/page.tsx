@@ -4,6 +4,8 @@ import { getApiUrl } from "@/lib/api/config";
 import { getAdminTldPricing } from "@/lib/api/admin/tld-pricing";
 import { getAdminServiceCategories } from "@/lib/api/admin/service-categories";
 import { ADMIN_ACCESS_TOKEN_COOKIE } from "@/lib/auth/adminAuthCookies";
+import { getAdminSession } from "@/lib/auth/adminSession";
+import { AccessDenied } from "@/components/admin/AccessDenied";
 import { TldPricingManager } from "@/components/admin/tld-pricing/TldPricingManager";
 
 export const metadata: Metadata = {
@@ -11,6 +13,12 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminTldPricingPage() {
+  // GET /admin/tld-pricing chỉ [Authorize(Roles="Admin")] - chặn trước khi gọi API.
+  const session = await getAdminSession();
+  if (!session?.roles.includes("Admin")) {
+    return <AccessDenied />;
+  }
+
   const cookieStore = await cookies();
   const token = cookieStore.get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
   const baseUrl = getApiUrl();

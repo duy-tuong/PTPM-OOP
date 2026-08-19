@@ -5,6 +5,8 @@ import { getAdminPromotions } from "@/lib/api/admin/promotions";
 import { getAdminServiceCategories } from "@/lib/api/admin/service-categories";
 import { getAdminServicePlans } from "@/lib/api/admin/service-plans";
 import { ADMIN_ACCESS_TOKEN_COOKIE } from "@/lib/auth/adminAuthCookies";
+import { getAdminSession } from "@/lib/auth/adminSession";
+import { AccessDenied } from "@/components/admin/AccessDenied";
 import { PromotionsManager } from "@/components/admin/promotions/PromotionsManager";
 
 export const metadata: Metadata = {
@@ -12,6 +14,12 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminPromotionsPage() {
+  // GET /admin/promotions chỉ [Authorize(Roles="Admin")] - chặn trước khi gọi API.
+  const session = await getAdminSession();
+  if (!session?.roles.includes("Admin")) {
+    return <AccessDenied />;
+  }
+
   const cookieStore = await cookies();
   const token = cookieStore.get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
   const baseUrl = getApiUrl();
