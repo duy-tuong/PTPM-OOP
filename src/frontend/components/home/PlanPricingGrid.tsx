@@ -53,11 +53,11 @@ export function PlanPricingGrid({ plans }: { plans: ServicePlanListItemDto[] }) 
             aria-label="Chuyển đổi kỳ hạn thanh toán"
             onClick={() => setIsAnnual((prev) => !prev)}
             data-state={isAnnual ? "checked" : "unchecked"}
-            className="relative h-7 w-14 shrink-0 rounded-full bg-white/10 transition-colors data-[state=checked]:bg-primary"
+            className="relative h-7 w-14 shrink-0 rounded-full bg-input transition-colors data-[state=checked]:bg-primary"
           >
             <span
               className={cn(
-                "absolute top-1 left-1 size-5 rounded-full bg-white shadow transition-transform duration-300",
+                "absolute top-1 left-1 size-5 rounded-full bg-background shadow transition-transform duration-300",
                 isAnnual && "translate-x-7",
               )}
             />

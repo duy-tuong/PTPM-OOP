@@ -8,8 +8,9 @@ import type { TestimonialDto } from "@/lib/types/content";
 
 // Section 6/9 của Trang chủ - phong cách "Minimalist SaaS" (tuyệt đối không gradient): băng chuyền
 // cuộn ngang vô hạn (Marquee dùng chung, đã có sẵn mask-fade 2 mép), pause khi hover, thẻ nền solid
-// tối trung tính (khác .glass-card cyan-tinted dùng ở các section khác - chủ đích tương phản, không
-// phải lỗi thiếu nhất quán). Dữ liệu thật từ getTestimonials(), không bịa.
+// trung tính (bg-muted/border-border, khác .glass-card translucent dùng ở các section khác - chủ đích
+// tương phản, không phải lỗi thiếu nhất quán) - dùng token thay vì zinc-900/zinc-800 hardcode để tự đổi
+// theo Light/Dark theme (xem ThemeToggle.tsx). Dữ liệu thật từ getTestimonials(), không bịa.
 export async function TestimonialsGridSection() {
   const testimonials = await safeFetch(() => getTestimonials({ revalidate: 3600 }), []);
 
@@ -47,8 +48,8 @@ export async function TestimonialsGridSection() {
 
 function TestimonialCard({ testimonial }: { testimonial: TestimonialDto }) {
   return (
-    <div className="group relative flex h-full w-[380px] shrink-0 flex-col overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/80 p-8 transition-colors duration-300 hover:border-primary">
-      <Quotes className="pointer-events-none absolute -top-4 -right-4 size-24 text-zinc-800" weight="fill" />
+    <div className="group relative flex h-full w-[380px] shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-muted p-8 transition-colors duration-300 hover:border-primary">
+      <Quotes className="pointer-events-none absolute -top-4 -right-4 size-24 text-muted-foreground/20" weight="fill" />
 
       {testimonial.rating != null && (
         <div className="mb-4 flex gap-1">

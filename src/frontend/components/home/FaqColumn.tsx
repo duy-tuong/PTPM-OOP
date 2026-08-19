@@ -72,7 +72,7 @@ function FaqBlockItem({ faq }: { faq: FaqDto }) {
     <div
       {...hoverHandlers}
       className={cn(
-        "rounded-lg border bg-white/[0.02] p-5 transition-all duration-300",
+        "rounded-lg border bg-foreground/[0.02] p-5 transition-all duration-300",
         open
           ? "scale-[1.02] border-primary shadow-[0_0_40px_-4px_color-mix(in_oklch,var(--primary)_40%,transparent)]"
           : "scale-100 border-border/50",

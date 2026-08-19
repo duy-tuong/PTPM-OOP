@@ -82,7 +82,7 @@ export async function ServicesBentoSection() {
 
                   <div
                     className={cn(
-                      "relative w-fit rounded-lg border border-white/10 bg-white/5 transition-all duration-300 group-hover/card:-translate-y-0.5 group-hover/card:bg-primary/10",
+                      "relative w-fit rounded-lg border border-border bg-foreground/5 transition-all duration-300 group-hover/card:-translate-y-0.5 group-hover/card:bg-primary/10",
                       isHero ? "p-4" : "p-3",
                     )}
                   >

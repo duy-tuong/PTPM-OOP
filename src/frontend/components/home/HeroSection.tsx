@@ -61,7 +61,7 @@ export function HeroSection() {
             size="lg"
             variant="ghost"
             nativeButton={false}
-            className="btn-shine glass-card h-12 gap-2 px-8 text-base font-semibold text-foreground transition-transform hover:scale-105 hover:bg-white/10 md:h-14 md:px-10 md:text-lg"
+            className="btn-shine glass-card h-12 gap-2 px-8 text-base font-semibold text-foreground transition-transform hover:scale-105 hover:bg-foreground/10 md:h-14 md:px-10 md:text-lg"
             render={
               <Link href="/lien-he?intent=tu-van">
                 <EnvelopeSimple className="size-5" weight="bold" />

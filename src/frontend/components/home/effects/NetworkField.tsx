@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { THEME_CHANGED_EVENT } from "@/lib/theme/publicTheme";
 
 // Nền động "data mesh" - thay cho ShaderBackground (hiệu ứng cực quang WebGL đã bỏ theo yêu cầu).
 // Cố định toàn màn hình (`fixed inset-0`), luôn hoạt động ở layer dưới cùng xuyên suốt trang, không
@@ -26,6 +27,21 @@ export function NetworkField() {
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
+    // canvas 2D không đọc trực tiếp CSS custom property được - "mượn" 1 element, gán color: var(--primary)
+    // rồi đọc lại getComputedStyle().color (browser tự resolve ra "rgb(r, g, b)") để lấy đúng giá trị
+    // --primary thật của theme đang active, thay vì hardcode rgba(0, 240, 255, ...) chỉ đúng cho dark mode.
+    let primaryRgb = "0, 240, 255";
+    function resolvePrimaryRgb() {
+      canvas!.style.color = "var(--primary)";
+      const resolved = getComputedStyle(canvas!).color;
+      const match = resolved.match(/\d+(\.\d+)?/g);
+      if (match && match.length >= 3) {
+        primaryRgb = `${match[0]}, ${match[1]}, ${match[2]}`;
+      }
+    }
+    resolvePrimaryRgb();
+    window.addEventListener(THEME_CHANGED_EVENT, resolvePrimaryRgb);
 
     let width = 0;
     let height = 0;
@@ -78,7 +94,7 @@ export function NetworkField() {
           const dy = nodes[i].y - nodes[j].y;
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist < CONNECT_DISTANCE) {
-            ctx!.strokeStyle = `rgba(0, 240, 255, ${0.15 * (1 - dist / CONNECT_DISTANCE)})`;
+            ctx!.strokeStyle = `rgba(${primaryRgb}, ${0.15 * (1 - dist / CONNECT_DISTANCE)})`;
             ctx!.lineWidth = 0.5;
             ctx!.beginPath();
             ctx!.moveTo(nodes[i].x, nodes[i].y);
@@ -90,7 +106,7 @@ export function NetworkField() {
 
       nodes.forEach((node) => {
         const nearMouse = mouse.active && Math.hypot(node.x - mouse.x, node.y - mouse.y) < 120;
-        ctx!.fillStyle = nearMouse ? "rgba(0, 240, 255, 0.6)" : "rgba(0, 240, 255, 0.3)";
+        ctx!.fillStyle = nearMouse ? `rgba(${primaryRgb}, 0.6)` : `rgba(${primaryRgb}, 0.3)`;
         ctx!.beginPath();
         ctx!.arc(node.x, node.y, nearMouse ? 2.5 : 1.3, 0, Math.PI * 2);
         ctx!.fill();
@@ -102,6 +118,7 @@ export function NetworkField() {
 
     return () => {
       resizeObserver.disconnect();
+      window.removeEventListener(THEME_CHANGED_EVENT, resolvePrimaryRgb);
       window.removeEventListener("pointermove", handleWindowPointerMove);
       if (rafId) cancelAnimationFrame(rafId);
     };

@@ -39,7 +39,7 @@ export function NewsColumn({ articles }: { articles: NewsArticleListItemDto[] })
           <motion.div key={article.id} variants={itemVariants}>
             <Link
               href={`/tin-tuc/${article.slug}`}
-              className="group flex gap-6 rounded-lg border border-border/50 bg-white/[0.02] p-4 transition-all duration-300 hover:scale-[1.03] hover:border-primary hover:shadow-[0_0_40px_-4px_color-mix(in_oklch,var(--primary)_40%,transparent)]"
+              className="group flex gap-6 rounded-lg border border-border/50 bg-foreground/[0.02] p-4 transition-all duration-300 hover:scale-[1.03] hover:border-primary hover:shadow-[0_0_40px_-4px_color-mix(in_oklch,var(--primary)_40%,transparent)]"
             >
               <div className="h-24 w-32 shrink-0 overflow-hidden rounded-lg">
                 <FallbackImage

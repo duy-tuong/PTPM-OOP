@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { MagneticButton } from "@/components/shared/MagneticButton";
 import { Logo } from "@/components/shared/Logo";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import {
   CUSTOMER_SESSION_CHANGED_EVENT,
   notifyCustomerSessionChanged,
@@ -95,6 +96,8 @@ export function Navbar() {
             </div>
           )}
 
+          <ThemeToggle />
+
           <MagneticButton>
             <Button
               nativeButton={false}
@@ -125,6 +128,11 @@ export function Navbar() {
               ))}
 
               <div className="my-1 border-t border-border" />
+
+              <div className="flex items-center justify-between">
+                <span className="text-base font-medium text-foreground">Giao diện</span>
+                <ThemeToggle />
+              </div>
 
               {session ? (
                 <>
