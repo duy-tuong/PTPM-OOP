@@ -2,12 +2,15 @@ import { Quotes, Star } from "@phosphor-icons/react/dist/ssr";
 import { getTestimonials } from "@/lib/api/content";
 import { safeFetch } from "@/lib/api/safe";
 import { FallbackImage } from "@/components/shared/FallbackImage";
+import { Marquee } from "@/components/shared/Marquee";
 import { Reveal } from "@/components/shared/Reveal";
 import type { TestimonialDto } from "@/lib/types/content";
 
-// Section 6/9 của Trang chủ (pivot 2 - theme "Cloudverse"). Thay 4 testimonial giả (Alex Nguyen/CTO
-// AuraCorp...) của bản Stitch gốc bằng getTestimonials() thật. Số cột co giãn theo số lượng thật -
-// không ép đủ 3-4 cột khi DB có ít testimonial.
+// Section 6/9 của Trang chủ - phong cách "Minimalist SaaS" (tuyệt đối không gradient): băng chuyền
+// cuộn ngang vô hạn (Marquee dùng chung, đã có sẵn mask-fade 2 mép), pause khi hover, thẻ nền solid
+// trung tính (bg-muted/border-border, khác .glass-card translucent dùng ở các section khác - chủ đích
+// tương phản, không phải lỗi thiếu nhất quán) - dùng token thay vì zinc-900/zinc-800 hardcode để tự đổi
+// theo Light/Dark theme (xem ThemeToggle.tsx). Dữ liệu thật từ getTestimonials(), không bịa.
 export async function TestimonialsGridSection() {
   const testimonials = await safeFetch(() => getTestimonials({ revalidate: 3600 }), []);
 
@@ -15,21 +18,29 @@ export async function TestimonialsGridSection() {
     return null;
   }
 
-  return (
-    <section className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
-      <Reveal className="mb-16 flex flex-col gap-4 text-center">
-        <h2 className="font-heading text-3xl font-bold text-balance sm:text-4xl">Lòng Tin Từ Cộng Đồng</h2>
-        <p className="mx-auto max-w-[600px] text-lg text-muted-foreground">
-          Lắng nghe chia sẻ từ những khách hàng đang xây dựng hạ tầng cùng Cloudverse.
-        </p>
-      </Reveal>
+  const shouldMarquee = testimonials.length > 1;
 
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-        {testimonials.map((testimonial, index) => (
-          <Reveal key={testimonial.id} delay={index * 0.1}>
-            <TestimonialCard testimonial={testimonial} />
-          </Reveal>
-        ))}
+  return (
+    <section className="py-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <Reveal className="mb-16 flex flex-col gap-4 text-center">
+          <h2 className="font-heading text-3xl font-bold text-balance sm:text-4xl">Lòng Tin Từ Cộng Đồng</h2>
+          <p className="mx-auto max-w-[600px] text-lg text-muted-foreground">
+            Lắng nghe chia sẻ từ những khách hàng đang xây dựng hạ tầng cùng Cloudverse.
+          </p>
+        </Reveal>
+
+        {shouldMarquee ? (
+          <Marquee pauseOnHover gapClassName="gap-8 pr-8">
+            {testimonials.map((testimonial) => (
+              <TestimonialCard key={testimonial.id} testimonial={testimonial} />
+            ))}
+          </Marquee>
+        ) : (
+          <div className="flex justify-center">
+            <TestimonialCard testimonial={testimonials[0]} />
+          </div>
+        )}
       </div>
     </section>
   );
@@ -37,8 +48,8 @@ export async function TestimonialsGridSection() {
 
 function TestimonialCard({ testimonial }: { testimonial: TestimonialDto }) {
   return (
-    <div className="glass-card group relative flex h-full flex-col overflow-hidden rounded-xl p-8">
-      <Quotes className="pointer-events-none absolute -top-4 -right-4 size-24 text-primary opacity-5" weight="fill" />
+    <div className="group relative flex h-full w-[380px] shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-muted p-8 transition-colors duration-300 hover:border-primary">
+      <Quotes className="pointer-events-none absolute -top-4 -right-4 size-24 text-muted-foreground/20" weight="fill" />
 
       {testimonial.rating != null && (
         <div className="mb-4 flex gap-1">

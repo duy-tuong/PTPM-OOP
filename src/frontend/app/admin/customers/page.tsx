@@ -3,6 +3,8 @@ import { cookies } from "next/headers";
 import { getApiUrl } from "@/lib/api/config";
 import { getAdminCustomers } from "@/lib/api/admin/customers";
 import { ADMIN_ACCESS_TOKEN_COOKIE } from "@/lib/auth/adminAuthCookies";
+import { getAdminSession } from "@/lib/auth/adminSession";
+import { AccessDenied } from "@/components/admin/AccessDenied";
 import {
   Pagination,
   PaginationContent,
@@ -24,6 +26,12 @@ interface AdminCustomersPageProps {
 }
 
 export default async function AdminCustomersPage({ searchParams }: AdminCustomersPageProps) {
+  // GET /admin/customers chỉ [Authorize(Roles="Admin")] - chặn trước khi gọi API (dữ liệu PII).
+  const session = await getAdminSession();
+  if (!session?.roles.includes("Admin")) {
+    return <AccessDenied />;
+  }
+
   const params = await searchParams;
   const pageNumber = Number(params.page) > 0 ? Number(params.page) : 1;
   const cookieStore = await cookies();

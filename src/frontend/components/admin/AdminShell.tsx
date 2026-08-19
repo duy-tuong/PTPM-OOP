@@ -13,7 +13,7 @@ export function AdminShell({ session, children }: { session: SessionUser; childr
 
   return (
     <div className="flex min-h-screen bg-zinc-50 text-zinc-900 font-sans selection:bg-zinc-200">
-      <AdminSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <AdminSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} session={session} />
 
       <div className="flex min-w-0 flex-1 flex-col">
         <AdminTopbar session={session} onMenuClick={() => setSidebarOpen(true)} />

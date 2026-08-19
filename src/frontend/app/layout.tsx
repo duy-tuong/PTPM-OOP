@@ -4,15 +4,22 @@ import Script from "next/script";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-// Chạy trước khi paint (next/script strategy="beforeInteractive" - Next tự chèn vào <head> bất kể vị
-// trí trong JSX, đã verify qua node_modules/next/dist/docs) để quyết định dark/light theo pathname
-// TRƯỚC khi React hydrate - không dùng headers()/cookies() ở Server Component vì sẽ ép toàn site
-// thành dynamic render, mất SSG (bài học từ Phase 6.2c). Admin (/admin/**) giữ nguyên :root (sáng);
-// mọi route khác (public) được thêm .dark.
+// Chạy trước khi paint (script thô trong <head>, Next tự hoist đúng vị trí, không dùng next/script vì
+// không cần tính năng của nó ở đây) để quyết định light/dark TRƯỚC khi React hydrate - không dùng
+// headers()/cookies() ở Server Component vì sẽ ép toàn site thành dynamic render, mất SSG (bài học từ
+// Phase 6.2c). Admin (/admin/**) giữ nguyên :root (sáng, khoá cứng - không đọc theme người dùng chọn ở
+// public, xem MarkdownEditor.tsx/admin/login/page.tsx). Public đọc lựa chọn đã lưu ở localStorage
+// ("cloudverse-theme", ghi bởi lib/theme/publicTheme.ts qua ThemeToggle) - nếu chưa từng chọn thì theo
+// prefers-color-scheme của hệ điều hành, mặc định dark nếu OS không báo light rõ ràng.
 const THEME_INIT_SCRIPT = `
-  if (!location.pathname.startsWith('/admin')) {
-    document.documentElement.classList.add('dark');
-  }
+  (function () {
+    if (location.pathname.startsWith('/admin')) return;
+    var stored = localStorage.getItem('cloudverse-theme');
+    var mode = stored === 'light' || stored === 'dark'
+      ? stored
+      : (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+    document.documentElement.classList.add(mode);
+  })();
 `;
 
 // Pivot 2 (theme "Cloudverse", xem plan Phase 6.2): 3 font đúng bản Stitch dán vào - đã verify cả 3
