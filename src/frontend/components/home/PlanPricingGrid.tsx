@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { CheckCircle } from "@phosphor-icons/react";
-import { Reveal } from "@/components/shared/Reveal";
+import { CheckCircle, ArrowRight } from "@phosphor-icons/react";
+import { ScrollReveal } from "@/components/home/ScrollReveal";
+import { SpotlightCard } from "@/components/home/SpotlightCard";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, cn } from "@/lib/utils";
 import type { ServicePlanListItemDto } from "@/lib/types/catalog";
@@ -74,15 +75,15 @@ export function PlanPricingGrid({ plans }: { plans: ServicePlanListItemDto[] }) 
 
       <div
         className={cn(
-          "mx-auto grid w-full grid-cols-1 items-center gap-8",
+          "mx-auto grid w-full grid-cols-1 items-start gap-8",
           plans.length === 2 && "max-w-3xl md:grid-cols-2",
           plans.length >= 3 && "md:grid-cols-3",
         )}
       >
         {plans.map((plan, index) => (
-          <Reveal key={plan.id} delay={index * 0.1}>
+          <ScrollReveal key={plan.id} delay={index * 0.15}>
             <PlanCard plan={plan} highlighted={index === highlightIndex} period={selectedPeriod} />
-          </Reveal>
+          </ScrollReveal>
         ))}
       </div>
     </div>
@@ -103,52 +104,72 @@ function PlanCard({
   const suffix = price?.periodMonths === ANNUAL_PERIOD_MONTHS ? "/năm" : "/tháng";
 
   return (
-    <div
+    <SpotlightCard
       className={cn(
-        "glass-card relative flex h-full flex-col rounded-xl p-8 transition-all duration-500",
+        "glass-card relative flex h-full flex-col rounded-xl transition-all duration-500",
+        "hover:-translate-y-2 hover:shadow-[0_20px_80px_-20px_color-mix(in_oklch,var(--primary)_30%,transparent)]",
         highlighted
-          ? "z-10 scale-105 border-primary/40 shadow-[0_0_50px_color-mix(in_oklch,var(--primary)_20%,transparent)] hover:scale-[1.08]"
-          : "hover:scale-[1.02]",
+          ? "z-10 border-primary/40 shadow-[0_0_50px_color-mix(in_oklch,var(--primary)_20%,transparent)] md:-translate-y-4 hover:md:-translate-y-6"
+          : "opacity-90 hover:opacity-100",
       )}
     >
-      {highlighted && (
-        <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-primary px-4 py-1 text-[10px] font-bold tracking-widest text-primary-foreground uppercase shadow-[0_0_15px_color-mix(in_oklch,var(--primary)_40%,transparent)]">
-          Phổ biến nhất
-        </div>
-      )}
+      <div className="relative flex h-full flex-col overflow-hidden rounded-xl p-8">
+        {highlighted && (
+          <>
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-primary px-4 py-1 text-[10px] font-bold tracking-widest text-primary-foreground uppercase shadow-[0_0_15px_color-mix(in_oklch,var(--primary)_40%,transparent)]">
+              Phổ biến nhất
+            </div>
+            {/* Dải glow mờ hắt từ dưới lên - chỉ gói giữa, chỉ dùng var(--primary) (không đổi màu
+                theo brand khác, giữ đúng nguyên tắc 1 accent đã khoá). */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 -bottom-12 h-32 opacity-70 blur-2xl"
+              style={{
+                background:
+                  "radial-gradient(ellipse at center, color-mix(in oklch, var(--primary) 40%, transparent), transparent 70%)",
+              }}
+            />
+          </>
+        )}
 
-      <div className="mb-6">
-        <span className="text-xs font-medium tracking-widest text-primary uppercase">{plan.categoryName}</span>
-        <h3 className="font-heading mt-1 text-xl">{plan.name}</h3>
-        {plan.shortDescription && <p className="mt-1 text-sm text-muted-foreground">{plan.shortDescription}</p>}
+        <div className="mb-6">
+          <span className="text-xs font-medium tracking-widest text-primary uppercase">{plan.categoryName}</span>
+          <h3 className="font-heading mt-1 text-xl">{plan.name}</h3>
+          {plan.shortDescription && <p className="mt-1 text-sm text-muted-foreground">{plan.shortDescription}</p>}
+        </div>
+
+        {amount != null && (
+          <div className="mb-8 flex items-baseline gap-1">
+            <span className="text-5xl font-bold tracking-tight">{formatCurrency(amount)}</span>
+            <span className="text-sm text-muted-foreground">{suffix}</span>
+          </div>
+        )}
+
+        {plan.features.length > 0 && (
+          <ul className="mb-8 flex flex-1 flex-col gap-3">
+            {plan.features.map((feature) => (
+              <li key={feature.featureKey} className="flex items-start gap-3 text-sm text-muted-foreground">
+                <CheckCircle className="mt-0.5 size-4 shrink-0 text-primary" weight="fill" />
+                <span>
+                  {feature.featureLabel}: <span className="text-foreground">{feature.featureValueText}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <Button
+          nativeButton={false}
+          variant={highlighted ? "default" : "outline"}
+          className={cn("w-full", highlighted ? "btn-shine" : "border-primary text-primary hover:bg-primary/10")}
+          render={
+            <Link href={`/lien-he?planId=${plan.id}`} className="flex items-center justify-center gap-2">
+              Triển Khai Ngay
+              <ArrowRight className="size-4 transition-transform duration-300 group-hover/button:translate-x-1" />
+            </Link>
+          }
+        />
       </div>
-
-      {amount != null && (
-        <div className="mb-8 flex items-baseline gap-1">
-          <span className="text-5xl font-bold tracking-tight">{formatCurrency(amount)}</span>
-          <span className="text-sm text-muted-foreground">{suffix}</span>
-        </div>
-      )}
-
-      {plan.features.length > 0 && (
-        <ul className="mb-8 flex flex-1 flex-col gap-3">
-          {plan.features.map((feature) => (
-            <li key={feature.featureKey} className="flex items-start gap-3 text-sm text-muted-foreground">
-              <CheckCircle className="mt-0.5 size-4 shrink-0 text-primary" weight="fill" />
-              <span>
-                {feature.featureLabel}: <span className="text-foreground">{feature.featureValueText}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <Button
-        nativeButton={false}
-        variant={highlighted ? "default" : "outline"}
-        className={cn("w-full", !highlighted && "border-primary text-primary hover:bg-primary/10")}
-        render={<Link href={`/lien-he?planId=${plan.id}`}>Triển Khai Ngay</Link>}
-      />
-    </div>
+    </SpotlightCard>
   );
 }

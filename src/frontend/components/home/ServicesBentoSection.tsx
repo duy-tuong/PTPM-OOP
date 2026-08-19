@@ -3,7 +3,7 @@ import type { ComponentType } from "react";
 import { Cpu, HardDrives, At, EnvelopeSimple, LockKey, ShieldCheck, ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { getServiceCategories } from "@/lib/api/catalog";
 import { safeFetch } from "@/lib/api/safe";
-import { Reveal } from "@/components/shared/Reveal";
+import { ScrollReveal } from "@/components/home/ScrollReveal";
 import { SpotlightCard } from "@/components/home/SpotlightCard";
 import { cn } from "@/lib/utils";
 
@@ -38,12 +38,12 @@ export async function ServicesBentoSection() {
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
-      <Reveal className="mb-16 flex flex-col gap-4 text-center">
+      <ScrollReveal className="mb-16 flex flex-col gap-4 text-center">
         <h2 className="font-heading text-3xl font-bold text-balance sm:text-4xl">Danh Mục Dịch Vụ</h2>
         <p className="mx-auto max-w-[600px] text-lg text-muted-foreground">
           Hệ sinh thái hạ tầng đám mây toàn diện cho mọi nhu cầu doanh nghiệp.
         </p>
-      </Reveal>
+      </ScrollReveal>
 
       {/* group/bento: phạm vi hiệu ứng "peer dimming" - hover 1 thẻ làm mờ các thẻ còn lại. Tách biệt
           với group/card (đặt trên từng <Link>) - phạm vi micro-interaction riêng của từng thẻ (icon
@@ -59,7 +59,7 @@ export async function ServicesBentoSection() {
           const isHero = useBentoLayout && category.slug === HERO_SLUG;
 
           return (
-            <Reveal key={category.id} delay={index * 0.08} className={isHero ? "md:col-span-2 md:row-span-2" : undefined}>
+            <ScrollReveal key={category.id} delay={index * 0.08} className={isHero ? "md:col-span-2 md:row-span-2" : undefined}>
               <SpotlightCard className="glass-card h-full rounded-3xl transition-opacity duration-500 group-hover/bento:opacity-50 hover:!opacity-100">
                 <Link
                   href={`/dich-vu/${category.slug}`}
@@ -101,7 +101,7 @@ export async function ServicesBentoSection() {
                   </div>
                 </Link>
               </SpotlightCard>
-            </Reveal>
+            </ScrollReveal>
           );
         })}
       </div>
