@@ -26,11 +26,16 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
 import { cn } from "@/lib/utils";
+import type { SessionUser } from "@/lib/types/auth";
 
 interface NavItem {
   href: string;
   label: string;
   icon: typeof LayoutDashboard;
+  // true = chỉ Admin thấy được (khớp [Authorize(Roles="Admin")] của controller tương ứng) - Editor bị
+  // lọc khỏi sidebar. Dashboard KHÔNG đánh dấu dù dashboard-stats cũng Admin-only, vì trang vẫn còn
+  // nội dung dùng được cho Editor (bảng Recent Orders) - tự bắt lỗi 403 riêng ở page.tsx.
+  adminOnly?: boolean;
 }
 
 // 19 mục, dùng route thật đã scaffold sẵn dưới app/admin/. Tái cấu trúc thành nhóm có tiêu đề (thay
@@ -42,10 +47,10 @@ const NAV_GROUPS: { section?: string; items: NavItem[] }[] = [
   {
     section: "Danh mục & Giá",
     items: [
-      { href: "/admin/service-plans", label: "Dịch vụ", icon: Package },
-      { href: "/admin/service-categories", label: "Danh mục dịch vụ", icon: FolderTree },
-      { href: "/admin/tld-pricing", label: "Bảng giá tên miền", icon: Globe },
-      { href: "/admin/promotions", label: "Khuyến mãi", icon: Tag },
+      { href: "/admin/service-plans", label: "Dịch vụ", icon: Package, adminOnly: true },
+      { href: "/admin/service-categories", label: "Danh mục dịch vụ", icon: FolderTree, adminOnly: true },
+      { href: "/admin/tld-pricing", label: "Bảng giá tên miền", icon: Globe, adminOnly: true },
+      { href: "/admin/promotions", label: "Khuyến mãi", icon: Tag, adminOnly: true },
     ],
   },
   {
@@ -66,21 +71,28 @@ const NAV_GROUPS: { section?: string; items: NavItem[] }[] = [
       { href: "/admin/order-requests", label: "Đơn hàng", icon: ShoppingCart },
       { href: "/admin/consultation-requests", label: "Yêu cầu tư vấn", icon: MessageSquare },
       { href: "/admin/affiliate-applications", label: "Đăng ký affiliate", icon: Handshake },
-      { href: "/admin/customers", label: "Khách hàng", icon: Users },
+      { href: "/admin/customers", label: "Khách hàng", icon: Users, adminOnly: true },
     ],
   },
   {
     section: "Hệ thống",
     items: [
-      { href: "/admin/users", label: "Nhân viên", icon: UserCog },
-      { href: "/admin/site-settings", label: "Cài đặt hệ thống", icon: Settings },
-      { href: "/admin/audit-logs", label: "Nhật ký hệ thống", icon: History },
+      { href: "/admin/users", label: "Nhân viên", icon: UserCog, adminOnly: true },
+      { href: "/admin/site-settings", label: "Cài đặt hệ thống", icon: Settings, adminOnly: true },
+      { href: "/admin/audit-logs", label: "Nhật ký hệ thống", icon: History, adminOnly: true },
     ],
   },
 ];
 
-export function AdminSidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
+interface AdminSidebarProps {
+  open: boolean;
+  onClose: () => void;
+  session: SessionUser;
+}
+
+export function AdminSidebar({ open, onClose, session }: AdminSidebarProps) {
   const pathname = usePathname();
+  const isAdmin = session.roles.includes("Admin");
 
   return (
     <>
@@ -105,35 +117,40 @@ export function AdminSidebar({ open, onClose }: { open: boolean; onClose: () => 
         </div>
 
         <nav className="flex-1 space-y-4 overflow-y-auto p-4">
-          {NAV_GROUPS.map((group, groupIndex) => (
-            <div key={group.section ?? `group-${groupIndex}`} className="space-y-1">
-              {group.section && (
-                <p className="px-3 pt-2 pb-1 text-[11px] font-semibold tracking-wide text-zinc-400 uppercase">
-                  {group.section}
-                </p>
-              )}
-              {group.items.map((item) => {
-                const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={onClose}
-                    className={cn(
-                      "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-[14px] font-medium transition-all duration-200",
-                      isActive
-                        ? "text-zinc-900 bg-zinc-100/80 shadow-sm ring-1 ring-zinc-900/5"
-                        : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50",
-                    )}
-                  >
-                    <Icon className={cn("size-4.5", isActive ? "text-zinc-900" : "text-zinc-400")} />
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </div>
-          ))}
+          {NAV_GROUPS.map((group, groupIndex) => {
+            const visibleItems = group.items.filter((item) => !item.adminOnly || isAdmin);
+            if (visibleItems.length === 0) return null;
+
+            return (
+              <div key={group.section ?? `group-${groupIndex}`} className="space-y-1">
+                {group.section && (
+                  <p className="px-3 pt-2 pb-1 text-[11px] font-semibold tracking-wide text-zinc-400 uppercase">
+                    {group.section}
+                  </p>
+                )}
+                {visibleItems.map((item) => {
+                  const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={onClose}
+                      className={cn(
+                        "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-[14px] font-medium transition-all duration-200",
+                        isActive
+                          ? "text-zinc-900 bg-zinc-100/80 shadow-sm ring-1 ring-zinc-900/5"
+                          : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50",
+                      )}
+                    >
+                      <Icon className={cn("size-4.5", isActive ? "text-zinc-900" : "text-zinc-400")} />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            );
+          })}
         </nav>
       </aside>
     </>

@@ -7,7 +7,7 @@ namespace CloudServiceStore.WebApi.Controllers;
 
 [ApiController]
 [Route("api/admin/service-categories")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,Editor")]
 public class AdminServiceCategoriesController : ControllerBase
 {
     private readonly IAdminServiceCategoryService _service;
@@ -24,6 +24,7 @@ public class AdminServiceCategoriesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<AdminServiceCategoryDto>> Create(CreateServiceCategoryDto dto, CancellationToken cancellationToken)
     {
         var result = await _service.CreateAsync(dto, cancellationToken);
@@ -31,12 +32,14 @@ public class AdminServiceCategoriesController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<AdminServiceCategoryDto>> Update(int id, UpdateServiceCategoryDto dto, CancellationToken cancellationToken)
     {
         return Ok(await _service.UpdateAsync(id, dto, cancellationToken));
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
         await _service.DeleteAsync(id, cancellationToken);

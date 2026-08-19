@@ -128,6 +128,47 @@
   --sidebar-ring: #00f0ff;
 }
 
+/* Theme sáng "Cloudverse" cho public site (light mode, khác :root trung tính của Admin) - cùng "họ"
+   thương hiệu cyan/tím với .dark nhưng đảo cho nền sáng. --foreground tái dùng đúng hex nền tối của
+   .dark (đối xứng có chủ đích). --primary đậm hoá (#0e7490 thay vì #00f0ff) vì dùng CHUNG 1 token cho
+   cả text/link/icon lẫn nút/viền/glow trong toàn bộ Trang chủ - giữ nguyên #00f0ff sẽ fail contrast khi
+   làm chữ trên nền trắng; đánh đổi là nút bg-primary ở light mode đậm hơn dark mode, không neon. Gắn
+   class "light" ở <html> theo lựa chọn người dùng (localStorage) qua THEME_INIT_SCRIPT, xem app/layout.tsx. */
+.light {
+  --background: #f4f7fb;
+  --foreground: #0b0f19;
+  --card: #ffffff;
+  --card-foreground: #0b0f19;
+  --popover: #ffffff;
+  --popover-foreground: #0b0f19;
+  --primary: #0e7490;
+  --primary-foreground: #ffffff;
+  --secondary: #eef1f6;
+  --secondary-foreground: #0b0f19;
+  --muted: #eef1f6;
+  --muted-foreground: #55627a;
+  --accent: #eef1f6;
+  --accent-foreground: #0b0f19;
+  --accent-purple: #6b46c1;
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0 0 0 / 10%);
+  --input: oklch(0 0 0 / 12%);
+  --ring: #0e7490;
+  --chart-1: #0e7490;
+  --chart-2: #6b46c1;
+  --chart-3: oklch(0.556 0 0);
+  --chart-4: oklch(0.439 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0b0f19;
+  --sidebar-primary: #0e7490;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eef1f6;
+  --sidebar-accent-foreground: #0b0f19;
+  --sidebar-border: oklch(0 0 0 / 10%);
+  --sidebar-ring: #0e7490;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -204,6 +245,47 @@
   box-shadow: 0 8px 40px color-mix(in oklch, var(--primary) 12%, transparent);
 }
 
+/* Chất liệu "Floating Pill" Header (Navbar) - khác .glass-card: nền đậm hơn (85% thay vì 78%), viền
+   trung tính var(--border) thay vì viền cyan-tint, KHÔNG box-shadow glow (pill nổi lên nhờ blur+viền,
+   không cần đổ bóng gắt). */
+.glass-pill {
+  background-color: color-mix(in oklch, var(--card) 85%, transparent);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid var(--border);
+}
+
+/* Viền phát sáng bám theo con trỏ (Bento "Danh mục dịch vụ", Trang chủ) - toạ độ --spot-x/--spot-y do
+   SpotlightCard.tsx set qua JS onPointerMove. Kỹ thuật mask-composite: exclude để glow chỉ hiện ở viền
+   (padding 1px), không tô cả nền thẻ. Chỉ dùng var(--primary) - không đổi màu theo brand khác. */
+.spotlight-border {
+  position: relative;
+  isolation: isolate;
+}
+.spotlight-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: radial-gradient(
+    220px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+    color-mix(in oklch, var(--primary) 70%, transparent),
+    transparent 70%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.spotlight-border:hover::before {
+  opacity: 1;
+}
+
 /* Chữ gradient cyan -> tím (Hero headline, pivot 2 Cloudverse) */
 .text-gradient-primary {
   background: linear-gradient(135deg, var(--primary) 0%, var(--accent-purple, var(--chart-2)) 100%);
@@ -226,7 +308,7 @@
   background: linear-gradient(
     115deg,
     transparent 20%,
-    color-mix(in oklch, white 55%, transparent) 50%,
+    color-mix(in oklch, var(--foreground) 55%, transparent) 50%,
     transparent 80%
   );
   transform: translateX(-120%);
