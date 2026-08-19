@@ -3,10 +3,12 @@ import { ArrowRight, EnvelopeSimple } from "@phosphor-icons/react/dist/ssr";
 import { Button } from "@/components/ui/button";
 import { MagneticButton } from "@/components/shared/MagneticButton";
 import { ParallaxLayer } from "@/components/shared/ParallaxLayer";
+import { TopographicLines } from "@/components/home/effects/TopographicLines";
 
 // Section 1/9 của Trang chủ (pivot 2 - theme "Cloudverse", xem plan Phase 6.2). Bố cục center/stack
-// (khác bản split 2 cột của pivot 1): 2 blob nền cyan/tím trôi chậm + ảnh orb thật (mix-blend-screen,
-// mask tròn) qua ParallaxLayer. `NetworkField` (data mesh) không đặt ở đây nữa - đã chuyển lên mount 1
+// (khác bản split 2 cột của pivot 1): 2 blob nền cyan/tím trôi chậm + line-art "Topographic Contour
+// Lines" (SVG currentColor, tự đổi Đen/Trắng theo theme, không gradient) qua ParallaxLayer, thay cho
+// ảnh orb hotlink cũ. `NetworkField` (data mesh) không đặt ở đây nữa - đã chuyển lên mount 1
 // lần ở app/(public)/page.tsx làm nền cố định (fixed) xuyên suốt trang thay cho ShaderBackground (hiệu
 // ứng cực quang WebGL đã bỏ theo yêu cầu). Dòng trust badge dưới CTA cố tình không kèm con số (kiểu
 // "10.000 lập trình viên" của bản Stitch gốc là số liệu bịa, không có API/DB nào xác thực) - chỉ dùng
@@ -19,22 +21,8 @@ export function HeroSection() {
         <div className="animate-ambient-blob absolute top-[40%] right-[-150px] h-[500px] w-[500px] rounded-full bg-[var(--accent-purple)] opacity-20 blur-[100px]" />
       </ParallaxLayer>
 
-      <ParallaxLayer
-        depth={1.2}
-        className="pointer-events-none absolute inset-0 -z-10 flex items-center justify-center opacity-40"
-      >
-        <div className="relative aspect-square w-full max-w-[800px]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDE5_gBlFoADqY5faSrR0_8dtbbM6pgf3Z5XuKtf5Gm8Qe6lpP1XGuEXAdsU9ux1owhW_DX-ijhg0pCTgkRyF1uN7G-Abz-ssmCb9uIcmMDU8GWoCVXGgN-XCFpe78eZTSvlK54JEoDr4MZ4swAQQSmDhLyuGuMhMLKu1XjbiqBer9gyhYXRFFgb03hFYGivf_L8_JJyo3UsbIimw4ZCGoxNJutJmUfrOc85WBxNRHxetUb6ZnI6MKucw"
-            alt=""
-            className="h-full w-full rounded-full object-cover mix-blend-screen"
-            style={{
-              maskImage: "radial-gradient(circle at center, black 40%, transparent 70%)",
-              WebkitMaskImage: "radial-gradient(circle at center, black 40%, transparent 70%)",
-            }}
-          />
-        </div>
+      <ParallaxLayer depth={0.4} className="pointer-events-none absolute inset-0 -z-10">
+        <TopographicLines />
       </ParallaxLayer>
 
       <div className="relative z-10 flex max-w-3xl flex-col items-center gap-6">
