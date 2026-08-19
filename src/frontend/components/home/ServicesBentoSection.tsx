@@ -18,11 +18,14 @@ const CATEGORY_ICONS: Record<string, ComponentType<{ className?: string; weight?
   "firewall-chong-ddos": ShieldCheck,
 };
 
-// Bento 9-ô: VPS (hero, 2x2) + 5 danh mục còn lại đều 1x1. Thứ tự API trả về đúng DisplayOrder
-// (VPS, Hosting, Domain, Email, SSL, Firewall) nên chỉ cần set span cho VPS - CSS Grid auto-placement
-// (row-major, không cần "dense") tự xếp đúng vị trí 5 ô còn lại (Hosting/Domain xếp chồng cột 3 hàng
-// 1-2, Email/SSL/Firewall xếp hàng 3) mà không cần hardcode className theo từng slug.
+// Bento 9-ô: VPS (hero, 2x2) + 5 danh mục còn lại đều 1x1 - toán khớp CHÍNH XÁC cho 6 danh mục
+// (4 ô hero + 5 ô = 9 ô, lấp đầy 3x3 không dư/thiếu). Nếu số danh mục thay đổi (Admin thêm/bớt qua
+// /admin/service-categories), toán này không còn khớp - hàng cuối sẽ để trống 1-2 ô dở dang. Vì vậy
+// CHỈ áp Bento bất đối xứng khi categories.length === 6 đúng như lúc thiết kế; khác 6 thì rơi về lưới
+// đều (uniform grid) như bản gốc trước khi nâng cấp - an toàn tuyệt đối với mọi N, không bao giờ để
+// hàng cuối trống dở dang.
 const HERO_SLUG = "vps";
+const BENTO_CATEGORY_COUNT = 6;
 
 export async function ServicesBentoSection() {
   const categories = await safeFetch(() => getServiceCategories({ revalidate: 3600 }), []);
@@ -30,6 +33,8 @@ export async function ServicesBentoSection() {
   if (categories.length === 0) {
     return null;
   }
+
+  const useBentoLayout = categories.length === BENTO_CATEGORY_COUNT;
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
@@ -43,10 +48,15 @@ export async function ServicesBentoSection() {
       {/* group/bento: phạm vi hiệu ứng "peer dimming" - hover 1 thẻ làm mờ các thẻ còn lại. Tách biệt
           với group/card (đặt trên từng <Link>) - phạm vi micro-interaction riêng của từng thẻ (icon
           nhích lên, chữ/mũi tên đổi màu) để không bị lan sang thẻ khác khi chỉ hover 1 thẻ. */}
-      <div className="group/bento grid grid-cols-1 gap-4 md:grid-cols-3 md:auto-rows-[220px]">
+      <div
+        className={cn(
+          "group/bento grid grid-cols-1 gap-4",
+          useBentoLayout ? "md:grid-cols-3 md:auto-rows-[220px]" : "md:grid-cols-2 lg:grid-cols-3",
+        )}
+      >
         {categories.map((category, index) => {
           const Icon = CATEGORY_ICONS[category.slug] ?? Cpu;
-          const isHero = category.slug === HERO_SLUG;
+          const isHero = useBentoLayout && category.slug === HERO_SLUG;
 
           return (
             <Reveal key={category.id} delay={index * 0.08} className={isHero ? "md:col-span-2 md:row-span-2" : undefined}>
