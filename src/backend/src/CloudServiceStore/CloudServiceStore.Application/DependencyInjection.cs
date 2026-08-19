@@ -17,6 +17,7 @@ using CloudServiceStore.Application.Features.Admin.Reporting.DashboardStats;
 using CloudServiceStore.Application.Features.Admin.Sales.AffiliateApplications;
 using CloudServiceStore.Application.Features.Admin.Sales.ConsultationRequests;
 using CloudServiceStore.Application.Features.Admin.Sales.OrderRequests;
+using CloudServiceStore.Application.Features.Admin.System.SiteSettings;
 using CloudServiceStore.Application.Features.Auth;
 using CloudServiceStore.Application.Features.Catalog.ServiceCategories;
 using CloudServiceStore.Application.Features.Catalog.ServicePlans;
@@ -78,6 +79,8 @@ public static class DependencyInjection
         services.AddScoped<IAdminOrderRequestService, AdminOrderRequestService>();
         services.AddScoped<IAdminAffiliateApplicationService, AdminAffiliateApplicationService>();
         services.AddScoped<IAdminConsultationRequestService, AdminConsultationRequestService>();
+
+        services.AddScoped<IAdminSiteSettingService, AdminSiteSettingService>();
 
         services.AddScoped<IDashboardStatsService, DashboardStatsService>();
         services.AddScoped<IAdminAuditLogService, AdminAuditLogService>();

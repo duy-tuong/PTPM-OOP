@@ -506,3 +506,23 @@ export interface UpdateUserDto {
 export interface ResetUserPasswordDto {
   newPassword: string;
 }
+
+// ---- Admin System: Site Settings ----
+// Khớp Application/Features/Admin/System/SiteSettings/Dtos/*.cs
+export interface AdminSiteSettingDto {
+  id: number;
+  settingKey: string;
+  settingValue: string;
+  settingGroup: string;
+  dataType: string;
+  updatedAt?: string | null;
+}
+
+export interface CreateSiteSettingDto {
+  settingKey: string;
+  settingValue: string;
+  settingGroup: string;
+  dataType: string;
+}
+
+export type UpdateSiteSettingDto = CreateSiteSettingDto;
