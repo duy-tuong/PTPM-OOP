@@ -22,7 +22,6 @@ const NAV_LINKS = [
   { href: "/dich-vu", label: "Dịch vụ" },
   { href: "/bang-gia", label: "Bảng giá" },
   { href: "/tin-tuc", label: "Tin tức" },
-  { href: "/khach-hang", label: "Khách hàng" },
   { href: "/gioi-thieu", label: "Giới thiệu" },
   { href: "/doi-tac", label: "Đối tác" },
 ];

@@ -15,7 +15,7 @@ import { TopographicLines } from "@/components/home/effects/TopographicLines";
 // câu định tính, marquee đối tác thật (Section 2) đảm nhiệm phần bằng chứng cụ thể.
 export function HeroSection() {
   return (
-    <section className="relative flex min-h-[90vh] flex-col items-center justify-center overflow-hidden px-4 pt-32 pb-24 text-center sm:px-6 lg:px-8">
+    <section className="relative flex min-h-[90vh] flex-col items-center justify-center overflow-hidden px-4 pt-28 pb-20 text-center sm:px-6 lg:px-8">
       <ParallaxLayer depth={0.8} className="pointer-events-none absolute inset-0 -z-10">
         <div className="animate-ambient-blob absolute top-[-100px] left-[-100px] h-[400px] w-[400px] rounded-full bg-primary opacity-40 blur-[100px]" />
         <div className="animate-ambient-blob absolute top-[40%] right-[-150px] h-[500px] w-[500px] rounded-full bg-[var(--accent-purple)] opacity-20 blur-[100px]" />
