@@ -24,3 +24,32 @@ export interface CustomerAuthResponse {
 export interface CustomerSessionUser {
   fullName: string;
 }
+
+// Khớp Application/Features/Customers/Auth/Dtos/CustomerProfileDto.cs - customerType là chuỗi tên
+// enum ("Individual"/"Business", đã .ToString() ở service) - dùng chung CUSTOMER_TYPE_LABELS
+// (lib/types/enums.ts) để hiển thị, khác UpdateCustomerProfileDto (ghi) phải gửi số nguyên.
+export interface CustomerProfileDto {
+  id: string;
+  email: string;
+  fullName: string;
+  phone: string;
+  customerType: string;
+  companyName?: string | null;
+  taxCode?: string | null;
+  createdAt: string;
+}
+
+// Khớp Application/Features/Customers/Auth/Dtos/UpdateCustomerProfileDto.cs
+export interface UpdateCustomerProfileDto {
+  fullName: string;
+  phone: string;
+  customerType: number;
+  companyName?: string;
+  taxCode?: string;
+}
+
+// Khớp Application/Features/Auth/Dtos/ChangePasswordRequest.cs (dùng chung với staff Auth feature).
+export interface ChangeCustomerPasswordDto {
+  currentPassword: string;
+  newPassword: string;
+}

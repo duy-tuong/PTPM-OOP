@@ -57,3 +57,25 @@ export interface AffiliateApplicationDto {
   status: string;
   createdAt: string;
 }
+
+// Khớp Application/Features/Sales/OrderRequests/Dtos/MyOrderRequestDto.cs
+export interface MyOrderRequestDto {
+  id: number;
+  orderCode: string;
+  servicePlanName?: string | null;
+  periodMonths?: number | null;
+  quantity: number;
+  totalPrice: number;
+  status: string;
+  createdAt: string;
+}
+
+// Khớp Application/Features/Sales/ConsultationRequests/Dtos/MyConsultationRequestDto.cs
+export interface MyConsultationRequestDto {
+  id: number;
+  requestCode: string;
+  subject: string;
+  message: string;
+  status: string;
+  createdAt: string;
+}

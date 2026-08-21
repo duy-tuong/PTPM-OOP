@@ -6,6 +6,8 @@ import type {
   NewsArticleQueryParams,
   NewsArticleListItemDto,
   NewsArticleDetailDto,
+  NewsCommentDto,
+  CreateNewsCommentDto,
   FaqDto,
   TestimonialDto,
   PartnerDto,
@@ -22,6 +24,14 @@ export function getNewsArticles(params: NewsArticleQueryParams = {}, next?: { re
 
 export function getNewsArticleBySlug(slug: string, next?: { revalidate?: number | false }) {
   return apiFetch<NewsArticleDetailDto>(getApiUrl(), `/news-articles/${slug}`, "GET", { next });
+}
+
+export function getNewsComments(newsArticleId: number, next?: { revalidate?: number | false }) {
+  return apiFetch<NewsCommentDto[]>(getApiUrl(), "/news-comments", "GET", { params: { newsArticleId }, next });
+}
+
+export function createNewsComment(dto: CreateNewsCommentDto, token?: string) {
+  return apiFetch<NewsCommentDto>(getApiUrl(), "/news-comments", "POST", { body: dto, token, cache: "no-store" });
 }
 
 export function getFaqs(serviceCategoryId?: number, next?: { revalidate?: number | false }) {

@@ -72,3 +72,12 @@ export async function getCustomerSession(): Promise<CustomerSessionUser | null> 
     return null;
   }
 }
+
+// Server-only - đọc access token thật (httpOnly) để gọi các endpoint /customer-auth/me,
+// /order-requests/mine,... thay mặt khách hàng từ Server Component. Chỉ dùng trong app/khach-hang/**
+// (route riêng, đã bị proxy.ts chặn theo CUSTOMER_ACCESS_TOKEN_COOKIE trước khi tới đây) - KHÔNG dùng
+// ở app/(public)/** vì cùng lý do đã nêu ở getCustomerSession().
+export async function getCustomerAccessToken(): Promise<string | undefined> {
+  const cookieStore = await cookies();
+  return cookieStore.get(CUSTOMER_ACCESS_TOKEN_COOKIE)?.value;
+}

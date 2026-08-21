@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CheckCircle, ArrowRight } from "@phosphor-icons/react";
 import { ScrollReveal } from "@/components/home/ScrollReveal";
 import { SpotlightCard } from "@/components/home/SpotlightCard";
+import { BillingPeriodToggle } from "@/components/shared/BillingPeriodToggle";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, cn } from "@/lib/utils";
 import type { ServicePlanListItemDto } from "@/lib/types/catalog";
@@ -40,37 +41,13 @@ export function PlanPricingGrid({ plans }: { plans: ServicePlanListItemDto[] }) 
   const selectedPeriod = isAnnual ? ANNUAL_PERIOD_MONTHS : MONTHLY_PERIOD_MONTHS;
 
   return (
-    <div className="flex flex-col items-center gap-10">
+    <div className="flex flex-col items-center gap-8">
       {hasAnnualPricing && (
-        <div className="flex flex-wrap items-center justify-center gap-3">
-          <span className={cn("text-sm font-medium", !isAnnual ? "text-foreground" : "text-muted-foreground")}>
-            Hàng tháng
-          </span>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={isAnnual}
-            aria-label="Chuyển đổi kỳ hạn thanh toán"
-            onClick={() => setIsAnnual((prev) => !prev)}
-            data-state={isAnnual ? "checked" : "unchecked"}
-            className="relative h-7 w-14 shrink-0 rounded-full bg-input transition-colors data-[state=checked]:bg-primary"
-          >
-            <span
-              className={cn(
-                "absolute top-1 left-1 size-5 rounded-full bg-background shadow transition-transform duration-300",
-                isAnnual && "translate-x-7",
-              )}
-            />
-          </button>
-          <span className={cn("text-sm font-medium", isAnnual ? "text-foreground" : "text-muted-foreground")}>
-            Hàng năm
-          </span>
-          {maxDiscountPercent > 0 && (
-            <span className="rounded-full bg-primary/15 px-2.5 py-1 text-xs font-semibold text-primary">
-              Tiết kiệm tới {maxDiscountPercent}%
-            </span>
-          )}
-        </div>
+        <BillingPeriodToggle
+          isAnnual={isAnnual}
+          onToggle={() => setIsAnnual((prev) => !prev)}
+          discountPercent={maxDiscountPercent}
+        />
       )}
 
       <div
