@@ -23,7 +23,7 @@ services:
     restart: always
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=CloudServiceStoreDb;User Id=sa;Password=CloudServiceStore@2026!;TrustServerCertificate=True;
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=CloudServiceStoreDb;User Id=sa;Password=CloudServiceStore@2026!;TrustServerCertificate=True;Connect Timeout=30;
       - Jwt__SecretKey=CloudServiceStoreSuperSecretKey2026MustBeAtLeast32BytesLong!
     ports:
       - "5000:5000"
