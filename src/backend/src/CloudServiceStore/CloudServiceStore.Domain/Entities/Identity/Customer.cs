@@ -13,7 +13,7 @@ public class Customer : ISoftDelete
     public string Email { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
     public string FullName { get; set; } = string.Empty;
-    public string Phone { get; set; } = string.Empty;
+    public string? Phone { get; set; }
     public CustomerType CustomerType { get; set; } = CustomerType.Individual;
     public string? CompanyName { get; set; }
     public string? TaxCode { get; set; }
