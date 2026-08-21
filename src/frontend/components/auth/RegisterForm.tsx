@@ -75,7 +75,12 @@ export function RegisterForm() {
         if (res.status === 409) {
           setErrors({ email: "Email đã được sử dụng" });
         } else {
-          toast.error("Đăng ký thất bại, vui lòng thử lại");
+          try {
+            const errData = (await res.json()) as { message?: string };
+            toast.error(errData.message || "Đăng ký thất bại, vui lòng thử lại");
+          } catch {
+            toast.error("Đăng ký thất bại, vui lòng thử lại");
+          }
         }
         return;
       }
