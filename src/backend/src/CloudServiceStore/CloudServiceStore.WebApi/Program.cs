@@ -102,6 +102,15 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         Console.WriteLine($"[Migration Warning] {ex.Message}");
+        try
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<CloudServiceStore.Infrastructure.Persistence.AppDbContext>();
+            await dbContext.Database.EnsureCreatedAsync();
+        }
+        catch (Exception innerEx)
+        {
+            Console.WriteLine($"[EnsureCreated Warning] {innerEx.Message}");
+        }
     }
 
     try
