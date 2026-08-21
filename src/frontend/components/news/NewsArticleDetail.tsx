@@ -1,52 +1,20 @@
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import type { Components } from "react-markdown";
 import { ArticleToc } from "@/components/news/ArticleToc";
 import { ArticleSidebar } from "@/components/news/ArticleSidebar";
 import { ReadingProgressBar } from "@/components/news/ReadingProgressBar";
 import { CommentSection } from "@/components/news/CommentSection";
 import { NewsCard } from "@/components/news/NewsCard";
-import { formatDate, slugify } from "@/lib/utils";
+import { markdownComponents } from "@/lib/markdown-components";
+import { formatDate } from "@/lib/utils";
 import type { ArticleHeading } from "@/lib/utils";
 import type { NewsArticleDetailDto, NewsArticleListItemDto, NewsCommentDto } from "@/lib/types/content";
 
 // Bố cục "Tech Docs" 3 cột (TOC 20% - Nội dung 60% - Sidebar 20%) cho /tin-tuc/[slug]. Cột giữa bọc
 // max-w-prose (giới hạn ~65 ký tự/dòng cho dễ đọc). content là Markdown thật (Admin soạn qua
-// MarkdownEditor.tsx) - render qua react-markdown, heading gắn id bằng đúng slugify() dùng để trích
-// headings ở page.tsx (extractHeadings) nên link Mục lục luôn khớp đúng vị trí.
-const markdownComponents: Components = {
-  h2: ({ children }) => (
-    <h2 id={slugify(String(children))} className="mt-16 scroll-mt-32 font-heading text-2xl font-bold text-foreground">
-      {children}
-    </h2>
-  ),
-  h3: ({ children }) => (
-    <h3 id={slugify(String(children))} className="mt-10 scroll-mt-32 font-heading text-xl font-bold text-foreground">
-      {children}
-    </h3>
-  ),
-  p: ({ children }) => <p className="text-lg leading-relaxed text-muted-foreground">{children}</p>,
-  blockquote: ({ children }) => (
-    <blockquote className="border-l-[3px] border-primary pl-6 text-foreground italic">{children}</blockquote>
-  ),
-  pre: ({ children }) => (
-    <pre className="overflow-x-auto rounded-lg border border-border bg-background p-4 text-sm">{children}</pre>
-  ),
-  code: ({ children, className }) =>
-    className ? (
-      <code className={className}>{children}</code>
-    ) : (
-      <code className="rounded bg-muted px-1.5 py-0.5 text-sm">{children}</code>
-    ),
-  img: ({ src, alt }) => (
-    <figure className="my-8">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src as string} alt={alt ?? ""} className="w-full rounded-lg border border-border" />
-      {alt && <figcaption className="mt-2 text-center text-xs text-muted-foreground">{alt}</figcaption>}
-    </figure>
-  ),
-};
+// MarkdownEditor.tsx) - render qua markdownComponents dùng chung (lib/markdown-components.tsx, cũng
+// được AboutStory.tsx tái sử dụng).
 
 export function NewsArticleDetail({
   article,

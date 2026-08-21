@@ -111,7 +111,9 @@ export function Navbar() {
         <div className="hidden items-center gap-4 lg:flex">
           {session ? (
             <div className="flex items-center gap-3 text-sm">
-              <span className="font-medium text-foreground">Xin chào, {session.fullName}</span>
+              <Link href="/khach-hang" className="font-medium text-foreground hover:text-primary">
+                Xin chào, {session.fullName}
+              </Link>
               <button
                 type="button"
                 onClick={handleLogout}
@@ -169,7 +171,13 @@ export function Navbar() {
 
               {session ? (
                 <>
-                  <span className="text-base font-medium text-foreground">Xin chào, {session.fullName}</span>
+                  <Link
+                    href="/khach-hang"
+                    onClick={() => setOpen(false)}
+                    className="text-base font-medium text-foreground"
+                  >
+                    Xin chào, {session.fullName}
+                  </Link>
                   <button
                     type="button"
                     onClick={() => {
