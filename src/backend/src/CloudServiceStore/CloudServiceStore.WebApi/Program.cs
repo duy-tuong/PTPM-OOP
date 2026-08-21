@@ -90,9 +90,19 @@ if (app.Environment.IsDevelopment())
 
 app.UseExceptionHandler();
 
-// Nạp cache SiteSetting (Singleton) 1 lần lúc khởi động để có dữ liệu ngay từ request đầu tiên.
+// Tự động Migrate CSDL và Nạp cache SiteSetting khi khởi động
 using (var scope = app.Services.CreateScope())
 {
+    try
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<CloudServiceStore.Infrastructure.Persistence.AppDbContext>();
+        await dbContext.Database.MigrateAsync();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[Migration Warning] {ex.Message}");
+    }
+
     var siteSettingsCache = scope.ServiceProvider.GetRequiredService<ISiteSettingsCache>();
     await siteSettingsCache.RefreshAsync();
 }
