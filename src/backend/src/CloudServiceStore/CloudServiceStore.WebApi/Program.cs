@@ -104,8 +104,15 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine($"[Migration Warning] {ex.Message}");
     }
 
-    var siteSettingsCache = scope.ServiceProvider.GetRequiredService<ISiteSettingsCache>();
-    await siteSettingsCache.RefreshAsync();
+    try
+    {
+        var siteSettingsCache = scope.ServiceProvider.GetRequiredService<ISiteSettingsCache>();
+        await siteSettingsCache.RefreshAsync();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[SiteSettingsCache Warning] {ex.Message}");
+    }
 }
 
 // Không redirect sang HTTPS khi Development: frontend Next.js (Server Component fetch + form public)

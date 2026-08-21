@@ -16,6 +16,7 @@ export async function POST(request: Request) {
     if (error instanceof ApiError) {
       return NextResponse.json({ message: error.message }, { status: error.status });
     }
-    throw error;
+    const message = error instanceof Error ? error.message : "Đăng ký thất bại, vui lòng thử lại";
+    return NextResponse.json({ message }, { status: 500 });
   }
 }
