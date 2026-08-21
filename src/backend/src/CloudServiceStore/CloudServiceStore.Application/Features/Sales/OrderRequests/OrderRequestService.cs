@@ -1,5 +1,6 @@
 using CloudServiceStore.Application.Common.Exceptions;
 using CloudServiceStore.Application.Common.Interfaces;
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Common.Utils;
 using CloudServiceStore.Application.Features.Sales.OrderRequests.Dtos;
 using CloudServiceStore.Domain.Entities.Catalog;
@@ -17,7 +18,7 @@ public class OrderRequestService : IOrderRequestService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<OrderRequestDto> CreateAsync(CreateOrderRequestDto dto, CancellationToken cancellationToken = default)
+    public async Task<OrderRequestDto> CreateAsync(CreateOrderRequestDto dto, Guid? customerId = null, CancellationToken cancellationToken = default)
     {
         var planRepository = _unitOfWork.Repository<ServicePlan, int>();
         var priceRepository = _unitOfWork.Repository<PlanPrice, int>();
@@ -48,6 +49,7 @@ public class OrderRequestService : IOrderRequestService
         var orderRequest = new OrderRequest
         {
             OrderCode = RequestCodeGenerator.Generate("ORD"),
+            CustomerId = customerId,
             CustomerType = dto.CustomerType,
             CustomerName = dto.CustomerName,
             CustomerEmail = dto.CustomerEmail,
@@ -77,5 +79,35 @@ public class OrderRequestService : IOrderRequestService
             TotalPrice = orderRequest.TotalPrice,
             CreatedAt = orderRequest.CreatedAt
         };
+    }
+
+    public async Task<PagedResult<MyOrderRequestDto>> GetMineAsync(Guid customerId, PaginationParams query, CancellationToken cancellationToken = default)
+    {
+        var repository = _unitOfWork.Repository<OrderRequest, int>();
+
+        var baseQuery = repository.Query()
+            .Include(o => o.ServicePlan)
+            .Where(o => o.CustomerId == customerId)
+            .OrderByDescending(o => o.CreatedAt);
+
+        var totalCount = await baseQuery.CountAsync(cancellationToken);
+        var entities = await baseQuery
+            .Skip((query.PageNumber - 1) * query.PageSize)
+            .Take(query.PageSize)
+            .ToListAsync(cancellationToken);
+
+        var dtos = entities.Select(o => new MyOrderRequestDto
+        {
+            Id = o.Id,
+            OrderCode = o.OrderCode,
+            ServicePlanName = o.ServicePlan?.Name,
+            PeriodMonths = o.PeriodMonths,
+            Quantity = o.Quantity,
+            TotalPrice = o.TotalPrice,
+            Status = o.Status.ToString(),
+            CreatedAt = o.CreatedAt
+        }).ToList();
+
+        return PagedResult<MyOrderRequestDto>.Create(dtos, totalCount, query.PageNumber, query.PageSize);
     }
 }

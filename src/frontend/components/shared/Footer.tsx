@@ -9,7 +9,6 @@ const SERVICE_LINKS = [
 
 const COMPANY_LINKS = [
   { href: "/gioi-thieu", label: "Giới thiệu" },
-  { href: "/khach-hang", label: "Khách hàng" },
   { href: "/doi-tac", label: "Đối tác" },
   { href: "/lien-he", label: "Liên hệ" },
 ];

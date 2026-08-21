@@ -109,6 +109,67 @@ public class CustomerAuthService : ICustomerAuthService
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<CustomerProfileDto> GetProfileAsync(Guid customerId, CancellationToken cancellationToken = default)
+    {
+        var repository = _unitOfWork.Repository<Customer, Guid>();
+        var customer = await repository.GetByIdAsync(customerId, cancellationToken)
+            ?? throw new UnauthorizedAccessException("Người dùng không tồn tại.");
+
+        return ToProfileDto(customer);
+    }
+
+    public async Task<CustomerProfileDto> UpdateProfileAsync(Guid customerId, UpdateCustomerProfileDto dto, CancellationToken cancellationToken = default)
+    {
+        var repository = _unitOfWork.Repository<Customer, Guid>();
+        var customer = await repository.GetByIdAsync(customerId, cancellationToken)
+            ?? throw new UnauthorizedAccessException("Người dùng không tồn tại.");
+
+        customer.FullName = dto.FullName;
+        customer.Phone = dto.Phone;
+        customer.CustomerType = dto.CustomerType;
+        customer.CompanyName = dto.CompanyName;
+        customer.TaxCode = dto.TaxCode;
+        customer.UpdatedAt = DateTime.UtcNow;
+
+        repository.Update(customer);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return ToProfileDto(customer);
+    }
+
+    public async Task ChangePasswordAsync(Guid customerId, ChangePasswordRequest request, CancellationToken cancellationToken = default)
+    {
+        var repository = _unitOfWork.Repository<Customer, Guid>();
+        var customer = await repository.GetByIdAsync(customerId, cancellationToken)
+            ?? throw new UnauthorizedAccessException("Người dùng không tồn tại.");
+
+        if (!_passwordHasher.Verify(request.CurrentPassword, customer.PasswordHash))
+        {
+            throw new UnauthorizedAccessException("Mật khẩu hiện tại không đúng.");
+        }
+
+        customer.PasswordHash = _passwordHasher.Hash(request.NewPassword);
+        // Buộc đăng nhập lại ở mọi thiết bị sau khi đổi mật khẩu - mirror AuthService.ChangePasswordAsync.
+        customer.RefreshToken = null;
+        customer.RefreshTokenExpiryTime = null;
+        customer.UpdatedAt = DateTime.UtcNow;
+
+        repository.Update(customer);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    private static CustomerProfileDto ToProfileDto(Customer customer) => new()
+    {
+        Id = customer.Id,
+        Email = customer.Email,
+        FullName = customer.FullName,
+        Phone = customer.Phone,
+        CustomerType = customer.CustomerType.ToString(),
+        CompanyName = customer.CompanyName,
+        TaxCode = customer.TaxCode,
+        CreatedAt = customer.CreatedAt
+    };
+
     // Chỉ mutate field trên entity đang được EF Core track (Added ở RegisterAsync, Unchanged ở
     // LoginAsync/RefreshTokenAsync) - KHÔNG gọi repository.Update() ở đây: DbSet.Update() ép state
     // entry sang Modified, nếu gọi trên entity vừa AddAsync (đang Added) sẽ ghi đè thành Modified và

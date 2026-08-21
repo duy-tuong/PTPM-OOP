@@ -12,4 +12,10 @@ public interface ICustomerAuthService
     Task<CustomerAuthResponse> RefreshTokenAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default);
 
     Task LogoutAsync(Guid customerId, CancellationToken cancellationToken = default);
+
+    Task<CustomerProfileDto> GetProfileAsync(Guid customerId, CancellationToken cancellationToken = default);
+
+    Task<CustomerProfileDto> UpdateProfileAsync(Guid customerId, UpdateCustomerProfileDto dto, CancellationToken cancellationToken = default);
+
+    Task ChangePasswordAsync(Guid customerId, ChangePasswordRequest request, CancellationToken cancellationToken = default);
 }
