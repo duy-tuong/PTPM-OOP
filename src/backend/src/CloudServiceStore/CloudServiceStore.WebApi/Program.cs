@@ -4,6 +4,7 @@ using CloudServiceStore.Application.Common.Interfaces;
 using CloudServiceStore.Infrastructure;
 using CloudServiceStore.WebApi.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
