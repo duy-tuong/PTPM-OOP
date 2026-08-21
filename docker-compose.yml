@@ -1,0 +1,55 @@
+services:
+  # 1. SQL Server Database Container
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: cloudstore_sqlserver
+    restart: always
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=CloudServiceStore2026!
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql/data
+    networks:
+      - cloudstore_net
+
+  # 2. Backend Web API Container (.NET 9)
+  backend:
+    build:
+      context: ./src/backend
+      dockerfile: Dockerfile
+    container_name: cloudstore_backend
+    restart: always
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=CloudServiceStoreDb;User Id=sa;Password=CloudServiceStore2026!;TrustServerCertificate=True;
+    ports:
+      - "5000:5000"
+    depends_on:
+      - sqlserver
+    networks:
+      - cloudstore_net
+
+  # 3. Frontend Next.js Container
+  frontend:
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile
+    container_name: cloudstore_frontend
+    restart: always
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:5000
+    ports:
+      - "80:3000"
+    depends_on:
+      - backend
+    networks:
+      - cloudstore_net
+
+volumes:
+  mssql_data:
+
+networks:
+  cloudstore_net:
+    driver: bridge

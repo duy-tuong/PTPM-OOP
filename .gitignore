@@ -1,0 +1,26 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+TestResults/
+
+# appsettings chứa secret cá nhân — không commit
+appsettings.Development.json
+appsettings.*.local.json
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+.env
+.env.local
+
+# OS/editor
+.DS_Store
+
+# Claude Code local config
+.claude/
+
+# Antigravity/Agents configuration
+.agents/

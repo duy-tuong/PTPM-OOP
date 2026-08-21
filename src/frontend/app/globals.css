@@ -1,0 +1,332 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  /* Trỏ đúng sang biến font-loader thật đặt tên riêng (bug cũ ở Phase 6.1 là tự tham chiếu chính nó,
+     var(--font-sans) trong chính khối định nghĩa --font-sans - đã sửa 1 lần, không lặp lại ở đây). */
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
+  --font-heading: var(--font-space-grotesk);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* :root = token trung tính gốc của shadcn (base color "neutral"), dùng cho Admin panel (Phase 6.5+).
+   Trang public dùng theme tối "Cloudverse" qua class .dark bên dưới - phân theo route (không phải 1
+   div lồng) bằng THEME_INIT_SCRIPT ở app/layout.tsx (script chặn-paint theo pathname, xem comment ở đó).
+   --primary/--primary-foreground/--ring dùng lại đúng 3 giá trị cyan của .dark (không đổi gì khác) để
+   nút/link chính trên Admin vẫn cùng màu thương hiệu thay vì xám đen mặc định của preset "neutral". */
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: #00f0ff;
+  --primary-foreground: #0b0f19;
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: #00f0ff;
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+/* Theme tối "Cloudverse" (pivot 2, thay tông sky-blue "CloudArt" của pivot 1) - màu lấy trực tiếp từ
+   hex thật trong bản Stitch dán vào (không suy đoán): nền #0B0F19, accent cyan #00F0FF, tím #6B46C1
+   dùng cho gradient chữ. Gắn class "dark" ở app/(public)/layout.tsx để scope riêng cho public site. */
+.dark {
+  --background: #0b0f19;
+  --foreground: #f1f5f9;
+  --card: #131826;
+  --card-foreground: #f1f5f9;
+  --popover: #131826;
+  --popover-foreground: #f1f5f9;
+  --primary: #00f0ff;
+  --primary-foreground: #0b0f19;
+  --secondary: #1b2233;
+  --secondary-foreground: #f1f5f9;
+  --muted: #1b2233;
+  --muted-foreground: #94a3b8;
+  --accent: #1b2233;
+  --accent-foreground: #f1f5f9;
+  --accent-purple: #6b46c1;
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: #00f0ff;
+  --chart-1: #00f0ff;
+  --chart-2: #6b46c1;
+  --chart-3: oklch(0.87 0 0);
+  --chart-4: oklch(0.556 0 0);
+  --chart-5: oklch(0.439 0 0);
+  --sidebar: #131826;
+  --sidebar-foreground: #f1f5f9;
+  --sidebar-primary: #00f0ff;
+  --sidebar-primary-foreground: #0b0f19;
+  --sidebar-accent: #1b2233;
+  --sidebar-accent-foreground: #f1f5f9;
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: #00f0ff;
+}
+
+/* Theme sáng "Cloudverse" cho public site (light mode, khác :root trung tính của Admin) - cùng "họ"
+   thương hiệu cyan/tím với .dark nhưng đảo cho nền sáng. --foreground tái dùng đúng hex nền tối của
+   .dark (đối xứng có chủ đích). --primary đậm hoá (#0e7490 thay vì #00f0ff) vì dùng CHUNG 1 token cho
+   cả text/link/icon lẫn nút/viền/glow trong toàn bộ Trang chủ - giữ nguyên #00f0ff sẽ fail contrast khi
+   làm chữ trên nền trắng; đánh đổi là nút bg-primary ở light mode đậm hơn dark mode, không neon. Gắn
+   class "light" ở <html> theo lựa chọn người dùng (localStorage) qua THEME_INIT_SCRIPT, xem app/layout.tsx. */
+.light {
+  --background: #f4f7fb;
+  --foreground: #0b0f19;
+  --card: #ffffff;
+  --card-foreground: #0b0f19;
+  --popover: #ffffff;
+  --popover-foreground: #0b0f19;
+  --primary: #0e7490;
+  --primary-foreground: #ffffff;
+  --secondary: #eef1f6;
+  --secondary-foreground: #0b0f19;
+  --muted: #eef1f6;
+  --muted-foreground: #55627a;
+  --accent: #eef1f6;
+  --accent-foreground: #0b0f19;
+  --accent-purple: #6b46c1;
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0 0 0 / 10%);
+  --input: oklch(0 0 0 / 12%);
+  --ring: #0e7490;
+  --chart-1: #0e7490;
+  --chart-2: #6b46c1;
+  --chart-3: oklch(0.556 0 0);
+  --chart-4: oklch(0.439 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0b0f19;
+  --sidebar-primary: #0e7490;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eef1f6;
+  --sidebar-accent-foreground: #0b0f19;
+  --sidebar-border: oklch(0 0 0 / 10%);
+  --sidebar-ring: #0e7490;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/* Marquee - dùng cho Partners marquee ở Trang chủ. */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+/* Hero image bồng bềnh + bóng mờ bên dưới */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-16px);
+  }
+}
+@keyframes float-shadow {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(0.85);
+    opacity: 0.15;
+  }
+}
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+.animate-float-shadow {
+  animation: float-shadow 6s ease-in-out infinite;
+}
+
+/* Blob nền phát sáng trôi chậm (Hero, pivot 2 Cloudverse) - port từ .ambient-blob của bản Stitch */
+@keyframes ambient-blob {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    transform: translate(50px, 50px) scale(1.2);
+  }
+}
+.animate-ambient-blob {
+  animation: ambient-blob 20s infinite alternate ease-in-out;
+}
+
+/* Thẻ kính (glassmorphism) dùng chung xuyên suốt Trang chủ - nền translucent + blur + viền/glow theo
+   var(--primary), tự đổi màu theo theme (sky-blue trước đây, cyan ở pivot 2) vì dùng color-mix. */
+.glass-card {
+  background-color: color-mix(in oklch, var(--card) 78%, transparent);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid color-mix(in oklch, var(--primary) 15%, transparent);
+  box-shadow: 0 8px 40px color-mix(in oklch, var(--primary) 12%, transparent);
+}
+
+/* Chất liệu "Floating Pill" Header (Navbar) - khác .glass-card: nền đậm hơn (85% thay vì 78%), viền
+   trung tính var(--border) thay vì viền cyan-tint, KHÔNG box-shadow glow (pill nổi lên nhờ blur+viền,
+   không cần đổ bóng gắt). */
+.glass-pill {
+  background-color: color-mix(in oklch, var(--card) 85%, transparent);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid var(--border);
+}
+
+/* Viền phát sáng bám theo con trỏ (Bento "Danh mục dịch vụ", Trang chủ) - toạ độ --spot-x/--spot-y do
+   SpotlightCard.tsx set qua JS onPointerMove. Kỹ thuật mask-composite: exclude để glow chỉ hiện ở viền
+   (padding 1px), không tô cả nền thẻ. Chỉ dùng var(--primary) - không đổi màu theo brand khác. */
+.spotlight-border {
+  position: relative;
+  isolation: isolate;
+}
+.spotlight-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: radial-gradient(
+    220px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+    color-mix(in oklch, var(--primary) 70%, transparent),
+    transparent 70%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.spotlight-border:hover::before {
+  opacity: 1;
+}
+
+/* Chữ gradient cyan -> tím (Hero headline, pivot 2 Cloudverse) */
+.text-gradient-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent-purple, var(--chart-2)) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Ánh sáng lướt ngang khi hover (Hero CTA, pivot 2 Cloudverse) - dải sáng chéo quét qua nút bằng
+   ::after + hover-triggered translateX, không cần JS. */
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+}
+.btn-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 20%,
+    color-mix(in oklch, var(--foreground) 55%, transparent) 50%,
+    transparent 80%
+  );
+  transform: translateX(-120%);
+  transition: transform 0.6s ease;
+  pointer-events: none;
+}
+.btn-shine:hover::after {
+  transform: translateX(120%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-float,
+  .animate-float-shadow,
+  .animate-ambient-blob {
+    animation: none;
+  }
+  .btn-shine::after {
+    display: none;
+  }
+}
