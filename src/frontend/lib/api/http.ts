@@ -22,7 +22,8 @@ export class ApiError extends Error {
   readonly problem?: ProblemDetails;
 
   constructor(status: number, problem?: ProblemDetails) {
-    super(problem?.detail ?? problem?.title ?? `Yêu cầu API thất bại (status ${status}).`);
+    const rawMsg = (problem as unknown as { message?: string })?.message;
+    super(rawMsg ?? problem?.detail ?? problem?.title ?? `Yêu cầu API thất bại (status ${status}).`);
     this.name = "ApiError";
     this.status = status;
     this.problem = problem;
