@@ -22,8 +22,19 @@ public class CustomerAuthController : ControllerBase
     [AllowAnonymous]
     public async Task<ActionResult<CustomerAuthResponse>> Register(CustomerRegisterRequest request, CancellationToken cancellationToken)
     {
-        var result = await _customerAuthService.RegisterAsync(request, cancellationToken);
-        return Ok(result);
+        try
+        {
+            var result = await _customerAuthService.RegisterAsync(request, cancellationToken);
+            return Ok(result);
+        }
+        catch (CloudServiceStore.Application.Common.Exceptions.ConflictException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPost("login")]
