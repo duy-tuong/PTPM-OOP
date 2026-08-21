@@ -14,7 +14,7 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.Property(x => x.Email).HasMaxLength(100).IsRequired();
         builder.Property(x => x.PasswordHash).HasMaxLength(255).IsRequired();
         builder.Property(x => x.FullName).HasMaxLength(100).IsRequired();
-        builder.Property(x => x.Phone).HasMaxLength(20).IsRequired();
+        builder.Property(x => x.Phone).HasMaxLength(20);
         builder.Property(x => x.CompanyName).HasMaxLength(150);
         builder.Property(x => x.TaxCode).HasMaxLength(20);
         builder.Property(x => x.EmailVerificationToken).HasMaxLength(255);
