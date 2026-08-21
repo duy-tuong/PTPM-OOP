@@ -1,22 +1,15 @@
 import Link from "next/link";
-import type { ComponentType } from "react";
-import { Cpu, HardDrives, At, EnvelopeSimple, LockKey, ShieldCheck, ArrowRight } from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { getServiceCategories } from "@/lib/api/catalog";
 import { safeFetch } from "@/lib/api/safe";
 import { ScrollReveal } from "@/components/home/ScrollReveal";
 import { SpotlightCard } from "@/components/home/SpotlightCard";
+import { getCategoryIcon } from "@/lib/constants/serviceCategoryIcons";
 import { cn } from "@/lib/utils";
 
 // Section 3/9 của Trang chủ (pivot 2 - theme "Cloudverse"). Thay 4 ô "Cloud Compute/Quantum
-// Storage/Global Edge/Cyber Security" giả (sản phẩm hư cấu) bằng 6 ServiceCategory thật của hệ thống.
-const CATEGORY_ICONS: Record<string, ComponentType<{ className?: string; weight?: "fill" }>> = {
-  vps: Cpu,
-  hosting: HardDrives,
-  domain: At,
-  "email-doanh-nghiep": EnvelopeSimple,
-  ssl: LockKey,
-  "firewall-chong-ddos": ShieldCheck,
-};
+// Storage/Global Edge/Cyber Security" giả (sản phẩm hư cấu) bằng ServiceCategory thật của hệ thống.
+// Icon map dùng chung với /dich-vu - xem lib/constants/serviceCategoryIcons.ts.
 
 // Bento 9-ô: VPS (hero, 2x2) + 5 danh mục còn lại đều 1x1 - toán khớp CHÍNH XÁC cho 6 danh mục
 // (4 ô hero + 5 ô = 9 ô, lấp đầy 3x3 không dư/thiếu). Nếu số danh mục thay đổi (Admin thêm/bớt qua
@@ -37,8 +30,8 @@ export async function ServicesBentoSection() {
   const useBentoLayout = categories.length === BENTO_CATEGORY_COUNT;
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
-      <ScrollReveal className="mb-16 flex flex-col gap-4 text-center">
+    <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      <ScrollReveal className="mb-10 flex flex-col gap-4 text-center">
         <h2 className="font-heading text-3xl font-bold text-balance sm:text-4xl">Danh Mục Dịch Vụ</h2>
         <p className="mx-auto max-w-[600px] text-lg text-muted-foreground">
           Hệ sinh thái hạ tầng đám mây toàn diện cho mọi nhu cầu doanh nghiệp.
@@ -55,7 +48,7 @@ export async function ServicesBentoSection() {
         )}
       >
         {categories.map((category, index) => {
-          const Icon = CATEGORY_ICONS[category.slug] ?? Cpu;
+          const Icon = getCategoryIcon(category.slug);
           const isHero = useBentoLayout && category.slug === HERO_SLUG;
 
           return (

@@ -26,6 +26,7 @@ using CloudServiceStore.Application.Features.Content.ContentPages;
 using CloudServiceStore.Application.Features.Content.Faqs;
 using CloudServiceStore.Application.Features.Content.NewsArticles;
 using CloudServiceStore.Application.Features.Content.NewsCategories;
+using CloudServiceStore.Application.Features.Content.NewsComments;
 using CloudServiceStore.Application.Features.Content.Partners;
 using CloudServiceStore.Application.Features.Content.Testimonials;
 using CloudServiceStore.Application.Features.Customers.Auth;
@@ -51,6 +52,7 @@ public static class DependencyInjection
         services.AddScoped<IPromotionService, PromotionService>();
         services.AddScoped<INewsCategoryService, NewsCategoryService>();
         services.AddScoped<INewsArticleService, NewsArticleService>();
+        services.AddScoped<INewsCommentService, NewsCommentService>();
         services.AddScoped<IFaqService, FaqService>();
         services.AddScoped<ITestimonialService, TestimonialService>();
         services.AddScoped<IPartnerService, PartnerService>();

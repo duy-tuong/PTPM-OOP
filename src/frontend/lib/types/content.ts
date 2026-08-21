@@ -43,6 +43,27 @@ export interface NewsArticleDetailDto {
   tags: string[];
 }
 
+// Khớp Application/Features/Content/NewsComments/Dtos/NewsCommentDto.cs - AuthorEmail KHÔNG lộ ra
+// public (khác AdminNewsCommentDto). Replies là cây lồng nhau đã dựng sẵn ở backend.
+export interface NewsCommentDto {
+  id: number;
+  parentCommentId?: number | null;
+  authorDisplayName: string;
+  content: string;
+  createdAt: string;
+  replies: NewsCommentDto[];
+}
+
+// Khớp Application/Features/Content/NewsComments/Dtos/CreateNewsCommentDto.cs - authorName/authorEmail
+// chỉ cần khi gửi với tư cách khách vãng lai (chưa đăng nhập) - backend tự bỏ qua nếu đã đăng nhập.
+export interface CreateNewsCommentDto {
+  newsArticleId: number;
+  parentCommentId?: number;
+  authorName?: string;
+  authorEmail?: string;
+  content: string;
+}
+
 // Khớp Application/Features/Content/Faqs/Dtos/FaqDto.cs
 export interface FaqDto {
   id: number;

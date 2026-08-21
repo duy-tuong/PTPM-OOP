@@ -24,7 +24,7 @@ export async function PromotionBannerSection() {
   const promotion = promotions[0];
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-24 sm:px-6 lg:px-8">
+    <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
       <ScrollReveal>
         <div className="glass-card relative overflow-hidden rounded-3xl border border-primary/40 p-8 md:p-14">
           {/* Blob nền trôi chậm - tái dùng nguyên .animate-ambient-blob đã có (Hero), không viết

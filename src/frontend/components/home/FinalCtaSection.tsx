@@ -11,7 +11,7 @@ import { MouseGlow } from "@/components/home/effects/MouseGlow";
 // thị liên kết" trỏ thẳng /doi-tac (route thật đã có ở Phase 6.1), không phải trang không tồn tại.
 export function FinalCtaSection() {
   return (
-    <section className="relative overflow-hidden px-4 py-32 sm:px-6 lg:px-8">
+    <section className="relative overflow-hidden px-4 py-20 sm:px-6 lg:px-8">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,color-mix(in_oklch,var(--primary)_15%,transparent)_0%,transparent_60%)]"

@@ -40,6 +40,24 @@ export function slugify(text: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+// Trích H2/H3 từ content Markdown của bài tin tức (/tin-tuc/[slug]) để dựng Mục lục - id dùng lại đúng
+// slugify() ở trên, khớp với id gắn trong custom heading renderer của react-markdown (NewsArticleDetail.tsx)
+// để link mục lục nhảy đúng vị trí.
+export interface ArticleHeading {
+  id: string;
+  text: string;
+  level: 2 | 3;
+}
+
+export function extractHeadings(markdown: string): ArticleHeading[] {
+  return markdown.split("\n").flatMap((line): ArticleHeading[] => {
+    const match = line.match(/^(#{2,3})\s+(.*)$/);
+    if (!match) return [];
+    const text = match[2].trim();
+    return [{ id: slugify(text), text, level: match[1].length as 2 | 3 }];
+  });
+}
+
 // Dùng cho ExportButton (Phase 6.9) - trigger tải file nhị phân (vd .xlsx) từ 1 Blob đã fetch sẵn.
 export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);

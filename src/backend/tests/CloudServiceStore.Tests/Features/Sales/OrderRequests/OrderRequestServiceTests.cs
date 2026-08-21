@@ -82,4 +82,31 @@ public class OrderRequestServiceTests
 
         Assert.Equal(2700000m, result.TotalPrice);
     }
+
+    [Fact]
+    public async Task CreateAsync_CustomerIdProvided_LinksOrderToCustomer()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var sut = new OrderRequestService(TestDbContextFactory.CreateUnitOfWork(context));
+        var customerId = Guid.NewGuid();
+
+        var result = await sut.CreateAsync(BuildDto(plan.Id, periodMonths: null, quantity: 1), customerId);
+
+        var saved = context.OrderRequests.Single(o => o.Id == result.Id);
+        Assert.Equal(customerId, saved.CustomerId);
+    }
+
+    [Fact]
+    public async Task CreateAsync_NoCustomerId_LeavesCustomerIdNull()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var sut = new OrderRequestService(TestDbContextFactory.CreateUnitOfWork(context));
+
+        var result = await sut.CreateAsync(BuildDto(plan.Id, periodMonths: null, quantity: 1));
+
+        var saved = context.OrderRequests.Single(o => o.Id == result.Id);
+        Assert.Null(saved.CustomerId);
+    }
 }

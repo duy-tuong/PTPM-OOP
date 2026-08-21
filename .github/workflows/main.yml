@@ -1,0 +1,61 @@
+name: CI/CD Auto Deploy to Linux VM
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Build & Run Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore Dependencies
+        run: dotnet restore src/backend/src/CloudServiceStore/CloudServiceStore.sln
+
+      - name: Build Solution
+        run: dotnet build src/backend/src/CloudServiceStore/CloudServiceStore.sln --no-restore -c Release
+
+      - name: Run Unit Tests
+        run: dotnet test src/backend/tests/CloudServiceStore.Tests/CloudServiceStore.Tests.csproj --no-build -c Release
+
+  deploy:
+    name: Deploy to Google Cloud Linux VM
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH to VM
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: 22
+          script: |
+            echo "==== Starting Auto-Deploy Process on VM ===="
+            if [ ! -d "PTPM-OOP" ]; then
+              git clone https://github.com/${{ github.repository }}.git PTPM-OOP
+              cd PTPM-OOP
+            else
+              cd PTPM-OOP
+              git fetch origin main
+              git reset --hard origin/main
+            fi
+            echo "==== Building Docker Images & Starting Containers ===="
+            docker compose up -d --build --remove-orphans
+            docker image prune -f
+            echo "==== Deploy Completed Successfully! ===="

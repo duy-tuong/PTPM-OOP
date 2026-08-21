@@ -21,9 +21,9 @@ export async function TestimonialsGridSection() {
   const shouldMarquee = testimonials.length > 1;
 
   return (
-    <section className="py-24">
+    <section className="py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <Reveal className="mb-16 flex flex-col gap-4 text-center">
+        <Reveal className="mb-10 flex flex-col gap-4 text-center">
           <h2 className="font-heading text-3xl font-bold text-balance sm:text-4xl">Lòng Tin Từ Cộng Đồng</h2>
           <p className="mx-auto max-w-[600px] text-lg text-muted-foreground">
             Lắng nghe chia sẻ từ những khách hàng đang xây dựng hạ tầng cùng Cloudverse.

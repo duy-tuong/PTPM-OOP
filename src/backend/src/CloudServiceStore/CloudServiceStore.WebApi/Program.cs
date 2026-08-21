@@ -4,6 +4,7 @@ using CloudServiceStore.Application.Common.Interfaces;
 using CloudServiceStore.Infrastructure;
 using CloudServiceStore.WebApi.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
@@ -90,11 +91,28 @@ if (app.Environment.IsDevelopment())
 
 app.UseExceptionHandler();
 
-// Nạp cache SiteSetting (Singleton) 1 lần lúc khởi động để có dữ liệu ngay từ request đầu tiên.
+// Tự động Migrate CSDL và Nạp cache SiteSetting khi khởi động
 using (var scope = app.Services.CreateScope())
 {
-    var siteSettingsCache = scope.ServiceProvider.GetRequiredService<ISiteSettingsCache>();
-    await siteSettingsCache.RefreshAsync();
+    try
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<CloudServiceStore.Infrastructure.Persistence.AppDbContext>();
+        await dbContext.Database.MigrateAsync();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[Migration Warning] {ex.Message}");
+    }
+
+    try
+    {
+        var siteSettingsCache = scope.ServiceProvider.GetRequiredService<ISiteSettingsCache>();
+        await siteSettingsCache.RefreshAsync();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[SiteSettingsCache Warning] {ex.Message}");
+    }
 }
 
 // Không redirect sang HTTPS khi Development: frontend Next.js (Server Component fetch + form public)

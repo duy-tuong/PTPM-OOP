@@ -22,8 +22,19 @@ public class CustomerAuthController : ControllerBase
     [AllowAnonymous]
     public async Task<ActionResult<CustomerAuthResponse>> Register(CustomerRegisterRequest request, CancellationToken cancellationToken)
     {
-        var result = await _customerAuthService.RegisterAsync(request, cancellationToken);
-        return Ok(result);
+        try
+        {
+            var result = await _customerAuthService.RegisterAsync(request, cancellationToken);
+            return Ok(result);
+        }
+        catch (CloudServiceStore.Application.Common.Exceptions.ConflictException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPost("login")]
@@ -57,11 +68,56 @@ public class CustomerAuthController : ControllerBase
     }
 
     [HttpPost("logout")]
-    [Authorize]
+    [Authorize(Roles = "Customer")]
     public async Task<IActionResult> Logout(CancellationToken cancellationToken)
     {
         await _customerAuthService.LogoutAsync(GetCustomerId(), cancellationToken);
         return NoContent();
+    }
+
+    [HttpGet("me")]
+    [Authorize(Roles = "Customer")]
+    public async Task<ActionResult<CustomerProfileDto>> GetProfile(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _customerAuthService.GetProfileAsync(GetCustomerId(), cancellationToken);
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
+    }
+
+    [HttpPut("me")]
+    [Authorize(Roles = "Customer")]
+    public async Task<ActionResult<CustomerProfileDto>> UpdateProfile(UpdateCustomerProfileDto dto, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _customerAuthService.UpdateProfileAsync(GetCustomerId(), dto, cancellationToken);
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("change-password")]
+    [Authorize(Roles = "Customer")]
+    public async Task<IActionResult> ChangePassword(ChangePasswordRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _customerAuthService.ChangePasswordAsync(GetCustomerId(), request, cancellationToken);
+            return NoContent();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
     }
 
     private Guid GetCustomerId()
