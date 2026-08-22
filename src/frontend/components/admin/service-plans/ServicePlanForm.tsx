@@ -230,7 +230,11 @@ export function ServicePlanForm({ mode, initialData, categories }: ServicePlanFo
           <div className="grid gap-4 sm:grid-cols-2">
             <Field>
               <Label htmlFor="plan-category">Danh mục</Label>
-              <Select value={String(categoryId)} onValueChange={(value) => setCategoryId(Number(value))}>
+              <Select
+                items={categories.map((category) => ({ value: String(category.id), label: category.name }))}
+                value={String(categoryId)}
+                onValueChange={(value) => setCategoryId(Number(value))}
+              >
                 <SelectTrigger id="plan-category" className="w-full">
                   <SelectValue placeholder="Chọn danh mục" />
                 </SelectTrigger>

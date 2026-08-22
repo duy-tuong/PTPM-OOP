@@ -6,12 +6,12 @@ import { PromotionBannerSection } from "@/components/home/PromotionBannerSection
 import { TestimonialsGridSection } from "@/components/home/TestimonialsGridSection";
 import { NewsFaqSection } from "@/components/home/NewsFaqSection";
 import { FinalCtaSection } from "@/components/home/FinalCtaSection";
-import { NetworkField } from "@/components/home/effects/NetworkField";
+import { CloudDataFlowBackground } from "@/components/home/effects/CloudDataFlowBackground";
 
 export default function HomePage() {
   return (
     <>
-      <NetworkField />
+      <CloudDataFlowBackground />
       <HeroSection />
       <TrustStrip />
       <ServicesBentoSection />

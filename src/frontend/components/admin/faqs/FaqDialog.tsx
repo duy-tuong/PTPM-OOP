@@ -138,6 +138,10 @@ export function FaqDialog({ open, onOpenChange, faq, categories }: FaqDialogProp
             <Field>
               <Label htmlFor="faq-category">Áp dụng cho danh mục</Label>
               <Select
+                items={[
+                  { value: ALL_CATEGORIES_VALUE, label: "Tất cả danh mục" },
+                  ...categories.map((category) => ({ value: String(category.id), label: category.name })),
+                ]}
                 value={form.serviceCategoryId ? String(form.serviceCategoryId) : ALL_CATEGORIES_VALUE}
                 onValueChange={(value) =>
                   setForm((prev) => ({

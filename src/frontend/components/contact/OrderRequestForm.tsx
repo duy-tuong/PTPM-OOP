@@ -158,7 +158,11 @@ export function OrderRequestForm({
       <FieldGroup>
         <Field>
           <Label htmlFor="order-plan">Gói dịch vụ</Label>
-          <Select value={servicePlanId ? String(servicePlanId) : undefined} onValueChange={handlePlanChange}>
+          <Select
+            items={plans.map((plan) => ({ value: String(plan.id), label: `${plan.categoryName} - ${plan.name}` }))}
+            value={servicePlanId ? String(servicePlanId) : undefined}
+            onValueChange={handlePlanChange}
+          >
             <SelectTrigger id="order-plan" className="w-full">
               <SelectValue placeholder="Chọn gói dịch vụ" />
             </SelectTrigger>
@@ -177,6 +181,10 @@ export function OrderRequestForm({
           <Field>
             <Label htmlFor="order-period">Chu kỳ thanh toán</Label>
             <Select
+              items={selectedPlan.prices.map((price) => ({
+                value: String(price.periodMonths),
+                label: `${price.periodMonths} tháng - ${formatCurrency(price.promotionalPrice ?? price.price)}`,
+              }))}
               value={periodMonths ? String(periodMonths) : undefined}
               onValueChange={(value) => setPeriodMonths(value ? Number(value) : null)}
             >

@@ -99,7 +99,8 @@ export function ConsultationRequestForm({ categories }: { categories: ServiceCat
           <Field>
             <Label htmlFor="consult-category">Dịch vụ quan tâm (không bắt buộc)</Label>
             <Select
-              value={serviceCategoryId ? String(serviceCategoryId) : undefined}
+              items={categories.map((category) => ({ value: String(category.id), label: category.name }))}
+              value={serviceCategoryId ? String(serviceCategoryId) : null}
               onValueChange={(value) => setServiceCategoryId(value ? Number(value) : null)}
             >
               <SelectTrigger id="consult-category" className="w-full">

@@ -157,6 +157,10 @@ export function TldPricingDialog({ open, onOpenChange, item, categories }: TldPr
             <Field>
               <Label htmlFor="tld-category">Danh mục dịch vụ</Label>
               <Select
+                items={[
+                  { value: NO_CATEGORY_VALUE, label: "Không thuộc danh mục" },
+                  ...categories.map((category) => ({ value: String(category.id), label: category.name })),
+                ]}
                 value={form.serviceCategoryId ? String(form.serviceCategoryId) : NO_CATEGORY_VALUE}
                 onValueChange={(value) =>
                   setForm((prev) => ({

@@ -23,6 +23,10 @@ export function OrderRequestsFilterBar({ currentStatus }: { currentStatus?: stri
 
   return (
     <Select
+      items={[
+        { value: ALL_STATUS_VALUE, label: "Tất cả trạng thái" },
+        ...Object.entries(ORDER_REQUEST_STATUS_LABELS).map(([key, label]) => ({ value: key, label })),
+      ]}
       value={currentStatus ?? ALL_STATUS_VALUE}
       onValueChange={(value) => updateParam("status", value === ALL_STATUS_VALUE ? null : value)}
     >

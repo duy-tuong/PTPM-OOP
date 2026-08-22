@@ -36,18 +36,15 @@ export function ServicePlansFilterBar({
         Bộ lọc:
       </div>
       <Select
+        items={[
+          { value: "all-categories", label: "Tất cả danh mục" },
+          ...categories.map((category) => ({ value: category.slug, label: category.name })),
+        ]}
         value={currentCategorySlug ?? "all-categories"}
         onValueChange={(value) => updateParam("categorySlug", value === "all-categories" ? null : value)}
       >
         <SelectTrigger className="w-[220px] rounded-full bg-white border-zinc-200/60 shadow-none ring-1 ring-zinc-950/5 hover:bg-zinc-50">
-          <span className="truncate text-left flex-1">
-            {currentCategorySlug && currentCategorySlug !== "all-categories"
-              ? categories.find((c) => c.slug === currentCategorySlug)?.name ?? "Tất cả danh mục"
-              : "Tất cả danh mục"}
-          </span>
-          <span className="hidden">
-            <SelectValue placeholder="Tất cả danh mục" />
-          </span>
+          <SelectValue placeholder="Tất cả danh mục" />
         </SelectTrigger>
         <SelectContent alignItemWithTrigger={false}>
           <SelectItem value="all-categories">Tất cả danh mục</SelectItem>
@@ -60,16 +57,15 @@ export function ServicePlansFilterBar({
       </Select>
 
       <Select
+        items={[
+          { value: "all-plans", label: "Tất cả gói" },
+          { value: "featured", label: "Chỉ gói nổi bật" },
+        ]}
         value={currentIsFeatured === "true" ? "featured" : "all-plans"}
         onValueChange={(value) => updateParam("isFeatured", value === "featured" ? "true" : null)}
       >
         <SelectTrigger className="w-[180px] rounded-full bg-white border-zinc-200/60 shadow-none ring-1 ring-zinc-950/5 hover:bg-zinc-50">
-          <span className="truncate text-left flex-1">
-            {currentIsFeatured === "true" ? "Chỉ gói nổi bật" : "Tất cả gói"}
-          </span>
-          <span className="hidden">
-            <SelectValue placeholder="Tất cả gói" />
-          </span>
+          <SelectValue placeholder="Tất cả gói" />
         </SelectTrigger>
         <SelectContent alignItemWithTrigger={false}>
           <SelectItem value="all-plans">Tất cả gói</SelectItem>

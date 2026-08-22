@@ -99,6 +99,10 @@ export function AffiliateStatusDialog({ open, onOpenChange, application }: Affil
           <Field>
             <Label htmlFor="affiliate-new-status">Trạng thái mới</Label>
             <Select
+              items={Object.entries(AFFILIATE_APPLICATION_STATUS_LABELS).map(([key, label]) => ({
+                value: String(AffiliateApplicationStatus[key as keyof typeof AffiliateApplicationStatus]),
+                label,
+              }))}
               value={String(newStatus)}
               onValueChange={(value) => setNewStatus(Number(value) as AffiliateApplicationStatus)}
             >
