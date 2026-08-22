@@ -13,7 +13,7 @@ public class AffiliateApplicationService : IAffiliateApplicationService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<AffiliateApplicationDto> CreateAsync(CreateAffiliateApplicationDto dto, CancellationToken cancellationToken = default)
+    public async Task<AffiliateApplicationDto> CreateAsync(CreateAffiliateApplicationDto dto, Guid? customerId = null, CancellationToken cancellationToken = default)
     {
         var entity = new AffiliateApplication
         {
@@ -22,6 +22,7 @@ public class AffiliateApplicationService : IAffiliateApplicationService
             Phone = dto.Phone,
             WebsiteUrl = dto.WebsiteUrl,
             PromotionPlan = dto.PromotionPlan,
+            CustomerId = customerId,
             CreatedAt = DateTime.UtcNow
         };
 

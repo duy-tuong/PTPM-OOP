@@ -111,7 +111,9 @@ function PlanCard({
 
         <div className="mb-6">
           <span className="text-xs font-medium tracking-widest text-primary uppercase">{plan.categoryName}</span>
-          <h3 className="font-heading mt-1 text-xl">{plan.name}</h3>
+          <Link href={`/bang-gia/${plan.slug}`} className="font-heading mt-1 block w-fit text-xl hover:text-primary">
+            {plan.name}
+          </Link>
           {plan.shortDescription && <p className="mt-1 text-sm text-muted-foreground">{plan.shortDescription}</p>}
         </div>
 

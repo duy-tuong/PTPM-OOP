@@ -13,6 +13,9 @@ public class AffiliateApplication
     public string? PromotionPlan { get; set; }
     public AffiliateApplicationStatus Status { get; set; } = AffiliateApplicationStatus.Pending;
 
+    public Guid? CustomerId { get; set; }
+    public Customer? Customer { get; set; }
+
     public Guid? ReviewedByUserId { get; set; }
     public AppUser? ReviewedByUser { get; set; }
     public DateTime? ReviewedAt { get; set; }

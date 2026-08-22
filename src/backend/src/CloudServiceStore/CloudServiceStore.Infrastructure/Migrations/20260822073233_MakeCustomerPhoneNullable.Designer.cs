@@ -4,6 +4,7 @@ using CloudServiceStore.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CloudServiceStore.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260822073233_MakeCustomerPhoneNullable")]
+    partial class MakeCustomerPhoneNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1380,9 +1383,6 @@ namespace CloudServiceStore.Infrastructure.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
 
-                    b.Property<Guid?>("CustomerId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -1421,8 +1421,6 @@ namespace CloudServiceStore.Infrastructure.Migrations
                         .HasColumnType("nvarchar(255)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CustomerId");
 
                     b.HasIndex("ReviewedByUserId");
 
@@ -1911,17 +1909,10 @@ namespace CloudServiceStore.Infrastructure.Migrations
 
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.Sales.AffiliateApplication", b =>
                 {
-                    b.HasOne("CloudServiceStore.Domain.Entities.Identity.Customer", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("CloudServiceStore.Domain.Entities.Identity.AppUser", "ReviewedByUser")
                         .WithMany()
                         .HasForeignKey("ReviewedByUserId")
                         .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Customer");
 
                     b.Navigation("ReviewedByUser");
                 });
