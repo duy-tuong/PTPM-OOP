@@ -26,6 +26,8 @@ interface FormErrors {
   title?: string;
   slug?: string;
   content?: string;
+  summary?: string;
+  thumbnailUrl?: string;
 }
 
 function toDateInputValue(value: string): string {
@@ -84,6 +86,8 @@ export function NewsArticleForm({ mode, initialData, categories }: NewsArticleFo
     if (!slug.trim()) nextErrors.slug = "Vui lòng nhập slug";
     else if (slug.length > 270) nextErrors.slug = "Slug tối đa 270 ký tự";
     if (!content.trim()) nextErrors.content = "Vui lòng nhập nội dung";
+    if (summary.length > 500) nextErrors.summary = "Tóm tắt tối đa 500 ký tự";
+    if (thumbnailUrl.length > 500) nextErrors.thumbnailUrl = "URL tối đa 500 ký tự";
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   }
@@ -194,7 +198,9 @@ export function NewsArticleForm({ mode, initialData, categories }: NewsArticleFo
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
               placeholder="Hiển thị ở danh sách tin tức, tối đa 500 ký tự"
+              aria-invalid={!!errors.summary}
             />
+            <FieldError errors={errors.summary ? [{ message: errors.summary }] : undefined} />
           </Field>
 
           <Field>
@@ -204,7 +210,9 @@ export function NewsArticleForm({ mode, initialData, categories }: NewsArticleFo
               value={thumbnailUrl}
               onChange={(e) => setThumbnailUrl(e.target.value)}
               placeholder="https://..."
+              aria-invalid={!!errors.thumbnailUrl}
             />
+            <FieldError errors={errors.thumbnailUrl ? [{ message: errors.thumbnailUrl }] : undefined} />
           </Field>
 
           <Field>

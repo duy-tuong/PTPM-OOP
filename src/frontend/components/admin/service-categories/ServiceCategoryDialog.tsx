@@ -34,6 +34,8 @@ const EMPTY_FORM: FormState = { name: "", slug: "", description: "", iconUrl: ""
 interface FormErrors {
   name?: string;
   slug?: string;
+  description?: string;
+  iconUrl?: string;
 }
 
 export function ServiceCategoryDialog({ open, onOpenChange, category }: ServiceCategoryDialogProps) {
@@ -75,6 +77,8 @@ export function ServiceCategoryDialog({ open, onOpenChange, category }: ServiceC
     else if (form.name.length > 100) nextErrors.name = "Tên tối đa 100 ký tự";
     if (!form.slug.trim()) nextErrors.slug = "Vui lòng nhập slug";
     else if (form.slug.length > 120) nextErrors.slug = "Slug tối đa 120 ký tự";
+    if (form.description.length > 2000) nextErrors.description = "Mô tả tối đa 2000 ký tự";
+    if (form.iconUrl.length > 500) nextErrors.iconUrl = "URL tối đa 500 ký tự";
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   }
@@ -155,7 +159,9 @@ export function ServiceCategoryDialog({ open, onOpenChange, category }: ServiceC
                 id="category-description"
                 value={form.description}
                 onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
+                aria-invalid={!!errors.description}
               />
+              <FieldError errors={errors.description ? [{ message: errors.description }] : undefined} />
             </Field>
 
             <Field>
@@ -165,7 +171,9 @@ export function ServiceCategoryDialog({ open, onOpenChange, category }: ServiceC
                 value={form.iconUrl}
                 onChange={(e) => setForm((prev) => ({ ...prev, iconUrl: e.target.value }))}
                 placeholder="https://..."
+                aria-invalid={!!errors.iconUrl}
               />
+              <FieldError errors={errors.iconUrl ? [{ message: errors.iconUrl }] : undefined} />
             </Field>
 
             <Field>

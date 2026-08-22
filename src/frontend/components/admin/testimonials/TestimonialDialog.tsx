@@ -41,6 +41,9 @@ const EMPTY_FORM: FormState = {
 interface FormErrors {
   displayName?: string;
   content?: string;
+  companyName?: string;
+  avatarUrl?: string;
+  rating?: string;
 }
 
 export function TestimonialDialog({ open, onOpenChange, testimonial }: TestimonialDialogProps) {
@@ -76,6 +79,14 @@ export function TestimonialDialog({ open, onOpenChange, testimonial }: Testimoni
     else if (form.displayName.length > 100) nextErrors.displayName = "Tên tối đa 100 ký tự";
     if (!form.content.trim()) nextErrors.content = "Vui lòng nhập nội dung đánh giá";
     else if (form.content.length > 1000) nextErrors.content = "Nội dung tối đa 1000 ký tự";
+    if (form.companyName.length > 150) nextErrors.companyName = "Tối đa 150 ký tự";
+    if (form.avatarUrl.length > 500) nextErrors.avatarUrl = "URL tối đa 500 ký tự";
+    if (form.rating) {
+      const ratingValue = Number(form.rating);
+      if (!Number.isFinite(ratingValue) || ratingValue < 1 || ratingValue > 5) {
+        nextErrors.rating = "Số sao phải từ 1 đến 5";
+      }
+    }
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   }
@@ -140,7 +151,9 @@ export function TestimonialDialog({ open, onOpenChange, testimonial }: Testimoni
                 value={form.companyName}
                 onChange={(e) => setForm((prev) => ({ ...prev, companyName: e.target.value }))}
                 placeholder="Tuỳ chọn"
+                aria-invalid={!!errors.companyName}
               />
+              <FieldError errors={errors.companyName ? [{ message: errors.companyName }] : undefined} />
             </Field>
 
             <Field>
@@ -150,7 +163,9 @@ export function TestimonialDialog({ open, onOpenChange, testimonial }: Testimoni
                 value={form.avatarUrl}
                 onChange={(e) => setForm((prev) => ({ ...prev, avatarUrl: e.target.value }))}
                 placeholder="https://..."
+                aria-invalid={!!errors.avatarUrl}
               />
+              <FieldError errors={errors.avatarUrl ? [{ message: errors.avatarUrl }] : undefined} />
             </Field>
 
             <Field>
@@ -176,7 +191,9 @@ export function TestimonialDialog({ open, onOpenChange, testimonial }: Testimoni
                   value={form.rating}
                   onChange={(e) => setForm((prev) => ({ ...prev, rating: e.target.value }))}
                   placeholder="Tuỳ chọn"
+                  aria-invalid={!!errors.rating}
                 />
+                <FieldError errors={errors.rating ? [{ message: errors.rating }] : undefined} />
               </Field>
 
               <Field>

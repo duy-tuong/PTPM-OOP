@@ -29,6 +29,18 @@ interface FormErrors {
   categoryId?: string;
   name?: string;
   slug?: string;
+  shortDescription?: string;
+}
+
+interface FeatureRowErrors {
+  featureKey?: string;
+  featureLabel?: string;
+  featureValueText?: string;
+}
+
+interface PriceRowErrors {
+  periodMonths?: string;
+  price?: string;
 }
 
 // AdminServicePlanDto.features/.prices là read DTO (PlanFeatureDto/PlanPriceDto ở lib/types/catalog.ts)
@@ -92,6 +104,8 @@ export function ServicePlanForm({ mode, initialData, categories }: ServicePlanFo
   const [features, setFeatures] = useState<PlanFeatureInputDto[]>(initialData?.features.map(toFeatureInput) ?? []);
   const [prices, setPrices] = useState<PlanPriceInputDto[]>(initialData?.prices.map(toPriceInput) ?? []);
   const [errors, setErrors] = useState<FormErrors>({});
+  const [featureErrors, setFeatureErrors] = useState<Record<number, FeatureRowErrors>>({});
+  const [priceErrors, setPriceErrors] = useState<Record<number, PriceRowErrors>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function handleNameChange(value: string) {
@@ -136,8 +150,38 @@ export function ServicePlanForm({ mode, initialData, categories }: ServicePlanFo
     else if (name.length > 100) nextErrors.name = "Tên tối đa 100 ký tự";
     if (!slug.trim()) nextErrors.slug = "Vui lòng nhập slug";
     else if (slug.length > 120) nextErrors.slug = "Slug tối đa 120 ký tự";
+    if (shortDescription.length > 500) nextErrors.shortDescription = "Mô tả ngắn tối đa 500 ký tự";
     setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
+
+    const nextFeatureErrors: Record<number, FeatureRowErrors> = {};
+    features.forEach((feature, index) => {
+      const rowErrors: FeatureRowErrors = {};
+      if (!feature.featureKey.trim()) rowErrors.featureKey = "Bắt buộc";
+      else if (feature.featureKey.length > 100) rowErrors.featureKey = "Tối đa 100 ký tự";
+      if (!feature.featureLabel.trim()) rowErrors.featureLabel = "Bắt buộc";
+      else if (feature.featureLabel.length > 200) rowErrors.featureLabel = "Tối đa 200 ký tự";
+      if (!feature.featureValueText.trim()) rowErrors.featureValueText = "Bắt buộc";
+      else if (feature.featureValueText.length > 200) rowErrors.featureValueText = "Tối đa 200 ký tự";
+      if (Object.keys(rowErrors).length > 0) nextFeatureErrors[index] = rowErrors;
+    });
+    setFeatureErrors(nextFeatureErrors);
+
+    const nextPriceErrors: Record<number, PriceRowErrors> = {};
+    prices.forEach((price, index) => {
+      const rowErrors: PriceRowErrors = {};
+      if (!Number.isFinite(price.periodMonths) || price.periodMonths < 1 || price.periodMonths > 60) {
+        rowErrors.periodMonths = "Từ 1 đến 60 tháng";
+      }
+      if (!Number.isFinite(price.price) || price.price < 0) rowErrors.price = "Không được âm";
+      if (Object.keys(rowErrors).length > 0) nextPriceErrors[index] = rowErrors;
+    });
+    setPriceErrors(nextPriceErrors);
+
+    return (
+      Object.keys(nextErrors).length === 0 &&
+      Object.keys(nextFeatureErrors).length === 0 &&
+      Object.keys(nextPriceErrors).length === 0
+    );
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -246,7 +290,9 @@ export function ServicePlanForm({ mode, initialData, categories }: ServicePlanFo
               value={shortDescription}
               onChange={(e) => setShortDescription(e.target.value)}
               placeholder="Hiển thị dưới tên gói ở trang chủ/bảng giá"
+              aria-invalid={!!errors.shortDescription}
             />
+            <FieldError errors={errors.shortDescription ? [{ message: errors.shortDescription }] : undefined} />
           </Field>
 
           <Field>
@@ -327,35 +373,61 @@ export function ServicePlanForm({ mode, initialData, categories }: ServicePlanFo
           {features.map((feature, index) => (
             <div
               key={index}
-              className="group grid grid-cols-1 gap-3 rounded-2xl border border-zinc-200/60 bg-zinc-50/50 p-4 transition-colors hover:bg-zinc-50 sm:grid-cols-[1fr_1fr_1fr_7rem_auto_auto] sm:items-center"
+              className="group grid grid-cols-1 gap-3 rounded-2xl border border-zinc-200/60 bg-zinc-50/50 p-4 transition-colors hover:bg-zinc-50 sm:grid-cols-[1fr_1fr_1fr_7rem_auto_auto] sm:items-start"
             >
-              <Input
-                placeholder="Khoá (vd: cpu)"
-                value={feature.featureKey}
-                className="bg-white"
-                onChange={(e) => updateFeature(index, { featureKey: e.target.value })}
-              />
-              <Input
-                placeholder="Nhãn (vd: CPU)"
-                value={feature.featureLabel}
-                className="bg-white"
-                onChange={(e) => updateFeature(index, { featureLabel: e.target.value })}
-              />
-              <Input
-                placeholder="Giá trị (vd: 2 vCPU)"
-                value={feature.featureValueText}
-                className="bg-white"
-                onChange={(e) => updateFeature(index, { featureValueText: e.target.value })}
-              />
-              <Input
-                type="number"
-                placeholder="Số (tuỳ chọn)"
-                value={feature.featureValueNumeric ?? ""}
-                className="bg-white"
-                onChange={(e) =>
-                  updateFeature(index, { featureValueNumeric: e.target.value ? Number(e.target.value) : undefined })
-                }
-              />
+              <div className="flex flex-col gap-1">
+                <Input
+                  placeholder="Khoá (vd: cpu)"
+                  value={feature.featureKey}
+                  className="bg-white"
+                  onChange={(e) => updateFeature(index, { featureKey: e.target.value })}
+                  aria-invalid={!!featureErrors[index]?.featureKey}
+                />
+                <FieldError
+                  errors={featureErrors[index]?.featureKey ? [{ message: featureErrors[index]!.featureKey! }] : undefined}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Input
+                  placeholder="Nhãn (vd: CPU)"
+                  value={feature.featureLabel}
+                  className="bg-white"
+                  onChange={(e) => updateFeature(index, { featureLabel: e.target.value })}
+                  aria-invalid={!!featureErrors[index]?.featureLabel}
+                />
+                <FieldError
+                  errors={
+                    featureErrors[index]?.featureLabel ? [{ message: featureErrors[index]!.featureLabel! }] : undefined
+                  }
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Input
+                  placeholder="Giá trị (vd: 2 vCPU)"
+                  value={feature.featureValueText}
+                  className="bg-white"
+                  onChange={(e) => updateFeature(index, { featureValueText: e.target.value })}
+                  aria-invalid={!!featureErrors[index]?.featureValueText}
+                />
+                <FieldError
+                  errors={
+                    featureErrors[index]?.featureValueText
+                      ? [{ message: featureErrors[index]!.featureValueText! }]
+                      : undefined
+                  }
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Input
+                  type="number"
+                  placeholder="Số (tuỳ chọn)"
+                  value={feature.featureValueNumeric ?? ""}
+                  className="bg-white"
+                  onChange={(e) =>
+                    updateFeature(index, { featureValueNumeric: e.target.value ? Number(e.target.value) : undefined })
+                  }
+                />
+              </div>
               <label className="flex cursor-pointer items-center gap-2 self-center px-2 text-sm font-medium whitespace-nowrap text-zinc-700">
                 <div className="relative flex items-center">
                   <input
@@ -398,35 +470,49 @@ export function ServicePlanForm({ mode, initialData, categories }: ServicePlanFo
           {prices.map((price, index) => (
             <div
               key={index}
-              className="group grid grid-cols-1 gap-3 rounded-2xl border border-zinc-200/60 bg-zinc-50/50 p-4 transition-colors hover:bg-zinc-50 sm:grid-cols-[6rem_1fr_1fr_auto_auto_auto] sm:items-center"
+              className="group grid grid-cols-1 gap-3 rounded-2xl border border-zinc-200/60 bg-zinc-50/50 p-4 transition-colors hover:bg-zinc-50 sm:grid-cols-[6rem_1fr_1fr_auto_auto_auto] sm:items-start"
             >
-              <Input
-                type="number"
-                min={1}
-                max={60}
-                value={price.periodMonths}
-                className="bg-white"
-                onChange={(e) => updatePrice(index, { periodMonths: Number(e.target.value) })}
-                aria-label="Số tháng"
-              />
-              <Input
-                type="number"
-                min={0}
-                placeholder="Giá (VNĐ)"
-                value={price.price}
-                className="bg-white"
-                onChange={(e) => updatePrice(index, { price: Number(e.target.value) })}
-              />
-              <Input
-                type="number"
-                min={0}
-                placeholder="Giá khuyến mãi (tuỳ chọn)"
-                value={price.promotionalPrice ?? ""}
-                className="bg-white"
-                onChange={(e) =>
-                  updatePrice(index, { promotionalPrice: e.target.value ? Number(e.target.value) : undefined })
-                }
-              />
+              <div className="flex flex-col gap-1">
+                <Input
+                  type="number"
+                  min={1}
+                  max={60}
+                  value={price.periodMonths}
+                  className="bg-white"
+                  onChange={(e) => updatePrice(index, { periodMonths: Number(e.target.value) })}
+                  aria-label="Số tháng"
+                  aria-invalid={!!priceErrors[index]?.periodMonths}
+                />
+                <FieldError
+                  errors={
+                    priceErrors[index]?.periodMonths ? [{ message: priceErrors[index]!.periodMonths! }] : undefined
+                  }
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder="Giá (VNĐ)"
+                  value={price.price}
+                  className="bg-white"
+                  onChange={(e) => updatePrice(index, { price: Number(e.target.value) })}
+                  aria-invalid={!!priceErrors[index]?.price}
+                />
+                <FieldError errors={priceErrors[index]?.price ? [{ message: priceErrors[index]!.price! }] : undefined} />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder="Giá khuyến mãi (tuỳ chọn)"
+                  value={price.promotionalPrice ?? ""}
+                  className="bg-white"
+                  onChange={(e) =>
+                    updatePrice(index, { promotionalPrice: e.target.value ? Number(e.target.value) : undefined })
+                  }
+                />
+              </div>
               <label className="flex cursor-pointer items-center gap-2 self-center px-2 text-sm font-medium whitespace-nowrap text-zinc-700">
                 <div className="relative flex items-center">
                   <input

@@ -59,6 +59,7 @@ const EMPTY_FORM: FormState = {
 interface FormErrors {
   code?: string;
   name?: string;
+  description?: string;
   discountValue?: string;
   dateRange?: string;
   scopes?: string;
@@ -149,6 +150,8 @@ export function PromotionDialog({ open, onOpenChange, promotion, categories, pla
     if (!form.code.trim()) nextErrors.code = "Vui lòng nhập mã khuyến mãi";
     else if (form.code.length > 50) nextErrors.code = "Mã tối đa 50 ký tự";
     if (!form.name.trim()) nextErrors.name = "Vui lòng nhập tên chương trình";
+    else if (form.name.length > 200) nextErrors.name = "Tên tối đa 200 ký tự";
+    if (form.description.length > 1000) nextErrors.description = "Mô tả tối đa 1000 ký tự";
     if (form.discountValue <= 0) nextErrors.discountValue = "Giá trị giảm phải lớn hơn 0";
     if (!form.startDate || !form.endDate) {
       nextErrors.dateRange = "Vui lòng chọn đầy đủ ngày bắt đầu và kết thúc";
@@ -259,7 +262,9 @@ export function PromotionDialog({ open, onOpenChange, promotion, categories, pla
                 id="promotion-description"
                 value={form.description}
                 onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
+                aria-invalid={!!errors.description}
               />
+              <FieldError errors={errors.description ? [{ message: errors.description }] : undefined} />
             </Field>
 
             <div className="grid grid-cols-2 gap-3">

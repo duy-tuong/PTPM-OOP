@@ -67,6 +67,7 @@ export function SiteSettingDialog({ open, onOpenChange, setting }: SiteSettingDi
     if (!form.settingValue.trim()) nextErrors.settingValue = "Vui lòng nhập giá trị";
     else if (form.settingValue.length > 2000) nextErrors.settingValue = "Giá trị tối đa 2000 ký tự";
     if (!form.settingGroup.trim()) nextErrors.settingGroup = "Vui lòng nhập nhóm cấu hình";
+    else if (form.settingGroup.length > 50) nextErrors.settingGroup = "Nhóm tối đa 50 ký tự";
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   }
