@@ -30,6 +30,7 @@ const EMPTY_FORM: FormState = { name: "", logoUrl: "", websiteUrl: "", displayOr
 interface FormErrors {
   name?: string;
   logoUrl?: string;
+  websiteUrl?: string;
 }
 
 export function PartnerDialog({ open, onOpenChange, partner }: PartnerDialogProps) {
@@ -62,6 +63,8 @@ export function PartnerDialog({ open, onOpenChange, partner }: PartnerDialogProp
     if (!form.name.trim()) nextErrors.name = "Vui lòng nhập tên đối tác";
     else if (form.name.length > 150) nextErrors.name = "Tên tối đa 150 ký tự";
     if (!form.logoUrl.trim()) nextErrors.logoUrl = "Vui lòng nhập URL logo";
+    else if (form.logoUrl.length > 500) nextErrors.logoUrl = "URL tối đa 500 ký tự";
+    if (form.websiteUrl.length > 500) nextErrors.websiteUrl = "URL tối đa 500 ký tự";
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   }
@@ -134,7 +137,9 @@ export function PartnerDialog({ open, onOpenChange, partner }: PartnerDialogProp
                 value={form.websiteUrl}
                 onChange={(e) => setForm((prev) => ({ ...prev, websiteUrl: e.target.value }))}
                 placeholder="https://... (tuỳ chọn)"
+                aria-invalid={!!errors.websiteUrl}
               />
+              <FieldError errors={errors.websiteUrl ? [{ message: errors.websiteUrl }] : undefined} />
             </Field>
 
             <Field>

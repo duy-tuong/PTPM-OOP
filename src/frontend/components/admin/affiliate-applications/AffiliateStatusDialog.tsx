@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Field, FieldGroup } from "@/components/ui/field";
+import { Field, FieldError, FieldGroup } from "@/components/ui/field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { updateAffiliateApplicationStatusAction } from "@/app/admin/affiliate-applications/actions";
 import { AffiliateApplicationStatus, AFFILIATE_APPLICATION_STATUS_LABELS } from "@/lib/types/enums";
@@ -25,6 +25,7 @@ export function AffiliateStatusDialog({ open, onOpenChange, application }: Affil
   const router = useRouter();
   const [newStatus, setNewStatus] = useState<AffiliateApplicationStatus>(AffiliateApplicationStatus.Pending);
   const [reviewNote, setReviewNote] = useState("");
+  const [reviewNoteError, setReviewNoteError] = useState<string | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -36,12 +37,19 @@ export function AffiliateStatusDialog({ open, onOpenChange, application }: Affil
         );
         setReviewNote(application.reviewNote ?? "");
       }
+      setReviewNoteError(undefined);
     }
     syncForm();
   }, [open, application]);
 
   async function handleSubmit() {
     if (!application) return;
+
+    if (reviewNote.length > 1000) {
+      setReviewNoteError("Ghi chú tối đa 1000 ký tự");
+      return;
+    }
+    setReviewNoteError(undefined);
 
     setIsSubmitting(true);
     try {
@@ -118,7 +126,9 @@ export function AffiliateStatusDialog({ open, onOpenChange, application }: Affil
               onChange={(e) => setReviewNote(e.target.value)}
               placeholder="Tuỳ chọn - lý do duyệt/từ chối"
               rows={3}
+              aria-invalid={!!reviewNoteError}
             />
+            <FieldError errors={reviewNoteError ? [{ message: reviewNoteError }] : undefined} />
           </Field>
         </FieldGroup>
 

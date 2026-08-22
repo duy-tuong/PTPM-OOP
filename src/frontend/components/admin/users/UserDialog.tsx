@@ -38,11 +38,13 @@ const EMPTY_FORM: FormState = {
 };
 
 const ROLE_NAME_TO_ID: Record<string, number> = { Admin: 1, Editor: 2 };
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface FormErrors {
   username?: string;
   email?: string;
   fullName?: string;
+  phoneNumber?: string;
   password?: string;
   roleIds?: string;
 }
@@ -87,8 +89,13 @@ export function UserDialog({ open, onOpenChange, user }: UserDialogProps) {
   function validate(): boolean {
     const nextErrors: FormErrors = {};
     if (!user && !form.username.trim()) nextErrors.username = "Vui lòng nhập tên đăng nhập";
+    else if (!user && form.username.length > 50) nextErrors.username = "Tối đa 50 ký tự";
     if (!form.email.trim()) nextErrors.email = "Vui lòng nhập email";
+    else if (!EMAIL_PATTERN.test(form.email)) nextErrors.email = "Email không đúng định dạng";
+    else if (form.email.length > 100) nextErrors.email = "Tối đa 100 ký tự";
     if (!form.fullName.trim()) nextErrors.fullName = "Vui lòng nhập họ tên";
+    else if (form.fullName.length > 100) nextErrors.fullName = "Tối đa 100 ký tự";
+    if (form.phoneNumber.length > 20) nextErrors.phoneNumber = "Tối đa 20 ký tự";
     if (!user && !form.password.trim()) nextErrors.password = "Vui lòng nhập mật khẩu";
     if (form.roleIds.length === 0) nextErrors.roleIds = "Vui lòng chọn ít nhất 1 vai trò";
     setErrors(nextErrors);
@@ -189,7 +196,9 @@ export function UserDialog({ open, onOpenChange, user }: UserDialogProps) {
                 id="user-phone"
                 value={form.phoneNumber}
                 onChange={(e) => setForm((prev) => ({ ...prev, phoneNumber: e.target.value }))}
+                aria-invalid={!!errors.phoneNumber}
               />
+              <FieldError errors={errors.phoneNumber ? [{ message: errors.phoneNumber }] : undefined} />
             </Field>
 
             {!user && (
