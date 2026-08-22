@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Field, FieldError, FieldGroup } from "@/components/ui/field";
+import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { createPartnerAction, updatePartnerAction } from "@/app/admin/partners/actions";
 import type { AdminPartnerDto } from "@/lib/types/admin";
 
@@ -120,12 +121,12 @@ export function PartnerDialog({ open, onOpenChange, partner }: PartnerDialogProp
 
             <Field>
               <Label htmlFor="partner-logo">URL logo</Label>
-              <Input
+              <ImageUploadField
                 id="partner-logo"
                 value={form.logoUrl}
-                onChange={(e) => setForm((prev) => ({ ...prev, logoUrl: e.target.value }))}
+                onChange={(value) => setForm((prev) => ({ ...prev, logoUrl: value }))}
                 placeholder="https://..."
-                aria-invalid={!!errors.logoUrl}
+                ariaInvalid={!!errors.logoUrl}
               />
               <FieldError errors={errors.logoUrl ? [{ message: errors.logoUrl }] : undefined} />
             </Field>

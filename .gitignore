@@ -9,6 +9,10 @@ TestResults/
 appsettings.Development.json
 appsettings.*.local.json
 
+# Ảnh upload qua AdminUploadsController — dữ liệu runtime, không phải mã nguồn (lưu bền vững qua
+# Docker volume lúc deploy, xem docker-compose.yml)
+src/backend/src/CloudServiceStore/CloudServiceStore.WebApi/wwwroot/uploads/
+
 # Node / Next.js
 node_modules/
 .next/

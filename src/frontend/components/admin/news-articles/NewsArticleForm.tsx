@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Field, FieldDescription, FieldError, FieldGroup } from "@/components/ui/field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MarkdownEditor } from "@/components/admin/MarkdownEditor";
+import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { slugify } from "@/lib/utils";
 import { createNewsArticleAction, updateNewsArticleAction } from "@/app/admin/news-articles/actions";
 import type { AdminNewsArticleDto, AdminNewsCategoryDto } from "@/lib/types/admin";
@@ -205,12 +206,12 @@ export function NewsArticleForm({ mode, initialData, categories }: NewsArticleFo
 
           <Field>
             <Label htmlFor="article-thumbnail">URL ảnh đại diện</Label>
-            <Input
+            <ImageUploadField
               id="article-thumbnail"
               value={thumbnailUrl}
-              onChange={(e) => setThumbnailUrl(e.target.value)}
+              onChange={setThumbnailUrl}
               placeholder="https://..."
-              aria-invalid={!!errors.thumbnailUrl}
+              ariaInvalid={!!errors.thumbnailUrl}
             />
             <FieldError errors={errors.thumbnailUrl ? [{ message: errors.thumbnailUrl }] : undefined} />
           </Field>
