@@ -87,7 +87,14 @@ export function OrderStatusDialog({ open, onOpenChange, order }: OrderStatusDial
 
           <Field>
             <Label htmlFor="order-new-status">Trạng thái mới</Label>
-            <Select value={String(newStatus)} onValueChange={(value) => setNewStatus(Number(value) as OrderRequestStatus)}>
+            <Select
+              items={Object.entries(ORDER_REQUEST_STATUS_LABELS).map(([key, label]) => ({
+                value: String(OrderRequestStatus[key as keyof typeof OrderRequestStatus]),
+                label,
+              }))}
+              value={String(newStatus)}
+              onValueChange={(value) => setNewStatus(Number(value) as OrderRequestStatus)}
+            >
               <SelectTrigger id="order-new-status" className="w-full">
                 <SelectValue />
               </SelectTrigger>

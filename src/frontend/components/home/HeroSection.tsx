@@ -3,7 +3,7 @@ import { ArrowRight, EnvelopeSimple } from "@phosphor-icons/react/dist/ssr";
 import { Button } from "@/components/ui/button";
 import { MagneticButton } from "@/components/shared/MagneticButton";
 import { ParallaxLayer } from "@/components/shared/ParallaxLayer";
-import { TopographicLines } from "@/components/home/effects/TopographicLines";
+
 
 // Section 1/9 của Trang chủ (pivot 2 - theme "Cloudverse", xem plan Phase 6.2). Bố cục center/stack
 // (khác bản split 2 cột của pivot 1): 2 blob nền cyan/tím trôi chậm + line-art "Topographic Contour
@@ -21,9 +21,7 @@ export function HeroSection() {
         <div className="animate-ambient-blob absolute top-[40%] right-[-150px] h-[500px] w-[500px] rounded-full bg-[var(--accent-purple)] opacity-20 blur-[100px]" />
       </ParallaxLayer>
 
-      <ParallaxLayer depth={0.4} className="pointer-events-none absolute inset-0 -z-10">
-        <TopographicLines />
-      </ParallaxLayer>
+
 
       <div className="relative z-10 flex max-w-3xl flex-col items-center gap-6">
         <div className="glass-card inline-flex w-fit items-center gap-2 rounded-full px-4 py-1.5">

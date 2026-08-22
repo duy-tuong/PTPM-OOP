@@ -153,6 +153,11 @@ export function SiteSettingDialog({ open, onOpenChange, setting }: SiteSettingDi
             <Field>
               <Label htmlFor="setting-datatype">Kiểu dữ liệu</Label>
               <Select
+                items={[
+                  { value: "string", label: "Chuỗi (string)" },
+                  { value: "number", label: "Số (number)" },
+                  { value: "boolean", label: "Đúng/Sai (boolean)" },
+                ]}
                 value={form.dataType}
                 onValueChange={(value) => setForm((prev) => ({ ...prev, dataType: value ?? prev.dataType }))}
               >

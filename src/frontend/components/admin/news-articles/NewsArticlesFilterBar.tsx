@@ -50,18 +50,15 @@ export function NewsArticlesFilterBar({ categories, currentCategorySlug, current
       </div>
 
       <Select
+        items={[
+          { value: "all-categories", label: "Tất cả danh mục" },
+          ...categories.map((category) => ({ value: category.slug, label: category.name })),
+        ]}
         value={currentCategorySlug ?? "all-categories"}
         onValueChange={(value) => updateParam("categorySlug", value === "all-categories" ? null : value)}
       >
         <SelectTrigger className="w-[220px] rounded-full bg-white border-zinc-200/60 shadow-none ring-1 ring-zinc-950/5 hover:bg-zinc-50">
-          <span className="truncate text-left flex-1">
-            {currentCategorySlug && currentCategorySlug !== "all-categories"
-              ? categories.find((c) => c.slug === currentCategorySlug)?.name ?? "Tất cả danh mục"
-              : "Tất cả danh mục"}
-          </span>
-          <span className="hidden">
-            <SelectValue placeholder="Tất cả danh mục" />
-          </span>
+          <SelectValue placeholder="Tất cả danh mục" />
         </SelectTrigger>
         <SelectContent alignItemWithTrigger={false}>
           <SelectItem value="all-categories">Tất cả danh mục</SelectItem>

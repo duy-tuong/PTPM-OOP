@@ -19,6 +19,7 @@ public class Customer : ISoftDelete
     public string? TaxCode { get; set; }
 
     public bool IsEmailVerified { get; set; }
+    public string? PendingEmail { get; set; }
     public string? EmailVerificationToken { get; set; }
     public DateTime? EmailVerificationExpiry { get; set; }
     public string? PasswordResetToken { get; set; }

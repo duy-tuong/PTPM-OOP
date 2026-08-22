@@ -271,6 +271,10 @@ export function PromotionDialog({ open, onOpenChange, promotion, categories, pla
               <Field>
                 <Label htmlFor="promotion-discount-type">Loại giảm giá</Label>
                 <Select
+                  items={[
+                    { value: String(DiscountType.Percentage), label: "Giảm theo %" },
+                    { value: String(DiscountType.FixedAmount), label: "Giảm số tiền cố định" },
+                  ]}
                   value={String(form.discountType)}
                   onValueChange={(value) =>
                     setForm((prev) => ({ ...prev, discountType: Number(value) as DiscountType }))
@@ -404,6 +408,10 @@ export function PromotionDialog({ open, onOpenChange, promotion, categories, pla
                     className="grid grid-cols-1 gap-2 rounded-2xl border border-zinc-200/60 bg-zinc-50/50 p-3 sm:grid-cols-[1fr_1fr_auto] sm:items-center"
                   >
                     <Select
+                      items={Object.entries(SCOPE_TYPE_LABELS).map(([key, label]) => ({
+                        value: String(ScopeType[key as keyof typeof ScopeType]),
+                        label,
+                      }))}
                       value={String(scope.scopeType)}
                       onValueChange={(value) => updateScope(index, { scopeType: Number(value) as ScopeType })}
                     >
@@ -421,6 +429,7 @@ export function PromotionDialog({ open, onOpenChange, promotion, categories, pla
 
                     {scope.scopeType === ScopeType.Category && (
                       <Select
+                        items={categories.map((category) => ({ value: String(category.id), label: category.name }))}
                         value={scope.serviceCategoryId ? String(scope.serviceCategoryId) : ""}
                         onValueChange={(value) => updateScope(index, { serviceCategoryId: Number(value) })}
                       >
@@ -439,6 +448,7 @@ export function PromotionDialog({ open, onOpenChange, promotion, categories, pla
 
                     {scope.scopeType === ScopeType.Plan && (
                       <Select
+                        items={plans.map((plan) => ({ value: String(plan.id), label: plan.name }))}
                         value={scope.servicePlanId ? String(scope.servicePlanId) : ""}
                         onValueChange={(value) => updateScope(index, { servicePlanId: Number(value) })}
                       >

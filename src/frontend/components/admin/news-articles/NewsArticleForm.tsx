@@ -138,7 +138,11 @@ export function NewsArticleForm({ mode, initialData, categories }: NewsArticleFo
           <div className="grid gap-4 sm:grid-cols-2">
             <Field>
               <Label htmlFor="article-category">Danh mục</Label>
-              <Select value={String(newsCategoryId)} onValueChange={(value) => setNewsCategoryId(Number(value))}>
+              <Select
+                items={categories.map((category) => ({ value: String(category.id), label: category.name }))}
+                value={String(newsCategoryId)}
+                onValueChange={(value) => setNewsCategoryId(Number(value))}
+              >
                 <SelectTrigger id="article-category" className="w-full">
                   <SelectValue placeholder="Chọn danh mục" />
                 </SelectTrigger>

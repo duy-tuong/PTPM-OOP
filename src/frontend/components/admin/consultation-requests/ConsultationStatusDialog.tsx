@@ -78,6 +78,10 @@ export function ConsultationStatusDialog({ open, onOpenChange, request }: Consul
           <Field>
             <Label htmlFor="consultation-new-status">Trạng thái mới</Label>
             <Select
+              items={Object.entries(CONSULTATION_STATUS_LABELS).map(([key, label]) => ({
+                value: String(ConsultationStatus[key as keyof typeof ConsultationStatus]),
+                label,
+              }))}
               value={String(newStatus)}
               onValueChange={(value) => setNewStatus(Number(value) as ConsultationStatus)}
             >

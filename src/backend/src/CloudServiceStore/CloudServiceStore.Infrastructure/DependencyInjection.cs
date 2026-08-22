@@ -39,6 +39,8 @@ public static class DependencyInjection
         services.AddSingleton<ISiteSettingsCache, SiteSettingsCache>();
         services.AddSingleton<IQrCodeFactory, QrCodeFactory>();
         services.AddSingleton<IFileStorageService, LocalFileStorageService>();
+        services.AddSingleton<IEmailService, LoggingEmailService>();
+        services.AddSingleton<IAppSettings, AppSettings>();
         services.AddScoped<IOrderStatusObserver, AuditLogOrderObserver>();
         services.AddScoped<IOrderRequestExportService, OrderRequestExportService>();
 
