@@ -25,6 +25,7 @@ export async function createServiceCategoryAction(
   try {
     const data = await createAdminServiceCategory(getApiUrl(), dto, await getToken());
     revalidatePath("/admin/service-categories");
+    revalidatePath("/", "layout");
     return { success: true, data };
   } catch (error) {
     if (error instanceof ApiError) return { success: false, message: error.message };
@@ -39,6 +40,7 @@ export async function updateServiceCategoryAction(
   try {
     const data = await updateAdminServiceCategory(getApiUrl(), id, dto, await getToken());
     revalidatePath("/admin/service-categories");
+    revalidatePath("/", "layout");
     return { success: true, data };
   } catch (error) {
     if (error instanceof ApiError) return { success: false, message: error.message };
@@ -50,6 +52,7 @@ export async function deleteServiceCategoryAction(id: number): Promise<{ success
   try {
     await deleteAdminServiceCategory(getApiUrl(), id, await getToken());
     revalidatePath("/admin/service-categories");
+    revalidatePath("/", "layout");
     return { success: true };
   } catch (error) {
     if (error instanceof ApiError) return { success: false, message: error.message };
