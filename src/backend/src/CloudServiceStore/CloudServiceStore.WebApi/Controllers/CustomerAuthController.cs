@@ -31,10 +31,6 @@ public class CustomerAuthController : ControllerBase
         {
             return Conflict(new { message = ex.Message });
         }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
     }
 
     [HttpPost("login")]

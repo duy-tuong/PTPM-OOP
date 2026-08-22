@@ -29,7 +29,9 @@ export function PlanConfiguratorSlider({ plans, period }: { plans: ServicePlanLi
       <div className="flex flex-col gap-6">
         <div>
           <p className="text-sm font-medium text-muted-foreground">Bạn cần bao nhiêu tài nguyên?</p>
-          <p className="mt-1 text-2xl font-bold text-foreground">{plan.name}</p>
+          <Link href={`/bang-gia/${plan.slug}`} className="mt-1 block w-fit text-2xl font-bold text-foreground hover:text-primary">
+            {plan.name}
+          </Link>
         </div>
         <input
           type="range"

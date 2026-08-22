@@ -113,7 +113,9 @@ function SinglePlanCard({ plan, period }: { plan: ServicePlanListItemDto; period
           Phổ biến nhất
         </div>
       )}
-      <p className="text-sm text-muted-foreground">{plan.name}</p>
+      <Link href={`/bang-gia/${plan.slug}`} className="w-fit text-sm text-muted-foreground hover:text-primary">
+        {plan.name}
+      </Link>
       <div className="my-2 text-4xl font-bold">
         <AnimatedPrice value={priceFor(plan, period)} />
       </div>
