@@ -38,9 +38,9 @@ export function OrderRequestsTable({ orders }: { orders: AdminOrderRequestDto[] 
       ),
     },
     {
-      key: "servicePlan",
-      header: "Gói dịch vụ",
-      cell: (row) => row.servicePlanName ?? "-",
+      key: "product",
+      header: "Sản phẩm",
+      cell: (row) => row.servicePlanName ?? (row.domainName && row.tldName ? `${row.domainName}${row.tldName}` : "-"),
     },
     {
       key: "totalPrice",

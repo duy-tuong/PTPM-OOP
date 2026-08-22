@@ -256,6 +256,9 @@ export interface AdminOrderRequestDto {
   companyName?: string | null;
   servicePlanId?: number | null;
   servicePlanName?: string | null;
+  tldPricingId?: number | null;
+  tldName?: string | null;
+  domainName?: string | null;
   periodMonths?: number | null;
   quantity: number;
   totalPrice: number;

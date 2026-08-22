@@ -18,6 +18,7 @@ public class OrderRequestConfiguration : IEntityTypeConfiguration<OrderRequest>
         builder.Property(x => x.CustomerPhone).HasMaxLength(20).IsRequired();
         builder.Property(x => x.CompanyName).HasMaxLength(150);
         builder.Property(x => x.TaxCode).HasMaxLength(20);
+        builder.Property(x => x.DomainName).HasMaxLength(100);
         builder.Property(x => x.TotalPrice).HasColumnType("decimal(18,2)");
         builder.Property(x => x.Status).HasConversion<string>().HasMaxLength(30).IsRequired();
         builder.Property(x => x.Source).HasMaxLength(50);

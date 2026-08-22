@@ -28,6 +28,9 @@ public class CreateOrderRequestDto
 
     public int? TldPricingId { get; set; }
 
+    [MaxLength(100)]
+    public string? DomainName { get; set; }
+
     public int? PeriodMonths { get; set; }
 
     public int? PromotionId { get; set; }

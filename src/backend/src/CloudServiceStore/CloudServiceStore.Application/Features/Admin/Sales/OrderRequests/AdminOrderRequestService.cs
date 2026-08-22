@@ -4,6 +4,7 @@ using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Common.Services;
 using CloudServiceStore.Application.Features.Admin.Sales.OrderRequests.Dtos;
 using CloudServiceStore.Domain.Entities.Sales;
+using CloudServiceStore.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace CloudServiceStore.Application.Features.Admin.Sales.OrderRequests;
@@ -25,6 +26,7 @@ public class AdminOrderRequestService : IAdminOrderRequestService
 
         var baseQuery = repository.Query()
             .Include(o => o.ServicePlan)
+            .Include(o => o.TldPricing)
             .Include(o => o.AssignedToUser)
             .Where(o => query.Status == null || o.Status == query.Status)
             .OrderByDescending(o => o.CreatedAt);
@@ -45,6 +47,7 @@ public class AdminOrderRequestService : IAdminOrderRequestService
 
         var entity = await repository.Query()
             .Include(o => o.ServicePlan)
+            .Include(o => o.TldPricing)
             .Include(o => o.AssignedToUser)
             .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
 
@@ -54,6 +57,12 @@ public class AdminOrderRequestService : IAdminOrderRequestService
         }
 
         var oldStatus = entity.Status;
+        if ((oldStatus == OrderRequestStatus.Completed || oldStatus == OrderRequestStatus.Cancelled)
+            && dto.NewStatus != oldStatus)
+        {
+            throw new ValidationException("Đơn hàng đã ở trạng thái kết thúc (Hoàn tất/Đã huỷ), không thể chuyển sang trạng thái khác.");
+        }
+
         entity.Status = dto.NewStatus;
         entity.AssignedToUserId ??= changedByUserId;
         entity.UpdatedAt = DateTime.UtcNow;
@@ -82,6 +91,9 @@ public class AdminOrderRequestService : IAdminOrderRequestService
             CompanyName = order.CompanyName,
             ServicePlanId = order.ServicePlanId,
             ServicePlanName = order.ServicePlan?.Name,
+            TldPricingId = order.TldPricingId,
+            TldName = order.TldPricing?.Tld,
+            DomainName = order.DomainName,
             PeriodMonths = order.PeriodMonths,
             Quantity = order.Quantity,
             TotalPrice = order.TotalPrice,

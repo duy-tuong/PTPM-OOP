@@ -56,7 +56,7 @@ export default async function MyOrdersPage({
             <thead className="border-b border-border bg-muted/50 text-xs text-muted-foreground uppercase">
               <tr>
                 <th className="px-4 py-3 font-medium">Mã đơn</th>
-                <th className="px-4 py-3 font-medium">Gói dịch vụ</th>
+                <th className="px-4 py-3 font-medium">Sản phẩm</th>
                 <th className="px-4 py-3 font-medium">Chu kỳ</th>
                 <th className="px-4 py-3 font-medium">Số lượng</th>
                 <th className="px-4 py-3 font-medium">Thành tiền</th>
@@ -68,9 +68,15 @@ export default async function MyOrdersPage({
               {result.items.map((order) => (
                 <tr key={order.id} className="border-b border-border last:border-0">
                   <td className="px-4 py-3 font-medium text-foreground">{order.orderCode}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{order.servicePlanName ?? "-"}</td>
                   <td className="px-4 py-3 text-muted-foreground">
-                    {order.periodMonths ? `${order.periodMonths} tháng` : "-"}
+                    {order.servicePlanName ?? (order.domainName && order.tldName ? `${order.domainName}${order.tldName}` : "-")}
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground">
+                    {order.periodMonths
+                      ? `${order.periodMonths} tháng`
+                      : order.tldName
+                        ? `${order.quantity} năm`
+                        : "-"}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{order.quantity}</td>
                   <td className="px-4 py-3 font-medium text-foreground">{formatCurrency(order.totalPrice)}</td>

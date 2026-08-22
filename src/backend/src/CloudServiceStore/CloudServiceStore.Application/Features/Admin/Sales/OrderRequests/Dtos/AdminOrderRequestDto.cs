@@ -11,6 +11,9 @@ public class AdminOrderRequestDto
     public string? CompanyName { get; init; }
     public int? ServicePlanId { get; init; }
     public string? ServicePlanName { get; init; }
+    public int? TldPricingId { get; init; }
+    public string? TldName { get; init; }
+    public string? DomainName { get; init; }
     public int? PeriodMonths { get; init; }
     public int Quantity { get; init; }
     public decimal TotalPrice { get; init; }
