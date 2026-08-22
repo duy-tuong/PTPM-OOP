@@ -5,10 +5,23 @@ using CloudServiceStore.Infrastructure;
 using CloudServiceStore.WebApi.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Chốt cứng 1 đường dẫn tuyệt đối duy nhất cho thư mục upload ngay từ đầu (ghi đè "Storage:UploadsPath"
+// nếu appsettings/env chưa cấu hình) - LocalFileStorageService.cs (ghi file) và UseStaticFiles bên dưới
+// (đọc file) đều phải trỏ đúng 1 chỗ; nếu để mỗi bên tự đoán theo quy ước (ContentRootPath vs
+// AppContext.BaseDirectory) có thể lệch nhau tuỳ cách khởi động (dotnet run vs Docker WORKDIR).
+var uploadsPath = builder.Configuration["Storage:UploadsPath"];
+if (string.IsNullOrWhiteSpace(uploadsPath))
+{
+    uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "uploads");
+    builder.Configuration["Storage:UploadsPath"] = uploadsPath;
+}
+Directory.CreateDirectory(uploadsPath);
 
 // Add services to the container.
 
@@ -131,6 +144,15 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
+
+// Phục vụ ảnh đã upload - PhysicalFileProvider trỏ đúng uploadsPath đã chốt ở trên (không dùng wwwroot
+// mặc định của UseStaticFiles() để tránh lệch đường dẫn). <img src> load thẳng GET không qua
+// CORS/preflight nên không cần thêm gì vào FrontendCorsPolicy.
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsPath),
+    RequestPath = "/uploads",
+});
 
 app.UseCors(FrontendCorsPolicy);
 

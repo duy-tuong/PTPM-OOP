@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Field, FieldError, FieldGroup } from "@/components/ui/field";
+import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { createTestimonialAction, updateTestimonialAction } from "@/app/admin/testimonials/actions";
 import type { AdminTestimonialDto } from "@/lib/types/admin";
 
@@ -158,12 +159,12 @@ export function TestimonialDialog({ open, onOpenChange, testimonial }: Testimoni
 
             <Field>
               <Label htmlFor="testimonial-avatar">URL ảnh đại diện</Label>
-              <Input
+              <ImageUploadField
                 id="testimonial-avatar"
                 value={form.avatarUrl}
-                onChange={(e) => setForm((prev) => ({ ...prev, avatarUrl: e.target.value }))}
+                onChange={(value) => setForm((prev) => ({ ...prev, avatarUrl: value }))}
                 placeholder="https://..."
-                aria-invalid={!!errors.avatarUrl}
+                ariaInvalid={!!errors.avatarUrl}
               />
               <FieldError errors={errors.avatarUrl ? [{ message: errors.avatarUrl }] : undefined} />
             </Field>

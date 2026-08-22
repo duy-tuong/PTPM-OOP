@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Field, FieldError, FieldGroup } from "@/components/ui/field";
+import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { slugify } from "@/lib/utils";
 import { createServiceCategoryAction, updateServiceCategoryAction } from "@/app/admin/service-categories/actions";
 import type { AdminServiceCategoryDto } from "@/lib/types/admin";
@@ -166,12 +167,12 @@ export function ServiceCategoryDialog({ open, onOpenChange, category }: ServiceC
 
             <Field>
               <Label htmlFor="category-icon">URL biểu tượng</Label>
-              <Input
+              <ImageUploadField
                 id="category-icon"
                 value={form.iconUrl}
-                onChange={(e) => setForm((prev) => ({ ...prev, iconUrl: e.target.value }))}
+                onChange={(value) => setForm((prev) => ({ ...prev, iconUrl: value }))}
                 placeholder="https://..."
-                aria-invalid={!!errors.iconUrl}
+                ariaInvalid={!!errors.iconUrl}
               />
               <FieldError errors={errors.iconUrl ? [{ message: errors.iconUrl }] : undefined} />
             </Field>

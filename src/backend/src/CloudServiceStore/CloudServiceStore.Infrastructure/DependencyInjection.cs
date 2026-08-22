@@ -22,8 +22,12 @@ public static class DependencyInjection
                 .UseSqlServer(
                     configuration.GetConnectionString("DefaultConnection"),
                     sqlServerOptions => sqlServerOptions.EnableRetryOnFailure(
-                        maxRetryCount: 5,
-                        maxRetryDelay: TimeSpan.FromSeconds(10),
+                        // Đã verify thật qua docker-compose: SQL Server lần đầu chạy trên volume rỗng có
+                        // thể mất >1 phút mới nhận kết nối (nâng cấp msdb/tempdb) - nới ngân sách retry
+                        // làm lớp phòng thủ thứ 2 cho các cách deploy không có healthcheck gate thứ tự
+                        // khởi động như docker-compose.yml (vd chạy trực tiếp trên VM, DB khởi động chậm).
+                        maxRetryCount: 10,
+                        maxRetryDelay: TimeSpan.FromSeconds(15),
                         errorNumbersToAdd: null))
                 .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning)));
 
@@ -34,6 +38,7 @@ public static class DependencyInjection
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
         services.AddSingleton<ISiteSettingsCache, SiteSettingsCache>();
         services.AddSingleton<IQrCodeFactory, QrCodeFactory>();
+        services.AddSingleton<IFileStorageService, LocalFileStorageService>();
         services.AddScoped<IOrderStatusObserver, AuditLogOrderObserver>();
         services.AddScoped<IOrderRequestExportService, OrderRequestExportService>();
 
