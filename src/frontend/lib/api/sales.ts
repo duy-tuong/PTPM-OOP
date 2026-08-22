@@ -1,5 +1,5 @@
 import { apiFetch } from "./http";
-import { getPublicApiUrl } from "./config";
+import { getApiUrl, getPublicApiUrl } from "./config";
 import type {
   CreateOrderRequestDto,
   OrderRequestDto,
@@ -9,10 +9,11 @@ import type {
   AffiliateApplicationDto,
 } from "@/lib/types/sales";
 
-// Gọi từ Client Component (form public ẩn danh, Phase 6.4) - fetch thẳng trình duyệt tới backend,
-// đây là trường hợp DUY NHẤT cần CORS (đã bật ở Phase 6.0).
-export function submitOrderRequest(dto: CreateOrderRequestDto) {
-  return apiFetch<OrderRequestDto>(getPublicApiUrl(), "/order-requests", "POST", { body: dto });
+// Server-only (dùng getApiUrl) - gọi từ app/api/order-requests/route.ts, KHÔNG import trực tiếp từ
+// Client Component. Nhận token tuỳ chọn: nếu khách đã đăng nhập, backend gán CustomerId cho đơn hàng
+// (OrderRequestsController đọc role "Customer" từ JWT); nếu không có token, đơn vẫn tạo được (ẩn danh).
+export function submitOrderRequest(dto: CreateOrderRequestDto, token?: string) {
+  return apiFetch<OrderRequestDto>(getApiUrl(), "/order-requests", "POST", { body: dto, token });
 }
 
 export function submitConsultationRequest(dto: CreateConsultationRequestDto) {

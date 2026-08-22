@@ -10,6 +10,7 @@ export interface CreateOrderRequestDto {
   taxCode?: string;
   servicePlanId?: number;
   tldPricingId?: number;
+  domainName?: string;
   periodMonths?: number;
   promotionId?: number;
   quantity: number;
@@ -63,6 +64,8 @@ export interface MyOrderRequestDto {
   id: number;
   orderCode: string;
   servicePlanName?: string | null;
+  tldName?: string | null;
+  domainName?: string | null;
   periodMonths?: number | null;
   quantity: number;
   totalPrice: number;

@@ -25,6 +25,7 @@ public class OrderRequest
 
     public int? TldPricingId { get; set; }
     public TldPricing? TldPricing { get; set; }
+    public string? DomainName { get; set; }
 
     public int? PeriodMonths { get; set; }
 

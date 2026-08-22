@@ -126,3 +126,73 @@ export function NetworkField() {
 
   return <canvas ref={canvasRef} aria-hidden className="pointer-events-none fixed inset-0 -z-20 h-full w-full" />;
 }
+
+// 3. Vẽ Floating Glass Panes
+panes.forEach(pane => {
+  pane.x += pane.vx;
+  pane.y += pane.vy;
+
+  // Wrap around biên mượt mà
+  if (pane.x < -pane.width - 50) pane.x = width + 50;
+  if (pane.x > width + 50) pane.x = -pane.width - 50;
+  if (pane.y < -pane.height - 50) pane.y = height + 50;
+  if (pane.y > height + 50) pane.y = -pane.height - 50;
+
+  ctx!.beginPath();
+  if (ctx!.roundRect) {
+    ctx!.roundRect(pane.x, pane.y, pane.width, pane.height, pane.borderRadius);
+  } else {
+    ctx!.rect(pane.x, pane.y, pane.width, pane.height); // Fallback
+  }
+
+  ctx!.fillStyle = `rgba(${pane.colorRgb}, 0.015)`;
+  ctx!.fill();
+  ctx!.strokeStyle = `rgba(${pane.colorRgb}, 0.1)`;
+  ctx!.stroke();
+});
+
+// 4. Vẽ Flowing Nodes (Các điểm sáng di chuyển)
+nodes.forEach(node => {
+  const line = lines[node.lineIndex];
+  const maxDist = line.isVertical ? height : width;
+
+  node.progress += node.speed * node.direction;
+  if (node.progress > maxDist + 20) node.progress = -20;
+  if (node.progress < -20) node.progress = maxDist + 20;
+
+  let nx = 0;
+  let ny = 0;
+  if (line.isVertical) {
+    nx = line.position;
+    ny = node.progress;
+  } else {
+    nx = node.progress;
+    ny = line.position;
+  }
+
+  // Lõi sáng
+  ctx!.beginPath();
+  ctx!.fillStyle = `rgba(${node.colorRgb}, 0.8)`;
+  ctx!.arc(nx, ny, 2.5, 0, Math.PI * 2);
+  ctx!.fill();
+
+  // Hào quang tỏa ra
+  ctx!.beginPath();
+  ctx!.fillStyle = `rgba(${node.colorRgb}, 0.25)`;
+  ctx!.arc(nx, ny, 7, 0, Math.PI * 2);
+  ctx!.fill();
+});
+
+rafId = requestAnimationFrame(draw);
+    }
+draw();
+
+return () => {
+  resizeObserver.disconnect();
+  window.removeEventListener(THEME_CHANGED_EVENT, resolvePrimaryRgb);
+  if (rafId) cancelAnimationFrame(rafId);
+};
+  }, []);
+
+return <canvas ref={canvasRef} aria-hidden className="pointer-events-none fixed inset-0 -z-20 h-full w-full" />;
+}

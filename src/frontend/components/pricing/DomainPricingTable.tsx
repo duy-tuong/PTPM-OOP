@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
 import type { TldPricingDto } from "@/lib/types/catalog";
 
@@ -37,6 +39,7 @@ export function DomainPricingTable({ tldPricing }: { tldPricing: TldPricingDto[]
               <th className="p-4">Đăng ký mới</th>
               <th className="p-4">Gia hạn</th>
               <th className="p-4">Chuyển về</th>
+              <th className="p-4" />
             </tr>
           </thead>
           <tbody>
@@ -46,11 +49,19 @@ export function DomainPricingTable({ tldPricing }: { tldPricing: TldPricingDto[]
                 <td className="p-4">{formatCurrency(t.registerPrice)}</td>
                 <td className="p-4">{formatCurrency(t.renewPrice)}</td>
                 <td className="p-4">{formatCurrency(t.transferPrice)}</td>
+                <td className="p-4 text-right">
+                  <Button
+                    nativeButton={false}
+                    size="sm"
+                    variant="outline"
+                    render={<Link href={`/lien-he?intent=ten-mien&tldPricingId=${t.id}`}>Đặt mua</Link>}
+                  />
+                </td>
               </tr>
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={4} className="p-8 text-center text-muted-foreground">
+                <td colSpan={5} className="p-8 text-center text-muted-foreground">
                   Không tìm thấy tên miền phù hợp.
                 </td>
               </tr>

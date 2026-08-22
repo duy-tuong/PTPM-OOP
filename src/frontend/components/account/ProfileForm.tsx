@@ -18,8 +18,8 @@ interface ProfileFormErrors {
 // PUT qua Route Handler app/api/customer-auth/me/route.ts (không gọi thẳng backend - token httpOnly
 // không đọc được từ client). Email không cho sửa (đổi email cần luồng xác thực riêng, ngoài phạm vi).
 export function ProfileForm({ profile }: { profile: CustomerProfileDto }) {
-  const [fullName, setFullName] = useState(profile.fullName);
-  const [phone, setPhone] = useState(profile.phone);
+  const [fullName, setFullName] = useState(profile.fullName ?? "");
+  const [phone, setPhone] = useState(profile.phone ?? "");
   const [customerType, setCustomerType] = useState(
     CustomerType[profile.customerType as keyof typeof CustomerType] ?? CustomerType.Individual,
   );

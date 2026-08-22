@@ -136,7 +136,7 @@ export function Navbar() {
           <MagneticButton>
             <Button
               nativeButton={false}
-              className="rounded-full bg-foreground font-bold text-background hover:bg-foreground/90"
+              className="rounded-full bg-primary font-bold text-primary-foreground hover:bg-primary/90 shadow-[0_4px_14px_0_color-mix(in_oklch,var(--primary)_39%,transparent)] hover:shadow-[0_6px_20px_color-mix(in_oklch,var(--primary)_23%,transparent)] hover:-translate-y-0.5 transition-all"
               render={<Link href="/lien-he">Đặt dịch vụ</Link>}
             />
           </MagneticButton>
@@ -197,7 +197,7 @@ export function Navbar() {
 
               <Button
                 nativeButton={false}
-                className="mt-2 rounded-full bg-foreground font-bold text-background hover:bg-foreground/90"
+                className="mt-2 rounded-full bg-primary font-bold text-primary-foreground hover:bg-primary/90 shadow-[0_4px_14px_0_color-mix(in_oklch,var(--primary)_39%,transparent)] transition-all"
                 render={
                   <Link href="/lien-he" onClick={() => setOpen(false)}>
                     Đặt dịch vụ

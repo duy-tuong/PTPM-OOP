@@ -19,8 +19,9 @@ interface OrderStatusDialogProps {
   order: AdminOrderRequestDto | null;
 }
 
-// Backend không ràng buộc chuyển trạng thái (đã verify Update*StatusAsync gán thẳng, không có
-// state-machine) - cho phép chọn tự do cả 5 giá trị, không disable option nào.
+// Cho chọn tự do cả 5 giá trị (không disable option nào) - backend tự chặn transition không hợp lệ
+// (đơn đã Hoàn tất/Đã huỷ không cho chuyển tiếp, xem AdminOrderRequestService.UpdateStatusAsync) và trả
+// lỗi rõ ràng qua toast nếu chọn sai, không cần UI đoán trước state-machine.
 export function OrderStatusDialog({ open, onOpenChange, order }: OrderStatusDialogProps) {
   const router = useRouter();
   const [newStatus, setNewStatus] = useState<OrderRequestStatus>(OrderRequestStatus.New);
@@ -73,8 +74,10 @@ export function OrderStatusDialog({ open, onOpenChange, order }: OrderStatusDial
               <span className="font-medium text-zinc-900">{order.customerName}</span>
             </div>
             <div className="mt-1 flex justify-between gap-4">
-              <span className="text-zinc-500">Gói dịch vụ</span>
-              <span className="font-medium text-zinc-900">{order.servicePlanName ?? "-"}</span>
+              <span className="text-zinc-500">Sản phẩm</span>
+              <span className="font-medium text-zinc-900">
+                {order.servicePlanName ?? (order.domainName && order.tldName ? `${order.domainName}${order.tldName}` : "-")}
+              </span>
             </div>
             <div className="mt-1 flex justify-between gap-4">
               <span className="text-zinc-500">Tổng tiền</span>

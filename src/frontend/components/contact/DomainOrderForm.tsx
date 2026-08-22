@@ -8,41 +8,37 @@ import { Label } from "@/components/ui/label";
 import { Field, FieldError, FieldGroup } from "@/components/ui/field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CustomerTypeToggle } from "@/components/contact/CustomerTypeToggle";
-import { priceFor } from "@/components/pricing/PlanConfiguratorSlider";
 import { CustomerType } from "@/lib/types/enums";
 import { cn, formatCurrency } from "@/lib/utils";
-import type { ServicePlanListItemDto } from "@/lib/types/catalog";
-import type { PromotionDto } from "@/lib/types/catalog";
+import type { TldPricingDto, PromotionDto } from "@/lib/types/catalog";
 import type { OrderRequestDto } from "@/lib/types/sales";
 
-interface OrderFormErrors {
+interface DomainFormErrors {
   customerName?: string;
   customerEmail?: string;
   customerPhone?: string;
-  servicePlanId?: string;
+  tldPricingId?: string;
+  domainName?: string;
 }
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Nhãn tên miền (phần trước dấu chấm) - khớp DomainLabelPattern phía backend (OrderRequestService.cs).
+const DOMAIN_LABEL_PATTERN = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/;
 
-function defaultPeriod(plan: ServicePlanListItemDto | null): number | null {
-  if (!plan || plan.prices.length === 0) return null;
-  return (plan.prices.find((p) => p.isDefault) ?? plan.prices[0]).periodMonths;
-}
-
-// Field theo đúng CreateOrderRequestDto (giới hạn ký tự mirror DataAnnotations: tên 150/email 100/
-// phone 20). quantity LUÔN gửi tường minh (mặc định 1) - thiếu field này C# nhận 0, fail [Range(1,100)].
-// Nếu có promotion resolve được từ ?promotionCode= (page.tsx): gửi kèm promotionId - backend tự validate
-// hiệu lực + tính giảm giá vào totalPrice trả về (OrderRequestService.ApplyPromotion).
-// Gửi qua /api/order-requests (Route Handler, không phải lib/api/sales.ts trực tiếp) để đính kèm cookie
-// access token của khách (nếu đã đăng nhập) - backend gán CustomerId cho đơn, đơn sẽ hiện ở "Đơn hàng
-// của tôi". Khách chưa đăng nhập vẫn đặt được bình thường (route handler gửi token undefined).
-export function OrderRequestForm({
-  plans,
-  defaultPlan,
+// Form đặt mua tên miền - tách riêng khỏi OrderRequestForm.tsx (đặt gói dịch vụ) thay vì gộp chung 1
+// form nhiều chế độ, vì 2 luồng có bộ field khác hẳn nhau (TLD+tên miền+số năm vs gói+chu kỳ) và mỗi
+// form đã có validate/customer-info field riêng theo đúng tiền lệ OrderRequestForm/ConsultationRequestForm
+// (2 form đó cũng không share validate chung). Cùng gửi qua /api/order-requests (Route Handler) để
+// đính kèm cookie access token khách đăng nhập, giống hệt OrderRequestForm.
+export function DomainOrderForm({
+  tldPricing,
+  defaultTldPricing,
+  defaultDomainName,
   promotion,
 }: {
-  plans: ServicePlanListItemDto[];
-  defaultPlan: ServicePlanListItemDto | null;
+  tldPricing: TldPricingDto[];
+  defaultTldPricing: TldPricingDto | null;
+  defaultDomainName: string;
   promotion: PromotionDto | null;
 }) {
   const [customerType, setCustomerType] = useState(CustomerType.Individual);
@@ -51,25 +47,21 @@ export function OrderRequestForm({
   const [customerPhone, setCustomerPhone] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [taxCode, setTaxCode] = useState("");
-  const [servicePlanId, setServicePlanId] = useState<number | null>(defaultPlan?.id ?? null);
-  const [periodMonths, setPeriodMonths] = useState<number | null>(defaultPeriod(defaultPlan));
-  const [quantity, setQuantity] = useState(1);
+  const [tldPricingId, setTldPricingId] = useState<number | null>(defaultTldPricing?.id ?? null);
+  const [domainName, setDomainName] = useState(defaultDomainName);
+  const [years, setYears] = useState(1);
   const [note, setNote] = useState("");
-  const [errors, setErrors] = useState<OrderFormErrors>({});
+  const [errors, setErrors] = useState<DomainFormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedOrder, setSubmittedOrder] = useState<OrderRequestDto | null>(null);
 
-  const selectedPlan = useMemo(() => plans.find((p) => p.id === servicePlanId) ?? null, [plans, servicePlanId]);
-
-  function handlePlanChange(value: string | null) {
-    const id = value ? Number(value) : null;
-    setServicePlanId(id);
-    const plan = plans.find((p) => p.id === id) ?? null;
-    setPeriodMonths(defaultPeriod(plan));
-  }
+  const selectedTld = useMemo(
+    () => tldPricing.find((t) => t.id === tldPricingId) ?? null,
+    [tldPricing, tldPricingId],
+  );
 
   function validate(): boolean {
-    const nextErrors: OrderFormErrors = {};
+    const nextErrors: DomainFormErrors = {};
     if (!customerName.trim() || customerName.trim().length > 150) {
       nextErrors.customerName = "Vui lòng nhập họ tên (tối đa 150 ký tự)";
     }
@@ -79,8 +71,12 @@ export function OrderRequestForm({
     if (!customerPhone.trim() || customerPhone.trim().length > 20) {
       nextErrors.customerPhone = "Vui lòng nhập số điện thoại (tối đa 20 ký tự)";
     }
-    if (!servicePlanId) {
-      nextErrors.servicePlanId = "Vui lòng chọn gói dịch vụ";
+    if (!tldPricingId) {
+      nextErrors.tldPricingId = "Vui lòng chọn phần mở rộng tên miền";
+    }
+    const trimmedDomain = domainName.trim();
+    if (!trimmedDomain || !DOMAIN_LABEL_PATTERN.test(trimmedDomain)) {
+      nextErrors.domainName = "Tên miền chỉ gồm chữ, số, gạch ngang, không dấu chấm/khoảng trắng";
     }
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
@@ -103,10 +99,10 @@ export function OrderRequestForm({
           customerPhone: customerPhone.trim(),
           companyName: customerType === CustomerType.Business ? companyName.trim() || undefined : undefined,
           taxCode: customerType === CustomerType.Business ? taxCode.trim() || undefined : undefined,
-          servicePlanId: servicePlanId ?? undefined,
-          periodMonths: periodMonths ?? undefined,
+          tldPricingId: tldPricingId ?? undefined,
+          domainName: domainName.trim(),
           promotionId: promotion?.id,
-          quantity,
+          quantity: years,
           note: note.trim() || undefined,
         }),
       });
@@ -118,21 +114,26 @@ export function OrderRequestForm({
 
       const result = (await res.json()) as OrderRequestDto;
 
-      toast.success("Đã gửi đơn đặt dịch vụ, đội ngũ Cloudverse sẽ liên hệ sớm");
+      toast.success("Đã gửi đơn đặt tên miền, đội ngũ Cloudverse sẽ liên hệ sớm");
       setSubmittedOrder(result);
       setCustomerName("");
       setCustomerEmail("");
       setCustomerPhone("");
       setCompanyName("");
       setTaxCode("");
+      setDomainName("");
       setNote("");
-      setQuantity(1);
+      setYears(1);
       setErrors({});
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Gửi đơn thất bại, vui lòng thử lại.");
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  if (tldPricing.length === 0) {
+    return <p className="text-center text-muted-foreground">Chưa có bảng giá tên miền nào.</p>;
   }
 
   return (
@@ -157,69 +158,65 @@ export function OrderRequestForm({
 
       <FieldGroup>
         <Field>
-          <Label htmlFor="order-plan">Gói dịch vụ</Label>
-          <Select value={servicePlanId ? String(servicePlanId) : undefined} onValueChange={handlePlanChange}>
-            <SelectTrigger id="order-plan" className="w-full">
-              <SelectValue placeholder="Chọn gói dịch vụ" />
-            </SelectTrigger>
-            <SelectContent>
-              {plans.map((plan) => (
-                <SelectItem key={plan.id} value={String(plan.id)}>
-                  {plan.categoryName} - {plan.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <FieldError errors={errors.servicePlanId ? [{ message: errors.servicePlanId }] : undefined} />
-        </Field>
-
-        {selectedPlan && selectedPlan.prices.length > 0 && (
-          <Field>
-            <Label htmlFor="order-period">Chu kỳ thanh toán</Label>
-            <Select
-              value={periodMonths ? String(periodMonths) : undefined}
-              onValueChange={(value) => setPeriodMonths(value ? Number(value) : null)}
-            >
-              <SelectTrigger id="order-period" className="w-full">
-                <SelectValue placeholder="Chọn chu kỳ" />
+          <Label htmlFor="domain-name">Tên miền mong muốn</Label>
+          <div className="flex items-center gap-2">
+            <Input
+              id="domain-name"
+              value={domainName}
+              onChange={(e) => setDomainName(e.target.value)}
+              placeholder="tencongty"
+              aria-invalid={!!errors.domainName}
+              className="h-11"
+            />
+            <Select value={tldPricingId ? String(tldPricingId) : undefined} onValueChange={(v) => setTldPricingId(v ? Number(v) : null)}>
+              <SelectTrigger id="domain-tld" className="h-11 w-40 shrink-0">
+                <SelectValue placeholder="Chọn TLD" />
               </SelectTrigger>
               <SelectContent>
-                {selectedPlan.prices.map((price) => (
-                  <SelectItem key={price.periodMonths} value={String(price.periodMonths)}>
-                    {price.periodMonths} tháng - {formatCurrency(price.promotionalPrice ?? price.price)}
+                {tldPricing.map((t) => (
+                  <SelectItem key={t.id} value={String(t.id)}>
+                    {t.tld}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          </Field>
-        )}
+          </div>
+          <FieldError
+            errors={[errors.domainName, errors.tldPricingId]
+              .filter((message): message is string => !!message)
+              .map((message) => ({ message }))}
+          />
+        </Field>
 
-        {selectedPlan && periodMonths && (
+        {selectedTld && domainName.trim() && (
           <div className="rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm">
             <span className="text-muted-foreground">Bạn đang đặt: </span>
-            <span className="font-medium text-foreground">{selectedPlan.name}</span>
+            <span className="font-medium text-foreground">
+              {domainName.trim()}
+              {selectedTld.tld}
+            </span>
             <span className="text-muted-foreground"> - </span>
-            <span className="font-medium text-primary">{formatCurrency(priceFor(selectedPlan, periodMonths))}</span>
+            <span className="font-medium text-primary">{formatCurrency(selectedTld.registerPrice)}/năm</span>
           </div>
         )}
 
         <Field>
-          <Label htmlFor="order-quantity">Số lượng</Label>
+          <Label htmlFor="domain-years">Số năm đăng ký</Label>
           <Input
-            id="order-quantity"
+            id="domain-years"
             type="number"
             min={1}
-            max={100}
-            value={quantity}
-            onChange={(e) => setQuantity(Math.min(100, Math.max(1, Number(e.target.value) || 1)))}
+            max={10}
+            value={years}
+            onChange={(e) => setYears(Math.min(10, Math.max(1, Number(e.target.value) || 1)))}
             className="h-11 w-32"
           />
         </Field>
 
         <Field>
-          <Label htmlFor="order-name">Họ và tên</Label>
+          <Label htmlFor="domain-order-name">Họ và tên</Label>
           <Input
-            id="order-name"
+            id="domain-order-name"
             value={customerName}
             onChange={(e) => setCustomerName(e.target.value)}
             placeholder="Nguyễn Văn A"
@@ -231,9 +228,9 @@ export function OrderRequestForm({
         </Field>
 
         <Field>
-          <Label htmlFor="order-email">Email</Label>
+          <Label htmlFor="domain-order-email">Email</Label>
           <Input
-            id="order-email"
+            id="domain-order-email"
             type="email"
             value={customerEmail}
             onChange={(e) => setCustomerEmail(e.target.value)}
@@ -246,9 +243,9 @@ export function OrderRequestForm({
         </Field>
 
         <Field>
-          <Label htmlFor="order-phone">Số điện thoại</Label>
+          <Label htmlFor="domain-order-phone">Số điện thoại</Label>
           <Input
-            id="order-phone"
+            id="domain-order-phone"
             type="tel"
             value={customerPhone}
             onChange={(e) => setCustomerPhone(e.target.value)}
@@ -263,25 +260,30 @@ export function OrderRequestForm({
         {customerType === CustomerType.Business && (
           <>
             <Field>
-              <Label htmlFor="order-company">Tên công ty</Label>
+              <Label htmlFor="domain-order-company">Tên công ty</Label>
               <Input
-                id="order-company"
+                id="domain-order-company"
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 className="h-11"
               />
             </Field>
             <Field>
-              <Label htmlFor="order-taxcode">Mã số thuế</Label>
-              <Input id="order-taxcode" value={taxCode} onChange={(e) => setTaxCode(e.target.value)} className="h-11" />
+              <Label htmlFor="domain-order-taxcode">Mã số thuế</Label>
+              <Input
+                id="domain-order-taxcode"
+                value={taxCode}
+                onChange={(e) => setTaxCode(e.target.value)}
+                className="h-11"
+              />
             </Field>
           </>
         )}
 
         <Field>
-          <Label htmlFor="order-note">Ghi chú (không bắt buộc)</Label>
+          <Label htmlFor="domain-order-note">Ghi chú (không bắt buộc)</Label>
           <textarea
-            id="order-note"
+            id="domain-order-note"
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={3}
@@ -295,7 +297,7 @@ export function OrderRequestForm({
       </FieldGroup>
 
       <Button type="submit" disabled={isSubmitting} className="h-11 w-full text-base font-semibold">
-        {isSubmitting ? "Đang gửi..." : "Đặt dịch vụ"}
+        {isSubmitting ? "Đang gửi..." : "Đặt mua tên miền"}
       </Button>
     </form>
   );

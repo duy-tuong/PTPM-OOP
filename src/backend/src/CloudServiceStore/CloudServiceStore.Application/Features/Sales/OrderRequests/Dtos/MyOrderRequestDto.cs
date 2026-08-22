@@ -7,6 +7,8 @@ public class MyOrderRequestDto
     public int Id { get; init; }
     public string OrderCode { get; init; } = string.Empty;
     public string? ServicePlanName { get; init; }
+    public string? TldName { get; init; }
+    public string? DomainName { get; init; }
     public int? PeriodMonths { get; init; }
     public int Quantity { get; init; }
     public decimal TotalPrice { get; init; }

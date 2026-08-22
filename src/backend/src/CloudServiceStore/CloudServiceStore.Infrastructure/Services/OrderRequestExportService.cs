@@ -24,6 +24,7 @@ public class OrderRequestExportService : IOrderRequestExportService
 
         var orders = await repository.Query()
             .Include(o => o.ServicePlan)
+            .Include(o => o.TldPricing)
             .Where(o => status == null || o.Status == status)
             .OrderByDescending(o => o.CreatedAt)
             .ToListAsync(cancellationToken);
@@ -34,7 +35,7 @@ public class OrderRequestExportService : IOrderRequestExportService
         string[] headers =
         [
             "Mã đơn", "Khách hàng", "Email", "Điện thoại", "Công ty",
-            "Gói dịch vụ", "Kỳ hạn (tháng)", "Số lượng", "Tổng tiền",
+            "Sản phẩm", "Kỳ hạn (tháng)", "Số lượng", "Tổng tiền",
             "Trạng thái", "Nguồn", "Ngày tạo"
         ];
         for (var col = 0; col < headers.Length; col++)
@@ -51,7 +52,8 @@ public class OrderRequestExportService : IOrderRequestExportService
             worksheet.Cell(row, 3).Value = order.CustomerEmail;
             worksheet.Cell(row, 4).Value = order.CustomerPhone;
             worksheet.Cell(row, 5).Value = order.CompanyName;
-            worksheet.Cell(row, 6).Value = order.ServicePlan?.Name;
+            worksheet.Cell(row, 6).Value = order.ServicePlan?.Name
+                ?? (order.DomainName is not null && order.TldPricing is not null ? order.DomainName + order.TldPricing.Tld : null);
             worksheet.Cell(row, 7).Value = order.PeriodMonths;
             worksheet.Cell(row, 8).Value = order.Quantity;
             worksheet.Cell(row, 9).Value = order.TotalPrice;

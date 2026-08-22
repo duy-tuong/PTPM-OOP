@@ -95,4 +95,38 @@ public class AdminOrderRequestServiceTests
         var persisted = context.OrderRequests.Single(o => o.Id == order.Id);
         Assert.Equal(existingAssignee, persisted.AssignedToUserId);
     }
+
+    [Fact]
+    public async Task UpdateStatusAsync_OrderAlreadyCompleted_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var order = await SeedOrderRequestAsync(context, status: OrderRequestStatus.Completed);
+        var sut = CreateSut(context, new Mock<IOrderStatusObserver>());
+
+        await Assert.ThrowsAsync<ValidationException>(() =>
+            sut.UpdateStatusAsync(order.Id, new UpdateOrderRequestStatusDto { NewStatus = OrderRequestStatus.New }, Guid.NewGuid()));
+    }
+
+    [Fact]
+    public async Task UpdateStatusAsync_OrderAlreadyCancelled_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var order = await SeedOrderRequestAsync(context, status: OrderRequestStatus.Cancelled);
+        var sut = CreateSut(context, new Mock<IOrderStatusObserver>());
+
+        await Assert.ThrowsAsync<ValidationException>(() =>
+            sut.UpdateStatusAsync(order.Id, new UpdateOrderRequestStatusDto { NewStatus = OrderRequestStatus.Confirmed }, Guid.NewGuid()));
+    }
+
+    [Fact]
+    public async Task UpdateStatusAsync_SameTerminalStatus_Succeeds()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var order = await SeedOrderRequestAsync(context, status: OrderRequestStatus.Completed);
+        var sut = CreateSut(context, new Mock<IOrderStatusObserver>());
+
+        var result = await sut.UpdateStatusAsync(order.Id, new UpdateOrderRequestStatusDto { NewStatus = OrderRequestStatus.Completed }, Guid.NewGuid());
+
+        Assert.Equal(nameof(OrderRequestStatus.Completed), result.Status);
+    }
 }
