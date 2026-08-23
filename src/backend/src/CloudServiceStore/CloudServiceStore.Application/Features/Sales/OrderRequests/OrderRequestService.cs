@@ -19,18 +19,21 @@ public class OrderRequestService : IOrderRequestService
     private static readonly Regex DomainLabelPattern = new(@"^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$", RegexOptions.Compiled);
 
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IEmailService _emailService;
+    private readonly IAppSettings _appSettings;
 
-    public OrderRequestService(IUnitOfWork unitOfWork)
+    public OrderRequestService(IUnitOfWork unitOfWork, IEmailService emailService, IAppSettings appSettings)
     {
         _unitOfWork = unitOfWork;
+        _emailService = emailService;
+        _appSettings = appSettings;
     }
 
     public async Task<OrderRequestDto> CreateAsync(CreateOrderRequestDto dto, Guid? customerId = null, CancellationToken cancellationToken = default)
     {
         var planRepository = _unitOfWork.Repository<ServicePlan, int>();
         var priceRepository = _unitOfWork.Repository<PlanPrice, int>();
-
-        decimal totalPrice = 0;
+        var tldRepository = _unitOfWork.Repository<TldPricing, int>();
 
         Promotion? promotion = null;
         if (dto.PromotionId is not null)
@@ -55,65 +58,110 @@ public class OrderRequestService : IOrderRequestService
             }
         }
 
-        if (dto.ServicePlanId is not null)
+        var items = new List<OrderRequestItem>();
+        // Song song với items - lưu (planId, categoryId) của từng dòng để tính khuyến mãi theo dòng mà
+        // không phải tra cứu lại DB (ServicePlan/TldPricing đã có sẵn từ vòng lặp validate bên dưới).
+        var itemScopes = new List<(int? PlanId, int? CategoryId)>();
+
+        foreach (var itemDto in dto.Items)
         {
-            var plan = await planRepository.GetByIdAsync(dto.ServicePlanId.Value, cancellationToken);
-            if (plan is null)
+            if ((itemDto.ServicePlanId is null) == (itemDto.TldPricingId is null))
             {
-                throw new NotFoundException(nameof(ServicePlan), dto.ServicePlanId.Value);
+                throw new ValidationException("Mỗi dòng trong đơn hàng phải chọn đúng 1 trong 2: gói dịch vụ hoặc tên miền.");
             }
 
-            if (!plan.IsActive)
+            if (itemDto.ServicePlanId is not null)
             {
-                throw new ValidationException("Gói dịch vụ này hiện không khả dụng để đặt mua.");
+                var plan = await planRepository.GetByIdAsync(itemDto.ServicePlanId.Value, cancellationToken);
+                if (plan is null)
+                {
+                    throw new NotFoundException(nameof(ServicePlan), itemDto.ServicePlanId.Value);
+                }
+
+                if (!plan.IsActive)
+                {
+                    throw new ValidationException("Gói dịch vụ này hiện không khả dụng để đặt mua.");
+                }
+
+                var priceQuery = priceRepository.Query()
+                    .Where(p => p.PlanId == itemDto.ServicePlanId.Value && p.IsActive);
+
+                var price = itemDto.PeriodMonths is not null
+                    ? await priceQuery.FirstOrDefaultAsync(p => p.PeriodMonths == itemDto.PeriodMonths.Value, cancellationToken)
+                    : await priceQuery.FirstOrDefaultAsync(p => p.IsDefault, cancellationToken);
+
+                if (price is null)
+                {
+                    throw new ValidationException("Gói dịch vụ chưa có giá cho kỳ hạn đã chọn.");
+                }
+
+                var unitPrice = price.PromotionalPrice ?? price.Price;
+                items.Add(new OrderRequestItem
+                {
+                    ServicePlanId = plan.Id,
+                    PeriodMonths = price.PeriodMonths,
+                    Quantity = itemDto.Quantity,
+                    UnitPrice = unitPrice,
+                    LineTotal = unitPrice * itemDto.Quantity
+                });
+                itemScopes.Add((plan.Id, plan.CategoryId));
             }
-
-            var priceQuery = priceRepository.Query()
-                .Where(p => p.PlanId == dto.ServicePlanId.Value && p.IsActive);
-
-            var price = dto.PeriodMonths is not null
-                ? await priceQuery.FirstOrDefaultAsync(p => p.PeriodMonths == dto.PeriodMonths.Value, cancellationToken)
-                : await priceQuery.FirstOrDefaultAsync(p => p.IsDefault, cancellationToken);
-
-            if (price is null)
+            else
             {
-                throw new ValidationException("Gói dịch vụ chưa có giá cho kỳ hạn đã chọn.");
-            }
+                var tldPricing = await tldRepository.GetByIdAsync(itemDto.TldPricingId!.Value, cancellationToken);
+                if (tldPricing is null)
+                {
+                    throw new NotFoundException(nameof(TldPricing), itemDto.TldPricingId.Value);
+                }
 
-            totalPrice = (price.PromotionalPrice ?? price.Price) * dto.Quantity;
+                if (!tldPricing.IsActive)
+                {
+                    throw new ValidationException("Tên miền này hiện không khả dụng để đặt mua.");
+                }
 
-            if (promotion is not null)
-            {
-                totalPrice = ApplyPromotion(promotion, planId: plan.Id, categoryId: plan.CategoryId, totalPrice);
+                var domainName = itemDto.DomainName?.Trim();
+                if (string.IsNullOrEmpty(domainName) || !DomainLabelPattern.IsMatch(domainName))
+                {
+                    throw new ValidationException("Vui lòng nhập tên miền hợp lệ (chỉ chữ, số, gạch ngang, không có dấu chấm).");
+                }
+
+                var unitPrice = tldPricing.RegisterPrice;
+                items.Add(new OrderRequestItem
+                {
+                    TldPricingId = tldPricing.Id,
+                    DomainName = domainName,
+                    Quantity = itemDto.Quantity,
+                    UnitPrice = unitPrice,
+                    LineTotal = unitPrice * itemDto.Quantity
+                });
+                itemScopes.Add((null, tldPricing.ServiceCategoryId));
             }
         }
 
-        string? domainName = null;
-        if (dto.TldPricingId is not null)
+        var grandSubtotal = items.Sum(i => i.LineTotal);
+        var totalPrice = grandSubtotal;
+
+        if (promotion is not null)
         {
-            var tldPricing = await _unitOfWork.Repository<TldPricing, int>().GetByIdAsync(dto.TldPricingId.Value, cancellationToken);
-            if (tldPricing is null)
+            // Khuyến mãi chỉ giảm giá phần dòng khớp phạm vi mã, không giảm cả đơn nếu đơn trộn sản
+            // phẩm không thuộc phạm vi (khác hành vi bản 1-sản-phẩm/đơn cũ vốn áp cho toàn bộ tổng).
+            var matchedSubtotal = items
+                .Zip(itemScopes, (item, scope) => (item.LineTotal, Matches: MatchesScope(promotion, scope.PlanId, scope.CategoryId)))
+                .Where(x => x.Matches)
+                .Sum(x => x.LineTotal);
+
+            if (matchedSubtotal == 0)
             {
-                throw new NotFoundException(nameof(TldPricing), dto.TldPricingId.Value);
+                throw new ValidationException("Mã khuyến mãi không áp dụng cho sản phẩm nào trong đơn.");
             }
 
-            if (!tldPricing.IsActive)
+            if (promotion.MinOrderValue is not null && matchedSubtotal < promotion.MinOrderValue)
             {
-                throw new ValidationException("Tên miền này hiện không khả dụng để đặt mua.");
+                throw new ValidationException($"Đơn hàng cần tối thiểu {promotion.MinOrderValue:N0}đ để áp dụng mã khuyến mãi này.");
             }
 
-            domainName = dto.DomainName?.Trim();
-            if (string.IsNullOrEmpty(domainName) || !DomainLabelPattern.IsMatch(domainName))
-            {
-                throw new ValidationException("Vui lòng nhập tên miền hợp lệ (chỉ chữ, số, gạch ngang, không có dấu chấm).");
-            }
-
-            totalPrice = tldPricing.RegisterPrice * dto.Quantity;
-
-            if (promotion is not null)
-            {
-                totalPrice = ApplyPromotion(promotion, planId: null, categoryId: tldPricing.ServiceCategoryId, totalPrice);
-            }
+            var discount = ComputeDiscount(promotion, matchedSubtotal);
+            totalPrice = Math.Max(0, grandSubtotal - discount);
         }
 
         var orderRequest = new OrderRequest
@@ -126,21 +174,26 @@ public class OrderRequestService : IOrderRequestService
             CustomerPhone = dto.CustomerPhone,
             CompanyName = dto.CompanyName,
             TaxCode = dto.TaxCode,
-            ServicePlanId = dto.ServicePlanId,
-            TldPricingId = dto.TldPricingId,
-            DomainName = domainName,
-            PeriodMonths = dto.PeriodMonths,
             PromotionId = dto.PromotionId,
-            Quantity = dto.Quantity,
             TotalPrice = totalPrice,
             Note = dto.Note,
             Source = "public-website",
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            Items = items
         };
 
         var orderRepository = _unitOfWork.Repository<OrderRequest, int>();
         await orderRepository.AddAsync(orderRequest, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Email lúc tạo đơn gửi trực tiếp ở đây (không qua Observer) vì tạo mới không phải "đổi trạng
+        // thái" - IOrderStatusObserver chỉ chạy khi Admin đổi Status ở bước sau (xem EmailOrderObserver).
+        var paymentUrl = $"{_appSettings.PublicBaseUrl}/thanh-toan/{orderRequest.OrderCode}";
+        await _emailService.SendAsync(
+            dto.CustomerEmail,
+            "Đã nhận đơn hàng - Cloudverse",
+            $"Cảm ơn bạn đã đặt hàng. Đơn {orderRequest.OrderCode} đang chờ thanh toán, xem hướng dẫn tại: {paymentUrl}",
+            cancellationToken);
 
         return new OrderRequestDto
         {
@@ -157,8 +210,8 @@ public class OrderRequestService : IOrderRequestService
         var repository = _unitOfWork.Repository<OrderRequest, int>();
 
         var baseQuery = repository.Query()
-            .Include(o => o.ServicePlan)
-            .Include(o => o.TldPricing)
+            .Include(o => o.Items).ThenInclude(i => i.ServicePlan)
+            .Include(o => o.Items).ThenInclude(i => i.TldPricing)
             .Where(o => o.CustomerId == customerId)
             .OrderByDescending(o => o.CreatedAt);
 
@@ -172,11 +225,7 @@ public class OrderRequestService : IOrderRequestService
         {
             Id = o.Id,
             OrderCode = o.OrderCode,
-            ServicePlanName = o.ServicePlan?.Name,
-            TldName = o.TldPricing?.Tld,
-            DomainName = o.DomainName,
-            PeriodMonths = o.PeriodMonths,
-            Quantity = o.Quantity,
+            Items = o.Items.Select(OrderRequestItemDto.FromEntity).ToList(),
             TotalPrice = o.TotalPrice,
             Status = o.Status.ToString(),
             CreatedAt = o.CreatedAt
@@ -185,29 +234,47 @@ public class OrderRequestService : IOrderRequestService
         return PagedResult<MyOrderRequestDto>.Create(dtos, totalCount, query.PageNumber, query.PageSize);
     }
 
+    public async Task<OrderLookupDto> GetByCodeAsync(string orderCode, CancellationToken cancellationToken = default)
+    {
+        var order = await _unitOfWork.Repository<OrderRequest, int>().Query()
+            .Include(o => o.Items).ThenInclude(i => i.ServicePlan)
+            .Include(o => o.Items).ThenInclude(i => i.TldPricing)
+            .FirstOrDefaultAsync(o => o.OrderCode == orderCode, cancellationToken)
+            ?? throw new NotFoundException(nameof(OrderRequest), orderCode);
+
+        return new OrderLookupDto
+        {
+            OrderCode = order.OrderCode,
+            Status = order.Status.ToString(),
+            TotalPrice = order.TotalPrice,
+            CreatedAt = order.CreatedAt,
+            Items = order.Items.Select(i => new OrderLookupItemDto
+            {
+                ProductName = i.ServicePlan?.Name ?? (i.TldPricing is not null ? $"{i.DomainName}{i.TldPricing.Tld}" : "Sản phẩm"),
+                Quantity = i.Quantity,
+                UnitPrice = i.UnitPrice,
+                LineTotal = i.LineTotal
+            }).ToList(),
+            BankName = _appSettings.BankName,
+            BankAccountNumber = _appSettings.BankAccountNumber,
+            BankAccountHolder = _appSettings.BankAccountHolder
+        };
+    }
+
     // planId: chỉ set khi đặt ServicePlan (PromotionScope.ServicePlanId chỉ FK tới ServicePlan, TLD
     // không có scope riêng theo từng tên miền - chỉ theo ServiceCategory hoặc "Toàn bộ").
-    private static decimal ApplyPromotion(Promotion promotion, int? planId, int? categoryId, decimal totalPrice)
-    {
+    private static bool MatchesScope(Promotion promotion, int? planId, int? categoryId) =>
         // Chưa cấu hình scope nào (VD: dữ liệu mẫu WELCOME2026 seed sẵn) = không giới hạn, áp dụng cho
         // mọi sản phẩm - mirror đúng kỳ vọng của Admin khi tạo khuyến mãi mà không chọn phạm vi cụ thể nào.
-        var scopeMatches = promotion.Scopes.Count == 0
-            || promotion.Scopes.Any(s => s.ScopeType == ScopeType.All
-                || (s.ScopeType == ScopeType.Plan && planId is not null && s.ServicePlanId == planId)
-                || (s.ScopeType == ScopeType.Category && categoryId is not null && s.ServiceCategoryId == categoryId));
+        promotion.Scopes.Count == 0
+        || promotion.Scopes.Any(s => s.ScopeType == ScopeType.All
+            || (s.ScopeType == ScopeType.Plan && planId is not null && s.ServicePlanId == planId)
+            || (s.ScopeType == ScopeType.Category && categoryId is not null && s.ServiceCategoryId == categoryId));
 
-        if (!scopeMatches)
-        {
-            throw new ValidationException("Mã khuyến mãi không áp dụng cho sản phẩm này.");
-        }
-
-        if (promotion.MinOrderValue is not null && totalPrice < promotion.MinOrderValue)
-        {
-            throw new ValidationException($"Đơn hàng cần tối thiểu {promotion.MinOrderValue:N0}đ để áp dụng mã khuyến mãi này.");
-        }
-
+    private static decimal ComputeDiscount(Promotion promotion, decimal subtotal)
+    {
         var discount = promotion.DiscountType == DiscountType.Percentage
-            ? totalPrice * promotion.DiscountValue / 100m
+            ? subtotal * promotion.DiscountValue / 100m
             : promotion.DiscountValue;
 
         if (promotion.MaxDiscountAmount is not null && discount > promotion.MaxDiscountAmount)
@@ -215,6 +282,6 @@ public class OrderRequestService : IOrderRequestService
             discount = promotion.MaxDiscountAmount.Value;
         }
 
-        return Math.Max(0, totalPrice - discount);
+        return discount;
     }
 }

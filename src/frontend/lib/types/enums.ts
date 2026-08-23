@@ -11,8 +11,10 @@ export enum OrderRequestStatus {
   New = 1,
   Contacted = 2,
   Confirmed = 3,
-  Cancelled = 4,
-  Completed = 5,
+  Paid = 4,
+  Provisioning = 5,
+  Cancelled = 6,
+  Completed = 7,
 }
 
 export enum ConsultationStatus {
@@ -48,6 +50,8 @@ export const ORDER_REQUEST_STATUS_LABELS: Record<string, string> = {
   New: "Mới",
   Contacted: "Đã liên hệ",
   Confirmed: "Đã xác nhận",
+  Paid: "Đã thanh toán",
+  Provisioning: "Đang triển khai",
   Cancelled: "Đã huỷ",
   Completed: "Hoàn tất",
 };

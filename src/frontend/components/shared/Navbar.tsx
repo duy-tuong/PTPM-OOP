@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { List } from "@phosphor-icons/react";
+import { List, ShoppingCart } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { MagneticButton } from "@/components/shared/MagneticButton";
@@ -16,6 +16,7 @@ import {
   readCustomerSessionCookie,
 } from "@/lib/auth/customerSessionClient";
 import type { CustomerSessionUser } from "@/lib/types/customerAuth";
+import { useCart } from "@/lib/cart/CartContext";
 
 const NAV_LINKS = [
   { href: "/", label: "Trang chủ" },
@@ -45,6 +46,8 @@ export function Navbar() {
   const [session, setSession] = useState<CustomerSessionUser | null>(null);
   const [hidden, setHidden] = useState(false);
   const router = useRouter();
+  const cart = useCart();
+  const cartCount = cart.items.length;
 
   useEffect(() => {
     function syncSession() {
@@ -131,6 +134,19 @@ export function Navbar() {
             </Link>
           )}
 
+          <Link
+            href="/lien-he"
+            aria-label={cartCount > 0 ? `Giỏ hàng, ${cartCount} sản phẩm` : "Giỏ hàng"}
+            className="relative inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <ShoppingCart className="size-5" />
+            {cartCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] leading-none font-bold text-primary-foreground">
+                {cartCount}
+              </span>
+            )}
+          </Link>
+
           <ThemeToggle />
 
           <MagneticButton>
@@ -161,6 +177,22 @@ export function Navbar() {
                   {link.label}
                 </Link>
               ))}
+
+              <Link
+                href="/lien-he"
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-between text-base font-medium text-foreground"
+              >
+                <span className="flex items-center gap-2">
+                  <ShoppingCart className="size-5" />
+                  Giỏ hàng
+                </span>
+                {cartCount > 0 && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-bold text-primary-foreground">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
 
               <div className="my-1 border-t border-border" />
 

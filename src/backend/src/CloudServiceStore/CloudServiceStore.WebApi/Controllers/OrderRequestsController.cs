@@ -48,4 +48,12 @@ public class OrderRequestsController : ControllerBase
         var customerId = Guid.Parse(sub!);
         return Ok(await _service.GetMineAsync(customerId, query, cancellationToken));
     }
+
+    // Công khai (không [Authorize]) - dùng cho trang /thanh-toan/{orderCode} mà link đã gửi qua email
+    // xác nhận đơn hàng có thể mở lại được mà không cần đăng nhập.
+    [HttpGet("by-code/{orderCode}")]
+    public async Task<ActionResult<OrderLookupDto>> GetByCode(string orderCode, CancellationToken cancellationToken)
+    {
+        return Ok(await _service.GetByCodeAsync(orderCode, cancellationToken));
+    }
 }

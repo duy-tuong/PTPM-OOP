@@ -5,6 +5,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { OrderRequestForm } from "@/components/contact/OrderRequestForm";
 import { DomainOrderForm } from "@/components/contact/DomainOrderForm";
 import { ConsultationRequestForm } from "@/components/contact/ConsultationRequestForm";
+import { CartCheckoutPanel } from "@/components/contact/CartCheckoutPanel";
+import { AutoAddFromQuery } from "@/components/contact/AutoAddFromQuery";
 
 export const metadata: Metadata = {
   title: "Liên hệ / Đặt dịch vụ",
@@ -48,6 +50,13 @@ export default async function ContactPage({
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:px-8">
+      <AutoAddFromQuery
+        key={defaultPlan?.id ?? defaultTldPricing?.id ?? "none"}
+        defaultPlan={defaultPlan}
+        defaultTldPricing={defaultTldPricing}
+        defaultDomainName={params.domainName ?? ""}
+      />
+
       <div className="mb-10 text-center">
         <h1 className="font-heading text-4xl font-bold sm:text-5xl">Liên Hệ</h1>
         <p className="mt-4 text-lg text-muted-foreground">
@@ -64,7 +73,7 @@ export default async function ContactPage({
 
         <TabsContent value="dat-dich-vu">
           {plans.length > 0 ? (
-            <OrderRequestForm plans={plans} defaultPlan={defaultPlan} promotion={promotion} />
+            <OrderRequestForm plans={plans} defaultPlan={defaultPlan} />
           ) : (
             <p className="text-center text-muted-foreground">Chưa có gói dịch vụ nào để đặt.</p>
           )}
@@ -75,7 +84,6 @@ export default async function ContactPage({
             tldPricing={tldPricing}
             defaultTldPricing={defaultTldPricing}
             defaultDomainName={params.domainName ?? ""}
-            promotion={promotion}
           />
         </TabsContent>
 
@@ -83,6 +91,10 @@ export default async function ContactPage({
           <ConsultationRequestForm categories={categories} />
         </TabsContent>
       </Tabs>
+
+      <div className="mt-10">
+        <CartCheckoutPanel promotion={promotion} />
+      </div>
     </div>
   );
 }

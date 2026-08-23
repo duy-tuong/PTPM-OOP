@@ -24,20 +24,11 @@ public class CreateOrderRequestDto
     [MaxLength(50)]
     public string? TaxCode { get; set; }
 
-    public int? ServicePlanId { get; set; }
-
-    public int? TldPricingId { get; set; }
-
-    [MaxLength(100)]
-    public string? DomainName { get; set; }
-
-    public int? PeriodMonths { get; set; }
-
     public int? PromotionId { get; set; }
-
-    [Range(1, 100)]
-    public int Quantity { get; set; } = 1;
 
     [MaxLength(1000)]
     public string? Note { get; set; }
+
+    [Required, MinLength(1)]
+    public List<CreateOrderRequestItemDto> Items { get; set; } = new();
 }

@@ -1,4 +1,3 @@
-using CloudServiceStore.Domain.Entities.Catalog;
 using CloudServiceStore.Domain.Entities.Identity;
 using CloudServiceStore.Domain.Entities.Marketing;
 using CloudServiceStore.Domain.Enums;
@@ -20,19 +19,9 @@ public class OrderRequest
     public string? CompanyName { get; set; }
     public string? TaxCode { get; set; }
 
-    public int? ServicePlanId { get; set; }
-    public ServicePlan? ServicePlan { get; set; }
-
-    public int? TldPricingId { get; set; }
-    public TldPricing? TldPricing { get; set; }
-    public string? DomainName { get; set; }
-
-    public int? PeriodMonths { get; set; }
-
     public int? PromotionId { get; set; }
     public Promotion? Promotion { get; set; }
 
-    public int Quantity { get; set; } = 1;
     public decimal TotalPrice { get; set; }
     public string? Note { get; set; }
     public OrderRequestStatus Status { get; set; } = OrderRequestStatus.New;
@@ -43,4 +32,7 @@ public class OrderRequest
     public string? Source { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
+
+    // Giỏ hàng nhiều sản phẩm - 1 đơn có thể gồm nhiều dòng gói dịch vụ/tên miền trộn lẫn.
+    public ICollection<OrderRequestItem> Items { get; set; } = new List<OrderRequestItem>();
 }
