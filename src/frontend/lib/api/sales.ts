@@ -3,6 +3,7 @@ import { getApiUrl, getPublicApiUrl } from "./config";
 import type {
   CreateOrderRequestDto,
   OrderRequestDto,
+  OrderLookupDto,
   CreateConsultationRequestDto,
   ConsultationRequestDto,
   CreateAffiliateApplicationDto,
@@ -14,6 +15,13 @@ import type {
 // (OrderRequestsController đọc role "Customer" từ JWT); nếu không có token, đơn vẫn tạo được (ẩn danh).
 export function submitOrderRequest(dto: CreateOrderRequestDto, token?: string) {
   return apiFetch<OrderRequestDto>(getApiUrl(), "/order-requests", "POST", { body: dto, token });
+}
+
+// Endpoint public (không [Authorize] phía backend) - dùng cho trang /thanh-toan/[orderCode] mà link
+// đã gửi qua email xác nhận đơn hàng có thể mở lại được mà không cần đăng nhập. no-store vì trạng thái
+// đơn (New/Paid/...) có thể đổi bất cứ lúc nào sau khi Admin xác nhận đã nhận tiền.
+export function getOrderByCode(orderCode: string) {
+  return apiFetch<OrderLookupDto>(getApiUrl(), `/order-requests/by-code/${orderCode}`, "GET", { cache: "no-store" });
 }
 
 export function submitConsultationRequest(dto: CreateConsultationRequestDto) {

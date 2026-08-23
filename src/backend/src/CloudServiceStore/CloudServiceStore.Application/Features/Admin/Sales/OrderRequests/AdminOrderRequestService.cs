@@ -3,6 +3,7 @@ using CloudServiceStore.Application.Common.Interfaces;
 using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Common.Services;
 using CloudServiceStore.Application.Features.Admin.Sales.OrderRequests.Dtos;
+using CloudServiceStore.Application.Features.Sales.OrderRequests.Dtos;
 using CloudServiceStore.Domain.Entities.Sales;
 using CloudServiceStore.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -25,8 +26,8 @@ public class AdminOrderRequestService : IAdminOrderRequestService
         var repository = _unitOfWork.Repository<OrderRequest, int>();
 
         var baseQuery = repository.Query()
-            .Include(o => o.ServicePlan)
-            .Include(o => o.TldPricing)
+            .Include(o => o.Items).ThenInclude(i => i.ServicePlan)
+            .Include(o => o.Items).ThenInclude(i => i.TldPricing)
             .Include(o => o.AssignedToUser)
             .Where(o => query.Status == null || o.Status == query.Status)
             .OrderByDescending(o => o.CreatedAt);
@@ -46,8 +47,8 @@ public class AdminOrderRequestService : IAdminOrderRequestService
         var repository = _unitOfWork.Repository<OrderRequest, int>();
 
         var entity = await repository.Query()
-            .Include(o => o.ServicePlan)
-            .Include(o => o.TldPricing)
+            .Include(o => o.Items).ThenInclude(i => i.ServicePlan)
+            .Include(o => o.Items).ThenInclude(i => i.TldPricing)
             .Include(o => o.AssignedToUser)
             .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
 
@@ -89,13 +90,7 @@ public class AdminOrderRequestService : IAdminOrderRequestService
             CustomerEmail = order.CustomerEmail,
             CustomerPhone = order.CustomerPhone,
             CompanyName = order.CompanyName,
-            ServicePlanId = order.ServicePlanId,
-            ServicePlanName = order.ServicePlan?.Name,
-            TldPricingId = order.TldPricingId,
-            TldName = order.TldPricing?.Tld,
-            DomainName = order.DomainName,
-            PeriodMonths = order.PeriodMonths,
-            Quantity = order.Quantity,
+            Items = order.Items.Select(OrderRequestItemDto.FromEntity).ToList(),
             TotalPrice = order.TotalPrice,
             Note = order.Note,
             Status = order.Status.ToString(),

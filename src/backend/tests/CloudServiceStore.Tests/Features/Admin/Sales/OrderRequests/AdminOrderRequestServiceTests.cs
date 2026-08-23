@@ -25,11 +25,11 @@ public class AdminOrderRequestServiceTests
             CustomerName = "Test Customer",
             CustomerEmail = "test@example.com",
             CustomerPhone = "0900000000",
-            Quantity = 1,
             TotalPrice = 100000m,
             Status = status,
             AssignedToUserId = assignedToUserId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            Items = { new OrderRequestItem { Quantity = 1, UnitPrice = 100000m, LineTotal = 100000m } }
         };
         context.OrderRequests.Add(order);
         await context.SaveChangesAsync();

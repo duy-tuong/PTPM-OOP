@@ -8,4 +8,6 @@ public interface IOrderRequestService
     Task<OrderRequestDto> CreateAsync(CreateOrderRequestDto dto, Guid? customerId = null, CancellationToken cancellationToken = default);
 
     Task<PagedResult<MyOrderRequestDto>> GetMineAsync(Guid customerId, PaginationParams query, CancellationToken cancellationToken = default);
+
+    Task<OrderLookupDto> GetByCodeAsync(string orderCode, CancellationToken cancellationToken = default);
 }

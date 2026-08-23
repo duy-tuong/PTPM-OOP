@@ -23,8 +23,8 @@ public class OrderRequestExportService : IOrderRequestExportService
         var repository = _unitOfWork.Repository<OrderRequest, int>();
 
         var orders = await repository.Query()
-            .Include(o => o.ServicePlan)
-            .Include(o => o.TldPricing)
+            .Include(o => o.Items).ThenInclude(i => i.ServicePlan)
+            .Include(o => o.Items).ThenInclude(i => i.TldPricing)
             .Where(o => status == null || o.Status == status)
             .OrderByDescending(o => o.CreatedAt)
             .ToListAsync(cancellationToken);
@@ -35,8 +35,7 @@ public class OrderRequestExportService : IOrderRequestExportService
         string[] headers =
         [
             "Mã đơn", "Khách hàng", "Email", "Điện thoại", "Công ty",
-            "Sản phẩm", "Kỳ hạn (tháng)", "Số lượng", "Tổng tiền",
-            "Trạng thái", "Nguồn", "Ngày tạo"
+            "Sản phẩm", "Tổng tiền", "Trạng thái", "Nguồn", "Ngày tạo"
         ];
         for (var col = 0; col < headers.Length; col++)
         {
@@ -47,20 +46,24 @@ public class OrderRequestExportService : IOrderRequestExportService
         var row = 2;
         foreach (var order in orders)
         {
+            // Đơn nhiều dòng - gộp thành 1 dòng Excel/1 đơn cho gọn (không tách 1 dòng/1 item).
+            var productSummary = string.Join("; ", order.Items.Select(i =>
+            {
+                var name = i.ServicePlan?.Name ?? (i.TldPricing is not null ? $"{i.DomainName}{i.TldPricing.Tld}" : "Sản phẩm");
+                return $"{name} x{i.Quantity}";
+            }));
+
             worksheet.Cell(row, 1).Value = order.OrderCode;
             worksheet.Cell(row, 2).Value = order.CustomerName;
             worksheet.Cell(row, 3).Value = order.CustomerEmail;
             worksheet.Cell(row, 4).Value = order.CustomerPhone;
             worksheet.Cell(row, 5).Value = order.CompanyName;
-            worksheet.Cell(row, 6).Value = order.ServicePlan?.Name
-                ?? (order.DomainName is not null && order.TldPricing is not null ? order.DomainName + order.TldPricing.Tld : null);
-            worksheet.Cell(row, 7).Value = order.PeriodMonths;
-            worksheet.Cell(row, 8).Value = order.Quantity;
-            worksheet.Cell(row, 9).Value = order.TotalPrice;
-            worksheet.Cell(row, 10).Value = order.Status.ToString();
-            worksheet.Cell(row, 11).Value = order.Source;
-            worksheet.Cell(row, 12).Value = order.CreatedAt;
-            worksheet.Cell(row, 12).Style.DateFormat.Format = "yyyy-MM-dd HH:mm";
+            worksheet.Cell(row, 6).Value = productSummary;
+            worksheet.Cell(row, 7).Value = order.TotalPrice;
+            worksheet.Cell(row, 8).Value = order.Status.ToString();
+            worksheet.Cell(row, 9).Value = order.Source;
+            worksheet.Cell(row, 10).Value = order.CreatedAt;
+            worksheet.Cell(row, 10).Style.DateFormat.Format = "yyyy-MM-dd HH:mm";
             row++;
         }
 

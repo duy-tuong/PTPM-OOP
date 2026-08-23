@@ -4,6 +4,7 @@ using CloudServiceStore.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CloudServiceStore.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260822182850_AddOrderRequestItemsCart")]
+    partial class AddOrderRequestItemsCart
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1563,6 +1566,10 @@ namespace CloudServiceStore.Infrastructure.Migrations
                     b.Property<int>("CustomerType")
                         .HasColumnType("int");
 
+                    b.Property<string>("DomainName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<string>("Note")
                         .HasColumnType("nvarchar(max)");
 
@@ -1571,7 +1578,16 @@ namespace CloudServiceStore.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<int?>("PeriodMonths")
+                        .HasColumnType("int");
+
                     b.Property<int?>("PromotionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ServicePlanId")
                         .HasColumnType("int");
 
                     b.Property<string>("Source")
@@ -1586,6 +1602,9 @@ namespace CloudServiceStore.Infrastructure.Migrations
                     b.Property<string>("TaxCode")
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<int?>("TldPricingId")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("TotalPrice")
                         .HasColumnType("decimal(18,2)");
@@ -1603,6 +1622,10 @@ namespace CloudServiceStore.Infrastructure.Migrations
                         .IsUnique();
 
                     b.HasIndex("PromotionId");
+
+                    b.HasIndex("ServicePlanId");
+
+                    b.HasIndex("TldPricingId");
 
                     b.HasIndex("Status", "CreatedAt");
 
@@ -1999,11 +2022,25 @@ namespace CloudServiceStore.Infrastructure.Migrations
                         .HasForeignKey("PromotionId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("CloudServiceStore.Domain.Entities.Catalog.ServicePlan", "ServicePlan")
+                        .WithMany()
+                        .HasForeignKey("ServicePlanId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("CloudServiceStore.Domain.Entities.Catalog.TldPricing", "TldPricing")
+                        .WithMany()
+                        .HasForeignKey("TldPricingId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("AssignedToUser");
 
                     b.Navigation("Customer");
 
                     b.Navigation("Promotion");
+
+                    b.Navigation("ServicePlan");
+
+                    b.Navigation("TldPricing");
                 });
 
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.Sales.OrderRequestItem", b =>

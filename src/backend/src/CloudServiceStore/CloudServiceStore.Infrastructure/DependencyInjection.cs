@@ -42,6 +42,7 @@ public static class DependencyInjection
         services.AddSingleton<IEmailService, LoggingEmailService>();
         services.AddSingleton<IAppSettings, AppSettings>();
         services.AddScoped<IOrderStatusObserver, AuditLogOrderObserver>();
+        services.AddScoped<IOrderStatusObserver, EmailOrderObserver>();
         services.AddScoped<IOrderRequestExportService, OrderRequestExportService>();
 
         return services;

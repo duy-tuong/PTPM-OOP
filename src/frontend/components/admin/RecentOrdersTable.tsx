@@ -1,5 +1,6 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { OrderStatusBadge } from "@/components/admin/OrderStatusBadge";
+import { formatOrderProductSummary } from "@/lib/utils/orderItems";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { AdminOrderRequestDto } from "@/lib/types/admin";
 
@@ -36,7 +37,7 @@ export function RecentOrdersTable({ orders }: { orders: AdminOrderRequestDto[] }
                 </div>
               </TableCell>
               <TableCell className="px-6 py-4 text-[14px] text-zinc-700">
-                {order.servicePlanName ?? (order.domainName && order.tldName ? `${order.domainName}${order.tldName}` : "-")}
+                {formatOrderProductSummary(order.items)}
               </TableCell>
               <TableCell className="px-6 py-4 text-[14px] text-zinc-700">{formatCurrency(order.totalPrice)}</TableCell>
               <TableCell className="px-6 py-4">

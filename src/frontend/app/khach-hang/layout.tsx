@@ -4,6 +4,7 @@ import { Footer } from "@/components/shared/Footer";
 import { SmoothScrollProvider } from "@/components/shared/SmoothScrollProvider";
 import { AccountNav } from "@/components/account/AccountNav";
 import { getCustomerAccessToken } from "@/lib/auth/customerSession";
+import { CartProvider } from "@/lib/cart/CartContext";
 
 // Route riêng ở top-level (ngang hàng app/admin/, KHÔNG lồng trong (public)) - getCustomerSession.ts đã
 // ghi rõ không được gọi cookies() ở app/(public)/layout.tsx vì sẽ ép toàn bộ trang public khác thành
@@ -19,18 +20,20 @@ export default async function AccountLayout({ children }: { children: React.Reac
   }
 
   return (
-    <SmoothScrollProvider>
-      <div className="flex min-h-full flex-1 flex-col">
-        <Navbar />
-        <main className="flex-1 pt-24">
-          <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
-            <h1 className="font-heading mb-8 text-3xl font-bold sm:text-4xl">Tài Khoản Của Tôi</h1>
-            <AccountNav />
-            <div className="mt-8">{children}</div>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    </SmoothScrollProvider>
+    <CartProvider>
+      <SmoothScrollProvider>
+        <div className="flex min-h-full flex-1 flex-col">
+          <Navbar />
+          <main className="flex-1 pt-24">
+            <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
+              <h1 className="font-heading mb-8 text-3xl font-bold sm:text-4xl">Tài Khoản Của Tôi</h1>
+              <AccountNav />
+              <div className="mt-8">{children}</div>
+            </div>
+          </main>
+          <Footer />
+        </div>
+      </SmoothScrollProvider>
+    </CartProvider>
   );
 }

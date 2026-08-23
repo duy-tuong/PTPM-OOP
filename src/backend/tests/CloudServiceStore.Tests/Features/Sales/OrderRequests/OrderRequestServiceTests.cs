@@ -1,4 +1,5 @@
 using CloudServiceStore.Application.Common.Exceptions;
+using CloudServiceStore.Application.Common.Interfaces;
 using CloudServiceStore.Application.Features.Sales.OrderRequests;
 using CloudServiceStore.Application.Features.Sales.OrderRequests.Dtos;
 using CloudServiceStore.Domain.Entities.Catalog;
@@ -6,11 +7,25 @@ using CloudServiceStore.Domain.Entities.Marketing;
 using CloudServiceStore.Domain.Enums;
 using CloudServiceStore.Infrastructure.Persistence;
 using CloudServiceStore.Tests.TestHelpers;
+using Moq;
 
 namespace CloudServiceStore.Tests.Features.Sales.OrderRequests;
 
 public class OrderRequestServiceTests
 {
+    private readonly Mock<IEmailService> _emailServiceMock = new();
+    private readonly Mock<IAppSettings> _appSettingsMock = new();
+
+    public OrderRequestServiceTests()
+    {
+        _appSettingsMock.SetupGet(a => a.PublicBaseUrl).Returns("http://localhost:3000");
+    }
+
+    private OrderRequestService CreateSut(AppDbContext context) => new(
+        TestDbContextFactory.CreateUnitOfWork(context),
+        _emailServiceMock.Object,
+        _appSettingsMock.Object);
+
     // Id/slug cố ý khác dữ liệu HasData (ServicePlan Id 1-2, PlanPrice Id 1-4) đã seed sẵn trong model
     // để test không phụ thuộc vào việc InMemory provider có tự nạp seed data hay không.
     private static async Task<ServicePlan> SeedPlanWithPricesAsync(AppDbContext context)
@@ -91,9 +106,7 @@ public class OrderRequestServiceTests
         CustomerName = "Test Customer",
         CustomerEmail = "test@example.com",
         CustomerPhone = "0900000000",
-        TldPricingId = tldPricingId,
-        DomainName = domainName,
-        Quantity = quantity
+        Items = { new CreateOrderRequestItemDto { TldPricingId = tldPricingId, DomainName = domainName, Quantity = quantity } }
     };
 
     private static CreateOrderRequestDto BuildDto(int? servicePlanId, int? periodMonths, int quantity) => new()
@@ -102,16 +115,14 @@ public class OrderRequestServiceTests
         CustomerName = "Test Customer",
         CustomerEmail = "test@example.com",
         CustomerPhone = "0900000000",
-        ServicePlanId = servicePlanId,
-        PeriodMonths = periodMonths,
-        Quantity = quantity
+        Items = { new CreateOrderRequestItemDto { ServicePlanId = servicePlanId, PeriodMonths = periodMonths, Quantity = quantity } }
     };
 
     [Fact]
     public async Task CreateAsync_PlanNotFound_ThrowsNotFoundException()
     {
         using var context = TestDbContextFactory.CreateContext();
-        var sut = new OrderRequestService(TestDbContextFactory.CreateUnitOfWork(context));
+        var sut = CreateSut(context);
 
         await Assert.ThrowsAsync<NotFoundException>(() => sut.CreateAsync(BuildDto(servicePlanId: 9999, periodMonths: null, quantity: 1)));
     }
@@ -121,7 +132,7 @@ public class OrderRequestServiceTests
     {
         using var context = TestDbContextFactory.CreateContext();
         var plan = await SeedPlanWithPricesAsync(context);
-        var sut = new OrderRequestService(TestDbContextFactory.CreateUnitOfWork(context));
+        var sut = CreateSut(context);
 
         var result = await sut.CreateAsync(BuildDto(plan.Id, periodMonths: 1, quantity: 2));
 
@@ -133,7 +144,7 @@ public class OrderRequestServiceTests
     {
         using var context = TestDbContextFactory.CreateContext();
         var plan = await SeedPlanWithPricesAsync(context);
-        var sut = new OrderRequestService(TestDbContextFactory.CreateUnitOfWork(context));
+        var sut = CreateSut(context);
 
         var result = await sut.CreateAsync(BuildDto(plan.Id, periodMonths: null, quantity: 1));
 
@@ -145,7 +156,7 @@ public class OrderRequestServiceTests
     {
         using var context = TestDbContextFactory.CreateContext();
         var plan = await SeedPlanWithPricesAsync(context);
-        var sut = new OrderRequestService(TestDbContextFactory.CreateUnitOfWork(context));
+        var sut = CreateSut(context);
 
         var result = await sut.CreateAsync(BuildDto(plan.Id, periodMonths: 12, quantity: 3));
 
@@ -157,7 +168,7 @@ public class OrderRequestServiceTests
     {
         using var context = TestDbContextFactory.CreateContext();
         var plan = await SeedPlanWithPricesAsync(context);
-        var sut = new OrderRequestService(TestDbContextFactory.CreateUnitOfWork(context));
+        var sut = CreateSut(context);
         var customerId = Guid.NewGuid();
 
         var result = await sut.CreateAsync(BuildDto(plan.Id, periodMonths: null, quantity: 1), customerId);
@@ -171,7 +182,7 @@ public class OrderRequestServiceTests
     {
         using var context = TestDbContextFactory.CreateContext();
         var plan = await SeedPlanWithPricesAsync(context);
-        var sut = new OrderRequestService(TestDbContextFactory.CreateUnitOfWork(context));
+        var sut = CreateSut(context);
 
         var result = await sut.CreateAsync(BuildDto(plan.Id, periodMonths: null, quantity: 1));
 
@@ -186,7 +197,7 @@ public class OrderRequestServiceTests
         var plan = await SeedPlanWithPricesAsync(context);
         plan.IsActive = false;
         await context.SaveChangesAsync();
-        var sut = new OrderRequestService(TestDbContextFactory.CreateUnitOfWork(context));
+        var sut = CreateSut(context);
 
         await Assert.ThrowsAsync<ValidationException>(() => sut.CreateAsync(BuildDto(plan.Id, periodMonths: null, quantity: 1)));
     }
@@ -196,7 +207,7 @@ public class OrderRequestServiceTests
     {
         using var context = TestDbContextFactory.CreateContext();
         var plan = await SeedPlanWithPricesAsync(context);
-        var sut = new OrderRequestService(TestDbContextFactory.CreateUnitOfWork(context));
+        var sut = CreateSut(context);
 
         await Assert.ThrowsAsync<ValidationException>(() => sut.CreateAsync(BuildDto(plan.Id, periodMonths: 6, quantity: 1)));
     }
@@ -205,9 +216,8 @@ public class OrderRequestServiceTests
     public async Task CreateAsync_InvalidTldPricingId_ThrowsNotFoundException()
     {
         using var context = TestDbContextFactory.CreateContext();
-        var sut = new OrderRequestService(TestDbContextFactory.CreateUnitOfWork(context));
-        var dto = BuildDto(servicePlanId: null, periodMonths: null, quantity: 1);
-        dto.TldPricingId = 9999;
+        var sut = CreateSut(context);
+        var dto = BuildDomainDto(tldPricingId: 9999, domainName: "myshop", quantity: 1);
 
         await Assert.ThrowsAsync<NotFoundException>(() => sut.CreateAsync(dto));
     }
@@ -217,7 +227,7 @@ public class OrderRequestServiceTests
     {
         using var context = TestDbContextFactory.CreateContext();
         var tldPricing = await SeedTldPricingAsync(context, isActive: false);
-        var sut = new OrderRequestService(TestDbContextFactory.CreateUnitOfWork(context));
+        var sut = CreateSut(context);
 
         await Assert.ThrowsAsync<ValidationException>(() => sut.CreateAsync(BuildDomainDto(tldPricing.Id, "myshop", quantity: 1)));
     }
@@ -227,7 +237,7 @@ public class OrderRequestServiceTests
     {
         using var context = TestDbContextFactory.CreateContext();
         var tldPricing = await SeedTldPricingAsync(context);
-        var sut = new OrderRequestService(TestDbContextFactory.CreateUnitOfWork(context));
+        var sut = CreateSut(context);
 
         await Assert.ThrowsAsync<ValidationException>(() => sut.CreateAsync(BuildDomainDto(tldPricing.Id, "", quantity: 1)));
     }
@@ -237,7 +247,7 @@ public class OrderRequestServiceTests
     {
         using var context = TestDbContextFactory.CreateContext();
         var tldPricing = await SeedTldPricingAsync(context);
-        var sut = new OrderRequestService(TestDbContextFactory.CreateUnitOfWork(context));
+        var sut = CreateSut(context);
 
         await Assert.ThrowsAsync<ValidationException>(() => sut.CreateAsync(BuildDomainDto(tldPricing.Id, "my shop.com", quantity: 1)));
     }
@@ -247,13 +257,13 @@ public class OrderRequestServiceTests
     {
         using var context = TestDbContextFactory.CreateContext();
         var tldPricing = await SeedTldPricingAsync(context);
-        var sut = new OrderRequestService(TestDbContextFactory.CreateUnitOfWork(context));
+        var sut = CreateSut(context);
 
         var result = await sut.CreateAsync(BuildDomainDto(tldPricing.Id, "myshop", quantity: 2));
 
         Assert.Equal(500000m, result.TotalPrice);
         var saved = context.OrderRequests.Single(o => o.Id == result.Id);
-        Assert.Equal("myshop", saved.DomainName);
+        Assert.Equal("myshop", saved.Items.Single().DomainName);
     }
 
     [Fact]
@@ -264,7 +274,7 @@ public class OrderRequestServiceTests
         var promotion = await SeedPromotionAsync(
             context, DiscountType.Percentage, discountValue: 20m,
             scopeType: ScopeType.Category, scopedCategoryId: 601);
-        var sut = new OrderRequestService(TestDbContextFactory.CreateUnitOfWork(context));
+        var sut = CreateSut(context);
         var dto = BuildDomainDto(tldPricing.Id, "myshop", quantity: 1);
         dto.PromotionId = promotion.Id;
 
@@ -281,7 +291,7 @@ public class OrderRequestServiceTests
         var promotion = await SeedPromotionAsync(
             context, DiscountType.Percentage, discountValue: 20m,
             scopeType: ScopeType.Category, scopedCategoryId: 999);
-        var sut = new OrderRequestService(TestDbContextFactory.CreateUnitOfWork(context));
+        var sut = CreateSut(context);
         var dto = BuildDomainDto(tldPricing.Id, "myshop", quantity: 1);
         dto.PromotionId = promotion.Id;
 
@@ -292,7 +302,7 @@ public class OrderRequestServiceTests
     public async Task CreateAsync_InvalidPromotionId_ThrowsNotFoundException()
     {
         using var context = TestDbContextFactory.CreateContext();
-        var sut = new OrderRequestService(TestDbContextFactory.CreateUnitOfWork(context));
+        var sut = CreateSut(context);
         var dto = BuildDto(servicePlanId: null, periodMonths: null, quantity: 1);
         dto.PromotionId = 9999;
 
@@ -305,7 +315,7 @@ public class OrderRequestServiceTests
         using var context = TestDbContextFactory.CreateContext();
         var plan = await SeedPlanWithPricesAsync(context);
         var promotion = await SeedPromotionAsync(context, DiscountType.Percentage, discountValue: 10m);
-        var sut = new OrderRequestService(TestDbContextFactory.CreateUnitOfWork(context));
+        var sut = CreateSut(context);
         var dto = BuildDto(plan.Id, periodMonths: 1, quantity: 1);
         dto.PromotionId = promotion.Id;
 
@@ -320,7 +330,7 @@ public class OrderRequestServiceTests
         using var context = TestDbContextFactory.CreateContext();
         var plan = await SeedPlanWithPricesAsync(context);
         var promotion = await SeedPromotionAsync(context, DiscountType.Percentage, discountValue: 50m, maxDiscountAmount: 20000m);
-        var sut = new OrderRequestService(TestDbContextFactory.CreateUnitOfWork(context));
+        var sut = CreateSut(context);
         var dto = BuildDto(plan.Id, periodMonths: 1, quantity: 1);
         dto.PromotionId = promotion.Id;
 
@@ -346,7 +356,7 @@ public class OrderRequestServiceTests
         };
         context.Promotions.Add(promotion);
         await context.SaveChangesAsync();
-        var sut = new OrderRequestService(TestDbContextFactory.CreateUnitOfWork(context));
+        var sut = CreateSut(context);
         var dto = BuildDto(plan.Id, periodMonths: 1, quantity: 1);
         dto.PromotionId = promotion.Id;
 
@@ -361,7 +371,7 @@ public class OrderRequestServiceTests
         using var context = TestDbContextFactory.CreateContext();
         var plan = await SeedPlanWithPricesAsync(context);
         var promotion = await SeedPromotionAsync(context, DiscountType.Percentage, discountValue: 10m, scopeType: ScopeType.Plan, scopedPlanId: 999);
-        var sut = new OrderRequestService(TestDbContextFactory.CreateUnitOfWork(context));
+        var sut = CreateSut(context);
         var dto = BuildDto(plan.Id, periodMonths: 1, quantity: 1);
         dto.PromotionId = promotion.Id;
 
@@ -376,7 +386,7 @@ public class OrderRequestServiceTests
         var promotion = await SeedPromotionAsync(
             context, DiscountType.Percentage, discountValue: 10m,
             startDate: DateTime.UtcNow.AddDays(-10), endDate: DateTime.UtcNow.AddDays(-1));
-        var sut = new OrderRequestService(TestDbContextFactory.CreateUnitOfWork(context));
+        var sut = CreateSut(context);
         var dto = BuildDto(plan.Id, periodMonths: 1, quantity: 1);
         dto.PromotionId = promotion.Id;
 
@@ -389,10 +399,138 @@ public class OrderRequestServiceTests
         using var context = TestDbContextFactory.CreateContext();
         var plan = await SeedPlanWithPricesAsync(context);
         var promotion = await SeedPromotionAsync(context, DiscountType.Percentage, discountValue: 10m, minOrderValue: 500000m);
-        var sut = new OrderRequestService(TestDbContextFactory.CreateUnitOfWork(context));
+        var sut = CreateSut(context);
         var dto = BuildDto(plan.Id, periodMonths: 1, quantity: 1);
         dto.PromotionId = promotion.Id;
 
         await Assert.ThrowsAsync<ValidationException>(() => sut.CreateAsync(dto));
+    }
+
+    [Fact]
+    public async Task CreateAsync_MultipleItems_SumsLineTotalsIntoGrandTotal()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var tldPricing = await SeedTldPricingAsync(context);
+        var sut = CreateSut(context);
+        var dto = new CreateOrderRequestDto
+        {
+            CustomerType = CustomerType.Individual,
+            CustomerName = "Test Customer",
+            CustomerEmail = "test@example.com",
+            CustomerPhone = "0900000000",
+            Items =
+            {
+                new CreateOrderRequestItemDto { ServicePlanId = plan.Id, PeriodMonths = 1, Quantity = 2 },
+                new CreateOrderRequestItemDto { TldPricingId = tldPricing.Id, DomainName = "myshop", Quantity = 1 }
+            }
+        };
+
+        var result = await sut.CreateAsync(dto);
+
+        Assert.Equal(450000m, result.TotalPrice);
+        var saved = context.OrderRequests.Single(o => o.Id == result.Id);
+        Assert.Equal(2, saved.Items.Count);
+    }
+
+    [Fact]
+    public async Task CreateAsync_ItemMissingBothProductFields_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var sut = CreateSut(context);
+        var dto = new CreateOrderRequestDto
+        {
+            CustomerType = CustomerType.Individual,
+            CustomerName = "Test Customer",
+            CustomerEmail = "test@example.com",
+            CustomerPhone = "0900000000",
+            Items = { new CreateOrderRequestItemDto { Quantity = 1 } }
+        };
+
+        await Assert.ThrowsAsync<ValidationException>(() => sut.CreateAsync(dto));
+    }
+
+    [Fact]
+    public async Task CreateAsync_ItemWithBothProductFields_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var tldPricing = await SeedTldPricingAsync(context);
+        var sut = CreateSut(context);
+        var dto = new CreateOrderRequestDto
+        {
+            CustomerType = CustomerType.Individual,
+            CustomerName = "Test Customer",
+            CustomerEmail = "test@example.com",
+            CustomerPhone = "0900000000",
+            Items = { new CreateOrderRequestItemDto { ServicePlanId = plan.Id, TldPricingId = tldPricing.Id, DomainName = "myshop", Quantity = 1 } }
+        };
+
+        await Assert.ThrowsAsync<ValidationException>(() => sut.CreateAsync(dto));
+    }
+
+    [Fact]
+    public async Task CreateAsync_PromotionMatchesOnlySomeItems_DiscountsOnlyMatchedLines()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var tldPricing = await SeedTldPricingAsync(context, categoryId: 601);
+        var promotion = await SeedPromotionAsync(
+            context, DiscountType.Percentage, discountValue: 10m,
+            scopeType: ScopeType.Category, scopedCategoryId: plan.CategoryId);
+        var sut = CreateSut(context);
+        var dto = new CreateOrderRequestDto
+        {
+            CustomerType = CustomerType.Individual,
+            CustomerName = "Test Customer",
+            CustomerEmail = "test@example.com",
+            CustomerPhone = "0900000000",
+            PromotionId = promotion.Id,
+            Items =
+            {
+                new CreateOrderRequestItemDto { ServicePlanId = plan.Id, PeriodMonths = 1, Quantity = 1 },
+                new CreateOrderRequestItemDto { TldPricingId = tldPricing.Id, DomainName = "myshop", Quantity = 1 }
+            }
+        };
+
+        var result = await sut.CreateAsync(dto);
+
+        // Gói 100000đ khớp scope Category -> giảm 10% = 10000; dòng tên miền 250000đ khác category
+        // không bị giảm. Tổng đúng = (100000 + 250000) - 10000 = 340000, không phải giảm cả 350000.
+        Assert.Equal(340000m, result.TotalPrice);
+    }
+
+    [Fact]
+    public async Task GetByCodeAsync_ExistingOrder_ReturnsLookupDtoWithBankInfo()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        _appSettingsMock.SetupGet(a => a.BankName).Returns("Ngân hàng Test");
+        _appSettingsMock.SetupGet(a => a.BankAccountNumber).Returns("999888777");
+        _appSettingsMock.SetupGet(a => a.BankAccountHolder).Returns("CLOUDVERSE");
+        var sut = CreateSut(context);
+        var created = await sut.CreateAsync(BuildDto(plan.Id, periodMonths: 1, quantity: 2));
+        var orderCode = context.OrderRequests.Single(o => o.Id == created.Id).OrderCode;
+
+        var result = await sut.GetByCodeAsync(orderCode);
+
+        Assert.Equal(orderCode, result.OrderCode);
+        Assert.Equal(200000m, result.TotalPrice);
+        Assert.Equal("New", result.Status);
+        Assert.Single(result.Items);
+        Assert.Equal("Test Plan", result.Items[0].ProductName);
+        Assert.Equal(2, result.Items[0].Quantity);
+        Assert.Equal("Ngân hàng Test", result.BankName);
+        Assert.Equal("999888777", result.BankAccountNumber);
+        Assert.Equal("CLOUDVERSE", result.BankAccountHolder);
+    }
+
+    [Fact]
+    public async Task GetByCodeAsync_UnknownOrderCode_ThrowsNotFoundException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var sut = CreateSut(context);
+
+        await Assert.ThrowsAsync<NotFoundException>(() => sut.GetByCodeAsync("ORD-DOES-NOT-EXIST"));
     }
 }

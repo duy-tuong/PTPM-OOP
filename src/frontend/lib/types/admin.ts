@@ -1,5 +1,6 @@
 import type { PaginationParams } from "./common";
 import type { PlanFeatureDto, PlanPriceDto } from "./catalog";
+import type { OrderRequestItemDto } from "./sales";
 import type {
   AffiliateApplicationStatus,
   ConsultationStatus,
@@ -254,13 +255,7 @@ export interface AdminOrderRequestDto {
   customerEmail: string;
   customerPhone: string;
   companyName?: string | null;
-  servicePlanId?: number | null;
-  servicePlanName?: string | null;
-  tldPricingId?: number | null;
-  tldName?: string | null;
-  domainName?: string | null;
-  periodMonths?: number | null;
-  quantity: number;
+  items: OrderRequestItemDto[];
   totalPrice: number;
   note?: string | null;
   status: string;

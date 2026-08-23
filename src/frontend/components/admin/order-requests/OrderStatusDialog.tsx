@@ -10,6 +10,7 @@ import { Field, FieldGroup } from "@/components/ui/field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { updateOrderRequestStatusAction } from "@/app/admin/order-requests/actions";
 import { OrderRequestStatus, ORDER_REQUEST_STATUS_LABELS } from "@/lib/types/enums";
+import { formatOrderItemLabel } from "@/lib/utils/orderItems";
 import { formatCurrency } from "@/lib/utils";
 import type { AdminOrderRequestDto } from "@/lib/types/admin";
 
@@ -73,11 +74,15 @@ export function OrderStatusDialog({ open, onOpenChange, order }: OrderStatusDial
               <span className="text-zinc-500">Khách hàng</span>
               <span className="font-medium text-zinc-900">{order.customerName}</span>
             </div>
-            <div className="mt-1 flex justify-between gap-4">
+            <div className="mt-1 flex flex-col gap-1">
               <span className="text-zinc-500">Sản phẩm</span>
-              <span className="font-medium text-zinc-900">
-                {order.servicePlanName ?? (order.domainName && order.tldName ? `${order.domainName}${order.tldName}` : "-")}
-              </span>
+              <ul className="flex flex-col gap-0.5">
+                {order.items.map((item) => (
+                  <li key={item.id} className="font-medium text-zinc-900">
+                    {formatOrderItemLabel(item)}
+                  </li>
+                ))}
+              </ul>
             </div>
             <div className="mt-1 flex justify-between gap-4">
               <span className="text-zinc-500">Tổng tiền</span>
