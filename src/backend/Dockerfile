@@ -17,6 +17,10 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0-preview AS final
 WORKDIR /app
 COPY --from=build /app/publish .
 
+# wwwroot/uploads (LocalFileStorageService.cs) gắn Docker volume ở docker-compose.yml để không mất ảnh
+# khi container tái tạo - tạo sẵn thư mục để volume mount không bị lỗi quyền ghi.
+RUN mkdir -p /app/wwwroot/uploads
+
 ENV ASPNETCORE_URLS=http://+:5000
 EXPOSE 5000
 

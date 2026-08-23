@@ -12,7 +12,7 @@ export function AboutStory({ page }: { page: ContentPageDto | null }) {
   if (!page) return null;
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-[3fr_7fr]">
         <div className="hidden lg:sticky lg:top-32 lg:flex lg:h-fit">
           <span aria-hidden className="font-heading text-6xl leading-none font-bold text-foreground/5 xl:text-7xl">

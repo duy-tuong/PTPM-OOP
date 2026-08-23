@@ -45,6 +45,7 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICustomerAuthService, CustomerAuthService>();
         services.AddScoped<OrderStatusNotifier>();
+        services.AddScoped<IOrderRequestStatusTransitionService, OrderRequestStatusTransitionService>();
 
         services.AddScoped<IServiceCategoryService, ServiceCategoryService>();
         services.AddScoped<IServicePlanService, ServicePlanService>();

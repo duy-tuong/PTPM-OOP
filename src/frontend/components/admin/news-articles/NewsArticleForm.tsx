@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Field, FieldDescription, FieldError, FieldGroup } from "@/components/ui/field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MarkdownEditor } from "@/components/admin/MarkdownEditor";
+import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { slugify } from "@/lib/utils";
 import { createNewsArticleAction, updateNewsArticleAction } from "@/app/admin/news-articles/actions";
 import type { AdminNewsArticleDto, AdminNewsCategoryDto } from "@/lib/types/admin";
@@ -26,6 +27,8 @@ interface FormErrors {
   title?: string;
   slug?: string;
   content?: string;
+  summary?: string;
+  thumbnailUrl?: string;
 }
 
 function toDateInputValue(value: string): string {
@@ -84,6 +87,8 @@ export function NewsArticleForm({ mode, initialData, categories }: NewsArticleFo
     if (!slug.trim()) nextErrors.slug = "Vui lòng nhập slug";
     else if (slug.length > 270) nextErrors.slug = "Slug tối đa 270 ký tự";
     if (!content.trim()) nextErrors.content = "Vui lòng nhập nội dung";
+    if (summary.length > 500) nextErrors.summary = "Tóm tắt tối đa 500 ký tự";
+    if (thumbnailUrl.length > 500) nextErrors.thumbnailUrl = "URL tối đa 500 ký tự";
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   }
@@ -133,7 +138,11 @@ export function NewsArticleForm({ mode, initialData, categories }: NewsArticleFo
           <div className="grid gap-4 sm:grid-cols-2">
             <Field>
               <Label htmlFor="article-category">Danh mục</Label>
-              <Select value={String(newsCategoryId)} onValueChange={(value) => setNewsCategoryId(Number(value))}>
+              <Select
+                items={categories.map((category) => ({ value: String(category.id), label: category.name }))}
+                value={String(newsCategoryId)}
+                onValueChange={(value) => setNewsCategoryId(Number(value))}
+              >
                 <SelectTrigger id="article-category" className="w-full">
                   <SelectValue placeholder="Chọn danh mục" />
                 </SelectTrigger>
@@ -194,17 +203,21 @@ export function NewsArticleForm({ mode, initialData, categories }: NewsArticleFo
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
               placeholder="Hiển thị ở danh sách tin tức, tối đa 500 ký tự"
+              aria-invalid={!!errors.summary}
             />
+            <FieldError errors={errors.summary ? [{ message: errors.summary }] : undefined} />
           </Field>
 
           <Field>
             <Label htmlFor="article-thumbnail">URL ảnh đại diện</Label>
-            <Input
+            <ImageUploadField
               id="article-thumbnail"
               value={thumbnailUrl}
-              onChange={(e) => setThumbnailUrl(e.target.value)}
+              onChange={setThumbnailUrl}
               placeholder="https://..."
+              ariaInvalid={!!errors.thumbnailUrl}
             />
+            <FieldError errors={errors.thumbnailUrl ? [{ message: errors.thumbnailUrl }] : undefined} />
           </Field>
 
           <Field>

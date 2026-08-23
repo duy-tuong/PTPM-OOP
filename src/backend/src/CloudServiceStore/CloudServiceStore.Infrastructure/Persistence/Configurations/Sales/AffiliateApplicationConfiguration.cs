@@ -20,6 +20,12 @@ public class AffiliateApplicationConfiguration : IEntityTypeConfiguration<Affili
         builder.Property(x => x.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
 
         builder.HasIndex(x => new { x.Status, x.CreatedAt });
+        builder.HasIndex(x => x.CustomerId);
+
+        builder.HasOne(x => x.Customer)
+            .WithMany()
+            .HasForeignKey(x => x.CustomerId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasOne(x => x.ReviewedByUser)
             .WithMany()

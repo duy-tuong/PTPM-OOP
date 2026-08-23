@@ -1,0 +1,45 @@
+using CloudServiceStore.Domain.Entities.Catalog;
+
+namespace CloudServiceStore.Domain.Entities.Sales;
+
+// 1 dòng sản phẩm trong giỏ hàng của OrderRequest - đúng 1 trong 2 (ServicePlanId hoặc TldPricingId),
+// không bao giờ cả 2 hoặc không cái nào (validate ở OrderRequestService.CreateAsync). Tách ra bảng
+// riêng thay vì field phẳng trên OrderRequest để 1 đơn hàng chứa được nhiều sản phẩm khác loại.
+public class OrderRequestItem
+{
+    public int Id { get; set; }
+
+    public int OrderRequestId { get; set; }
+    public OrderRequest OrderRequest { get; set; } = null!;
+
+    public int? ServicePlanId { get; set; }
+    public ServicePlan? ServicePlan { get; set; }
+
+    public int? TldPricingId { get; set; }
+    public TldPricing? TldPricing { get; set; }
+    public string? DomainName { get; set; }
+
+    public int? PeriodMonths { get; set; }
+    public int Quantity { get; set; } = 1;
+    public decimal UnitPrice { get; set; }
+    public decimal LineTotal { get; set; }
+
+    // Thông tin bàn giao mô phỏng (Tier 3 - "cấp phát tự động") - do OrderRequestStatusTransitionService
+    // sinh khi đơn chuyển Completed, KHÔNG phải hạ tầng thật. ServicePlan-item nhận IP+mật khẩu root,
+    // TldPricing-item nhận nameserver. Tất cả null cho tới khi Completed.
+    public string? ProvisionedIpAddress { get; set; }
+    public string? ProvisionedRootPassword { get; set; }
+    public string? ProvisionedNameservers { get; set; }
+    public DateTime? ProvisionedAt { get; set; }
+
+    // Tier 4 "vòng đời gia hạn" - ExpiresAt chỉ có ý nghĩa trên item "đang sống" (RenewsFromItemId ==
+    // null), set lúc Completed (xem OrderRequestStatusTransitionService). RenewsFromItemId chỉ set
+    // trên ĐÚNG 1 item của 1 đơn GIA HẠN (self-referencing FK trỏ về item gốc cần gia hạn) - item gia
+    // hạn tự nó không có ExpiresAt riêng (không có vòng đời độc lập, chỉ có tác dụng cộng dồn thời hạn
+    // vào item gốc). RenewalReminderSentAt là cờ chống gửi trùng email nhắc, chỉ có ý nghĩa khi
+    // RenewsFromItemId == null.
+    public DateTime? ExpiresAt { get; set; }
+    public int? RenewsFromItemId { get; set; }
+    public OrderRequestItem? RenewsFromItem { get; set; }
+    public DateTime? RenewalReminderSentAt { get; set; }
+}

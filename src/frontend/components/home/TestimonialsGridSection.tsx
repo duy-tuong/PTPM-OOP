@@ -21,7 +21,7 @@ export async function TestimonialsGridSection() {
   const shouldMarquee = testimonials.length > 1;
 
   return (
-    <section className="py-16">
+    <section className="py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Reveal className="mb-10 flex flex-col gap-4 text-center">
           <h2 className="font-heading text-3xl font-bold text-balance sm:text-4xl">Lòng Tin Từ Cộng Đồng</h2>
@@ -48,7 +48,7 @@ export async function TestimonialsGridSection() {
 
 function TestimonialCard({ testimonial }: { testimonial: TestimonialDto }) {
   return (
-    <div className="group relative flex h-full w-[380px] shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-muted p-8 transition-colors duration-300 hover:border-primary">
+    <div className="group relative flex h-full w-[380px] shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card p-8 transition-colors duration-300 hover:border-primary">
       <Quotes className="pointer-events-none absolute -top-4 -right-4 size-24 text-muted-foreground/20" weight="fill" />
 
       {testimonial.rating != null && (

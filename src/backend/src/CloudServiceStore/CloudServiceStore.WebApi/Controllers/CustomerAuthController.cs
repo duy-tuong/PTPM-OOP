@@ -31,10 +31,6 @@ public class CustomerAuthController : ControllerBase
         {
             return Conflict(new { message = ex.Message });
         }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
     }
 
     [HttpPost("login")]
@@ -112,6 +108,64 @@ public class CustomerAuthController : ControllerBase
         try
         {
             await _customerAuthService.ChangePasswordAsync(GetCustomerId(), request, cancellationToken);
+            return NoContent();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("change-email/request")]
+    [Authorize(Roles = "Customer")]
+    public async Task<IActionResult> RequestEmailChange(RequestEmailChangeDto dto, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _customerAuthService.RequestEmailChangeAsync(GetCustomerId(), dto, cancellationToken);
+            return NoContent();
+        }
+        catch (CloudServiceStore.Application.Common.Exceptions.ConflictException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
+    }
+
+    [HttpGet("change-email/confirm")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ConfirmEmailChange([FromQuery] string token, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _customerAuthService.ConfirmEmailChangeAsync(token, cancellationToken);
+            return NoContent();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("forgot-password")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest request, CancellationToken cancellationToken)
+    {
+        await _customerAuthService.ForgotPasswordAsync(request, cancellationToken);
+        // Luôn trả 204 kể cả email không tồn tại - tránh lộ thông tin email nào đã đăng ký.
+        return NoContent();
+    }
+
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ResetPassword(ResetPasswordRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _customerAuthService.ResetPasswordAsync(request, cancellationToken);
             return NoContent();
         }
         catch (UnauthorizedAccessException ex)

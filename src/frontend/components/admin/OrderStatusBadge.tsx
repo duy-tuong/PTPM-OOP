@@ -1,14 +1,18 @@
 import { ORDER_REQUEST_STATUS_LABELS } from "@/lib/types/enums";
 import { cn } from "@/lib/utils";
 
-// 5 màu cho đúng 5 trạng thái thật OrderRequestStatus (New/Contacted/Confirmed/Cancelled/Completed) -
-// KHÔNG phải Active/Pending/Suspended (không khớp domain thật của hệ thống này). Giữ tinh thần
-// xanh=trạng thái tốt/đỏ=trạng thái xấu. Dùng ở /admin/order-requests (Phase 6.9) và
-// RecentOrdersTable.tsx (Dashboard, Phase 6.6). Style dot-pill khớp StatusBadge.tsx/PublishBadge.tsx.
+// 7 màu cho đúng 7 trạng thái thật OrderRequestStatus (New/Contacted/Confirmed/Paid/Provisioning/
+// Cancelled/Completed) - KHÔNG phải Active/Pending/Suspended (không khớp domain thật của hệ thống
+// này). Giữ tinh thần xanh=trạng thái tốt/đỏ=trạng thái xấu; Paid/Provisioning (thêm ở bản nâng cấp
+// vòng đời đơn hàng) dùng tím/hổ phách - không trùng 5 màu gốc. Dùng ở /admin/order-requests,
+// RecentOrdersTable.tsx (Dashboard) và trang public /thanh-toan/[orderCode]. Style dot-pill khớp
+// StatusBadge.tsx/PublishBadge.tsx.
 const STATUS_STYLES: Record<string, { dot: string; text: string }> = {
   New: { dot: "bg-slate-400", text: "text-slate-600" },
   Contacted: { dot: "bg-blue-500", text: "text-blue-700" },
   Confirmed: { dot: "bg-indigo-500", text: "text-indigo-700" },
+  Paid: { dot: "bg-violet-500", text: "text-violet-700" },
+  Provisioning: { dot: "bg-amber-500", text: "text-amber-700" },
   Completed: { dot: "bg-emerald-500", text: "text-emerald-700" },
   Cancelled: { dot: "bg-red-500", text: "text-red-700" },
 };

@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Field, FieldError, FieldGroup } from "@/components/ui/field";
+import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { slugify } from "@/lib/utils";
 import { createServiceCategoryAction, updateServiceCategoryAction } from "@/app/admin/service-categories/actions";
 import type { AdminServiceCategoryDto } from "@/lib/types/admin";
@@ -34,6 +35,8 @@ const EMPTY_FORM: FormState = { name: "", slug: "", description: "", iconUrl: ""
 interface FormErrors {
   name?: string;
   slug?: string;
+  description?: string;
+  iconUrl?: string;
 }
 
 export function ServiceCategoryDialog({ open, onOpenChange, category }: ServiceCategoryDialogProps) {
@@ -75,6 +78,8 @@ export function ServiceCategoryDialog({ open, onOpenChange, category }: ServiceC
     else if (form.name.length > 100) nextErrors.name = "Tên tối đa 100 ký tự";
     if (!form.slug.trim()) nextErrors.slug = "Vui lòng nhập slug";
     else if (form.slug.length > 120) nextErrors.slug = "Slug tối đa 120 ký tự";
+    if (form.description.length > 2000) nextErrors.description = "Mô tả tối đa 2000 ký tự";
+    if (form.iconUrl.length > 500) nextErrors.iconUrl = "URL tối đa 500 ký tự";
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   }
@@ -155,17 +160,21 @@ export function ServiceCategoryDialog({ open, onOpenChange, category }: ServiceC
                 id="category-description"
                 value={form.description}
                 onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
+                aria-invalid={!!errors.description}
               />
+              <FieldError errors={errors.description ? [{ message: errors.description }] : undefined} />
             </Field>
 
             <Field>
               <Label htmlFor="category-icon">URL biểu tượng</Label>
-              <Input
+              <ImageUploadField
                 id="category-icon"
                 value={form.iconUrl}
-                onChange={(e) => setForm((prev) => ({ ...prev, iconUrl: e.target.value }))}
+                onChange={(value) => setForm((prev) => ({ ...prev, iconUrl: value }))}
                 placeholder="https://..."
+                ariaInvalid={!!errors.iconUrl}
               />
+              <FieldError errors={errors.iconUrl ? [{ message: errors.iconUrl }] : undefined} />
             </Field>
 
             <Field>

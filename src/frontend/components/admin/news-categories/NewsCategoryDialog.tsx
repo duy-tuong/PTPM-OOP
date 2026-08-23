@@ -32,6 +32,7 @@ const EMPTY_FORM: FormState = { name: "", slug: "", description: "", displayOrde
 interface FormErrors {
   name?: string;
   slug?: string;
+  description?: string;
 }
 
 // Mirror ServiceCategoryDialog.tsx (Phase 6.7) - NewsCategory không có IconUrl nên bỏ field đó.
@@ -73,6 +74,7 @@ export function NewsCategoryDialog({ open, onOpenChange, category }: NewsCategor
     else if (form.name.length > 100) nextErrors.name = "Tên tối đa 100 ký tự";
     if (!form.slug.trim()) nextErrors.slug = "Vui lòng nhập slug";
     else if (form.slug.length > 120) nextErrors.slug = "Slug tối đa 120 ký tự";
+    if (form.description.length > 1000) nextErrors.description = "Mô tả tối đa 1000 ký tự";
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   }
@@ -152,7 +154,9 @@ export function NewsCategoryDialog({ open, onOpenChange, category }: NewsCategor
                 id="news-category-description"
                 value={form.description}
                 onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
+                aria-invalid={!!errors.description}
               />
+              <FieldError errors={errors.description ? [{ message: errors.description }] : undefined} />
             </Field>
 
             <Field>

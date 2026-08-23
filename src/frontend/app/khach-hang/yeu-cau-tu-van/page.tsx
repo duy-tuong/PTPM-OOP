@@ -12,9 +12,10 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { formatDate } from "@/lib/utils";
 
-export const metadata = { title: "Yêu cầu tư vấn của tôi" };
+export const metadata = { title: "Yêu cầu tư vấn" };
 
 const PAGE_SIZE = 10;
 
@@ -49,25 +50,37 @@ export default async function MyConsultationRequestsPage({
   }
 
   return (
-    <div>
-      {result.items.length > 0 ? (
-        <div className="flex flex-col gap-4">
-          {result.items.map((request) => (
-            <div key={request.id} className="rounded-xl border border-border p-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="font-medium text-foreground">{request.subject}</span>
-                <ConsultationStatusBadge status={request.status} />
-              </div>
-              <p className="mt-2 text-sm text-muted-foreground">{request.message}</p>
-              <p className="mt-3 text-xs text-muted-foreground">
-                {request.requestCode} • {formatDate(request.createdAt)}
-              </p>
+    <div className="w-full">
+      <Card>
+        <CardHeader>
+          <CardTitle>Yêu cầu tư vấn</CardTitle>
+          <CardDescription>Theo dõi tiến độ xử lý các yêu cầu hỗ trợ và tư vấn của bạn</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {result.items.length > 0 ? (
+            <div className="flex flex-col gap-4">
+              {result.items.map((request) => (
+                <div key={request.id} className="rounded-xl border border-border p-5 bg-card hover:bg-muted/30 transition-colors">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-medium text-foreground text-base">{request.subject}</span>
+                    <ConsultationStatusBadge status={request.status} />
+                  </div>
+                  <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{request.message}</p>
+                  <div className="mt-4 flex items-center gap-3 text-xs text-muted-foreground font-mono bg-muted w-fit px-3 py-1.5 rounded-lg">
+                    <span>Mã: {request.requestCode}</span>
+                    <span>•</span>
+                    <span>{formatDate(request.createdAt)}</span>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      ) : (
-        <p className="py-16 text-center text-muted-foreground">Bạn chưa gửi yêu cầu tư vấn nào.</p>
-      )}
+          ) : (
+            <div className="py-16 text-center text-muted-foreground flex flex-col items-center justify-center border border-dashed border-border rounded-xl">
+              <p>Bạn chưa gửi yêu cầu tư vấn nào.</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {result.totalPages > 1 && (
         <Pagination className="mt-8">

@@ -32,7 +32,8 @@ public class DashboardStatsService : IDashboardStatsService
             .CountAsync(o => o.Status == OrderRequestStatus.New, cancellationToken);
 
         var monthlyStats = await BuildMonthlyStatsAsync(orderRepository, consultationRepository, cancellationToken);
-        var topServicePlans = await BuildTopServicePlansAsync(orderRepository, planRepository, cancellationToken);
+        var orderItemRepository = _unitOfWork.Repository<OrderRequestItem, int>();
+        var topServicePlans = await BuildTopServicePlansAsync(orderItemRepository, planRepository, cancellationToken);
 
         return new DashboardStatsDto
         {
@@ -82,15 +83,16 @@ public class DashboardStatsService : IDashboardStatsService
         return monthlyStats;
     }
 
-    // "gói dịch vụ được quan tâm nhất" (mục 3.2.6 đề bài) — top 5 ServicePlan theo số OrderRequest.
+    // "gói dịch vụ được quan tâm nhất" (mục 3.2.6 đề bài) — top 5 ServicePlan theo số dòng OrderRequestItem
+    // (đơn nhiều dòng nên đếm theo dòng, không theo đơn - 1 đơn có thể có nhiều dòng cùng 1 gói).
     private static async Task<List<TopServicePlanStatDto>> BuildTopServicePlansAsync(
-        IRepository<OrderRequest, int> orderRepository,
+        IRepository<OrderRequestItem, int> orderItemRepository,
         IRepository<ServicePlan, int> planRepository,
         CancellationToken cancellationToken)
     {
-        var topPlanGroups = await orderRepository.Query()
-            .Where(o => o.ServicePlanId != null)
-            .GroupBy(o => o.ServicePlanId)
+        var topPlanGroups = await orderItemRepository.Query()
+            .Where(i => i.ServicePlanId != null)
+            .GroupBy(i => i.ServicePlanId)
             .Select(g => new { ServicePlanId = g.Key!.Value, Count = g.Count() })
             .OrderByDescending(g => g.Count)
             .Take(5)

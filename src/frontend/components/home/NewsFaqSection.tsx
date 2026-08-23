@@ -19,7 +19,7 @@ export async function NewsFaqSection() {
   }
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
         {articles.length > 0 && <NewsColumn articles={articles} />}
         {faqs.length > 0 && <FaqColumn faqs={faqs} />}

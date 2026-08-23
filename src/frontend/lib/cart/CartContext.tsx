@@ -1,0 +1,94 @@
+"use client";
+
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+
+export const CART_STORAGE_KEY = "cloudverse-cart";
+
+// Giỏ hàng chỉ lưu thông tin hiển thị (label, đơn giá hiển thị) song song ID sản phẩm - giá hiển thị
+// chỉ để UI, giá thật luôn được backend tính lại từ ServicePlanId/TldPricingId lúc đặt hàng (đúng
+// nguyên tắc "không tin giá từ client" đã áp dụng xuyên suốt dự án).
+export interface CartItem {
+  key: string;
+  servicePlanId?: number;
+  tldPricingId?: number;
+  domainName?: string;
+  periodMonths?: number;
+  quantity: number;
+  label: string;
+  unitPriceDisplay: number;
+}
+
+interface CartContextValue {
+  items: CartItem[];
+  addItem: (item: Omit<CartItem, "key">) => void;
+  removeItem: (key: string) => void;
+  updateQuantity: (key: string, quantity: number) => void;
+  clear: () => void;
+  subtotalDisplay: number;
+}
+
+const CartContext = createContext<CartContextValue | null>(null);
+
+export function CartProvider({ children }: { children: ReactNode }) {
+  const [items, setItems] = useState<CartItem[]>([]);
+  const [hydrated, setHydrated] = useState(false);
+
+  // Nạp giỏ hàng từ localStorage đúng 1 lần lúc mount. Cờ `hydrated` chặn effect ghi lại (bên dưới)
+  // không chạy trước khi nạp xong - tránh ghi đè "[]" lên giỏ hàng đã lưu từ trước.
+  useEffect(() => {
+    function loadCart() {
+      try {
+        const raw = localStorage.getItem(CART_STORAGE_KEY);
+        if (raw) setItems(JSON.parse(raw));
+      } catch {
+        // localStorage có thể bị chặn (chế độ riêng tư/trình duyệt chặn cookie) - bỏ qua, giỏ hàng rỗng.
+      }
+      setHydrated(true);
+    }
+
+    loadCart();
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    } catch {
+      // ignore
+    }
+  }, [items, hydrated]);
+
+  function addItem(item: Omit<CartItem, "key">) {
+    setItems((prev) => [...prev, { ...item, key: crypto.randomUUID() }]);
+  }
+
+  function removeItem(key: string) {
+    setItems((prev) => prev.filter((item) => item.key !== key));
+  }
+
+  function updateQuantity(key: string, quantity: number) {
+    setItems((prev) =>
+      prev.map((item) => (item.key === key ? { ...item, quantity: Math.max(1, quantity) } : item)),
+    );
+  }
+
+  function clear() {
+    setItems([]);
+  }
+
+  const subtotalDisplay = items.reduce((sum, item) => sum + item.unitPriceDisplay * item.quantity, 0);
+
+  return (
+    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clear, subtotalDisplay }}>
+      {children}
+    </CartContext.Provider>
+  );
+}
+
+export function useCart(): CartContextValue {
+  const ctx = useContext(CartContext);
+  if (!ctx) {
+    throw new Error("useCart phải được gọi bên trong CartProvider.");
+  }
+  return ctx;
+}

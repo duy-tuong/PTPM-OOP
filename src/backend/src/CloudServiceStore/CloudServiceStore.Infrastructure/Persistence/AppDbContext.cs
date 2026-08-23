@@ -37,6 +37,7 @@ public class AppDbContext : DbContext
 
     // Sales
     public DbSet<OrderRequest> OrderRequests => Set<OrderRequest>();
+    public DbSet<OrderRequestItem> OrderRequestItems => Set<OrderRequestItem>();
     public DbSet<ConsultationRequest> ConsultationRequests => Set<ConsultationRequest>();
     public DbSet<AffiliateApplication> AffiliateApplications => Set<AffiliateApplication>();
 

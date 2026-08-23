@@ -14,7 +14,7 @@ export function AuthPageShell({
   children: ReactNode;
 }) {
   return (
-    <section className="relative flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center overflow-hidden px-4 py-16 sm:px-6">
+    <section className="relative flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center overflow-hidden px-4 py-12 sm:px-6">
       <ParallaxLayer depth={0.6} className="pointer-events-none absolute inset-0 -z-10">
         <div className="animate-ambient-blob absolute top-[-120px] left-[-100px] h-[380px] w-[380px] rounded-full bg-primary opacity-30 blur-[110px]" />
         <div className="animate-ambient-blob absolute right-[-100px] bottom-[-120px] h-[420px] w-[420px] rounded-full bg-[var(--accent-purple)] opacity-20 blur-[110px]" />

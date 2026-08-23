@@ -1,5 +1,6 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { OrderStatusBadge } from "@/components/admin/OrderStatusBadge";
+import { formatOrderProductSummary } from "@/lib/utils/orderItems";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { AdminOrderRequestDto } from "@/lib/types/admin";
 
@@ -19,7 +20,7 @@ export function RecentOrdersTable({ orders }: { orders: AdminOrderRequestDto[] }
           <TableRow className="border-b border-zinc-200/60 bg-zinc-50/50 hover:bg-zinc-50/50">
             <TableHead className="h-12 px-6 text-xs font-semibold text-zinc-500">Mã đơn</TableHead>
             <TableHead className="h-12 px-6 text-xs font-semibold text-zinc-500">Khách hàng</TableHead>
-            <TableHead className="h-12 px-6 text-xs font-semibold text-zinc-500">Gói dịch vụ</TableHead>
+            <TableHead className="h-12 px-6 text-xs font-semibold text-zinc-500">Sản phẩm</TableHead>
             <TableHead className="h-12 px-6 text-xs font-semibold text-zinc-500">Số tiền</TableHead>
             <TableHead className="h-12 px-6 text-xs font-semibold text-zinc-500">Trạng thái</TableHead>
             <TableHead className="h-12 px-6 text-xs font-semibold text-zinc-500">Ngày tạo</TableHead>
@@ -35,7 +36,9 @@ export function RecentOrdersTable({ orders }: { orders: AdminOrderRequestDto[] }
                   <span className="text-xs text-zinc-500">{order.customerEmail}</span>
                 </div>
               </TableCell>
-              <TableCell className="px-6 py-4 text-[14px] text-zinc-700">{order.servicePlanName ?? "-"}</TableCell>
+              <TableCell className="px-6 py-4 text-[14px] text-zinc-700">
+                {formatOrderProductSummary(order.items)}
+              </TableCell>
               <TableCell className="px-6 py-4 text-[14px] text-zinc-700">{formatCurrency(order.totalPrice)}</TableCell>
               <TableCell className="px-6 py-4">
                 <OrderStatusBadge status={order.status} />

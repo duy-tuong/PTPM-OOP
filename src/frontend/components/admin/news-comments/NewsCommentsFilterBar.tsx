@@ -28,6 +28,11 @@ export function NewsCommentsFilterBar({ currentIsApproved }: NewsCommentsFilterB
   return (
     <div className="flex flex-wrap items-center gap-3">
       <Select
+        items={[
+          { value: ALL_VALUE, label: "Tất cả trạng thái" },
+          { value: "false", label: "Chờ duyệt" },
+          { value: "true", label: "Đã duyệt" },
+        ]}
         value={currentIsApproved ?? ALL_VALUE}
         onValueChange={(value) => updateParam("isApproved", value === ALL_VALUE ? null : value)}
       >

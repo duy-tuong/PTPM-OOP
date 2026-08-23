@@ -10,8 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CustomerTypeToggle } from "@/components/contact/CustomerTypeToggle";
 import { CustomerType } from "@/lib/types/enums";
 import { cn } from "@/lib/utils";
-import { submitConsultationRequest } from "@/lib/api/sales";
 import type { ServiceCategoryDto } from "@/lib/types/catalog";
+import type { CreateConsultationRequestDto } from "@/lib/types/sales";
 
 interface ConsultationFormErrors {
   fullName?: string;
@@ -63,7 +63,7 @@ export function ConsultationRequestForm({ categories }: { categories: ServiceCat
 
     setIsSubmitting(true);
     try {
-      await submitConsultationRequest({
+      const dto: CreateConsultationRequestDto = {
         customerType,
         fullName: fullName.trim(),
         email: email.trim(),
@@ -72,7 +72,18 @@ export function ConsultationRequestForm({ categories }: { categories: ServiceCat
         serviceCategoryId: serviceCategoryId ?? undefined,
         subject: subject.trim(),
         message: message.trim(),
+      };
+
+      const res = await fetch("/api/consultation-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dto),
       });
+
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as { message?: string } | null;
+        throw new Error(data?.message ?? "Gửi yêu cầu thất bại, vui lòng thử lại.");
+      }
 
       toast.success("Đã gửi yêu cầu tư vấn, đội ngũ Cloudverse sẽ liên hệ sớm");
       setFullName("");
@@ -99,7 +110,8 @@ export function ConsultationRequestForm({ categories }: { categories: ServiceCat
           <Field>
             <Label htmlFor="consult-category">Dịch vụ quan tâm (không bắt buộc)</Label>
             <Select
-              value={serviceCategoryId ? String(serviceCategoryId) : undefined}
+              items={categories.map((category) => ({ value: String(category.id), label: category.name }))}
+              value={serviceCategoryId ? String(serviceCategoryId) : null}
               onValueChange={(value) => setServiceCategoryId(value ? Number(value) : null)}
             >
               <SelectTrigger id="consult-category" className="w-full">

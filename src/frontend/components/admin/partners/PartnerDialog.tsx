@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Field, FieldError, FieldGroup } from "@/components/ui/field";
+import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { createPartnerAction, updatePartnerAction } from "@/app/admin/partners/actions";
 import type { AdminPartnerDto } from "@/lib/types/admin";
 
@@ -30,6 +31,7 @@ const EMPTY_FORM: FormState = { name: "", logoUrl: "", websiteUrl: "", displayOr
 interface FormErrors {
   name?: string;
   logoUrl?: string;
+  websiteUrl?: string;
 }
 
 export function PartnerDialog({ open, onOpenChange, partner }: PartnerDialogProps) {
@@ -62,6 +64,8 @@ export function PartnerDialog({ open, onOpenChange, partner }: PartnerDialogProp
     if (!form.name.trim()) nextErrors.name = "Vui lòng nhập tên đối tác";
     else if (form.name.length > 150) nextErrors.name = "Tên tối đa 150 ký tự";
     if (!form.logoUrl.trim()) nextErrors.logoUrl = "Vui lòng nhập URL logo";
+    else if (form.logoUrl.length > 500) nextErrors.logoUrl = "URL tối đa 500 ký tự";
+    if (form.websiteUrl.length > 500) nextErrors.websiteUrl = "URL tối đa 500 ký tự";
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   }
@@ -117,12 +121,12 @@ export function PartnerDialog({ open, onOpenChange, partner }: PartnerDialogProp
 
             <Field>
               <Label htmlFor="partner-logo">URL logo</Label>
-              <Input
+              <ImageUploadField
                 id="partner-logo"
                 value={form.logoUrl}
-                onChange={(e) => setForm((prev) => ({ ...prev, logoUrl: e.target.value }))}
+                onChange={(value) => setForm((prev) => ({ ...prev, logoUrl: value }))}
                 placeholder="https://..."
-                aria-invalid={!!errors.logoUrl}
+                ariaInvalid={!!errors.logoUrl}
               />
               <FieldError errors={errors.logoUrl ? [{ message: errors.logoUrl }] : undefined} />
             </Field>
@@ -134,7 +138,9 @@ export function PartnerDialog({ open, onOpenChange, partner }: PartnerDialogProp
                 value={form.websiteUrl}
                 onChange={(e) => setForm((prev) => ({ ...prev, websiteUrl: e.target.value }))}
                 placeholder="https://... (tuỳ chọn)"
+                aria-invalid={!!errors.websiteUrl}
               />
+              <FieldError errors={errors.websiteUrl ? [{ message: errors.websiteUrl }] : undefined} />
             </Field>
 
             <Field>

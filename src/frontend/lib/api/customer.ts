@@ -5,8 +5,9 @@ import type {
   CustomerProfileDto,
   UpdateCustomerProfileDto,
   ChangeCustomerPasswordDto,
+  RequestEmailChangeDto,
 } from "@/lib/types/customerAuth";
-import type { MyOrderRequestDto, MyConsultationRequestDto } from "@/lib/types/sales";
+import type { MyOrderRequestDto, MyServiceItemDto, MyConsultationRequestDto } from "@/lib/types/sales";
 
 // Server-only - gọi các endpoint tự phục vụ [Authorize(Roles="Customer")], dùng trong
 // app/khach-hang/** (Server Component đọc token qua getCustomerAccessToken()) và các Route Handler
@@ -23,8 +24,16 @@ export function changeMyPassword(dto: ChangeCustomerPasswordDto, token: string) 
   return apiFetch<void>(getApiUrl(), "/customer-auth/change-password", "POST", { body: dto, token });
 }
 
+export function requestEmailChange(dto: RequestEmailChangeDto, token: string) {
+  return apiFetch<void>(getApiUrl(), "/customer-auth/change-email/request", "POST", { body: dto, token });
+}
+
 export function getMyOrders(params: PaginationParams, token: string) {
   return apiFetch<PagedResult<MyOrderRequestDto>>(getApiUrl(), "/order-requests/mine", "GET", { params, token });
+}
+
+export function getMyServices(params: PaginationParams, token: string) {
+  return apiFetch<PagedResult<MyServiceItemDto>>(getApiUrl(), "/order-requests/mine/services", "GET", { params, token });
 }
 
 export function getMyConsultationRequests(params: PaginationParams, token: string) {

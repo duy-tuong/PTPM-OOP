@@ -22,6 +22,8 @@ interface FormErrors {
   title?: string;
   slug?: string;
   content?: string;
+  metaTitle?: string;
+  metaDescription?: string;
 }
 
 // Không có API GetById cho Content Page (list phẳng) - trang [id]/edit/page.tsx đã tự fetch nguyên
@@ -53,6 +55,8 @@ export function ContentPageForm({ mode, initialData }: ContentPageFormProps) {
     if (!slug.trim()) nextErrors.slug = "Vui lòng nhập slug";
     else if (slug.length > 150) nextErrors.slug = "Slug tối đa 150 ký tự";
     if (!content.trim()) nextErrors.content = "Vui lòng nhập nội dung";
+    if (metaTitle.length > 200) nextErrors.metaTitle = "Meta title tối đa 200 ký tự";
+    if (metaDescription.length > 500) nextErrors.metaDescription = "Meta description tối đa 500 ký tự";
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   }
@@ -132,7 +136,9 @@ export function ContentPageForm({ mode, initialData }: ContentPageFormProps) {
                 value={metaTitle}
                 onChange={(e) => setMetaTitle(e.target.value)}
                 placeholder="Tuỳ chọn - mặc định dùng Tiêu đề"
+                aria-invalid={!!errors.metaTitle}
               />
+              <FieldError errors={errors.metaTitle ? [{ message: errors.metaTitle }] : undefined} />
             </Field>
 
             <Field>
@@ -153,7 +159,9 @@ export function ContentPageForm({ mode, initialData }: ContentPageFormProps) {
               value={metaDescription}
               onChange={(e) => setMetaDescription(e.target.value)}
               placeholder="Tuỳ chọn - hiển thị trong kết quả tìm kiếm"
+              aria-invalid={!!errors.metaDescription}
             />
+            <FieldError errors={errors.metaDescription ? [{ message: errors.metaDescription }] : undefined} />
           </Field>
 
           <label

@@ -36,7 +36,9 @@ export interface CustomerProfileDto {
   customerType: string;
   companyName?: string | null;
   taxCode?: string | null;
+  isEmailVerified: boolean;
   createdAt: string;
+  updatedAt?: string | null;
 }
 
 // Khớp Application/Features/Customers/Auth/Dtos/UpdateCustomerProfileDto.cs
@@ -51,5 +53,21 @@ export interface UpdateCustomerProfileDto {
 // Khớp Application/Features/Auth/Dtos/ChangePasswordRequest.cs (dùng chung với staff Auth feature).
 export interface ChangeCustomerPasswordDto {
   currentPassword: string;
+  newPassword: string;
+}
+
+// Khớp Application/Features/Customers/Auth/Dtos/RequestEmailChangeDto.cs
+export interface RequestEmailChangeDto {
+  newEmail: string;
+}
+
+// Khớp Application/Features/Customers/Auth/Dtos/ForgotPasswordRequest.cs
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+// Khớp Application/Features/Customers/Auth/Dtos/ResetPasswordRequest.cs
+export interface ResetPasswordRequest {
+  token: string;
   newPassword: string;
 }

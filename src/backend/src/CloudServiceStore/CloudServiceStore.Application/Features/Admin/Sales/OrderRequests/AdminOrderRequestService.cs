@@ -1,8 +1,8 @@
-using CloudServiceStore.Application.Common.Exceptions;
 using CloudServiceStore.Application.Common.Interfaces;
 using CloudServiceStore.Application.Common.Models;
-using CloudServiceStore.Application.Common.Services;
 using CloudServiceStore.Application.Features.Admin.Sales.OrderRequests.Dtos;
+using CloudServiceStore.Application.Features.Sales.OrderRequests;
+using CloudServiceStore.Application.Features.Sales.OrderRequests.Dtos;
 using CloudServiceStore.Domain.Entities.Sales;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,12 +11,12 @@ namespace CloudServiceStore.Application.Features.Admin.Sales.OrderRequests;
 public class AdminOrderRequestService : IAdminOrderRequestService
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly OrderStatusNotifier _orderStatusNotifier;
+    private readonly IOrderRequestStatusTransitionService _transitionService;
 
-    public AdminOrderRequestService(IUnitOfWork unitOfWork, OrderStatusNotifier orderStatusNotifier)
+    public AdminOrderRequestService(IUnitOfWork unitOfWork, IOrderRequestStatusTransitionService transitionService)
     {
         _unitOfWork = unitOfWork;
-        _orderStatusNotifier = orderStatusNotifier;
+        _transitionService = transitionService;
     }
 
     public async Task<PagedResult<AdminOrderRequestDto>> GetListAsync(OrderRequestQueryParams query, CancellationToken cancellationToken = default)
@@ -24,7 +24,8 @@ public class AdminOrderRequestService : IAdminOrderRequestService
         var repository = _unitOfWork.Repository<OrderRequest, int>();
 
         var baseQuery = repository.Query()
-            .Include(o => o.ServicePlan)
+            .Include(o => o.Items).ThenInclude(i => i.ServicePlan)
+            .Include(o => o.Items).ThenInclude(i => i.TldPricing)
             .Include(o => o.AssignedToUser)
             .Where(o => query.Status == null || o.Status == query.Status)
             .OrderByDescending(o => o.CreatedAt);
@@ -41,31 +42,7 @@ public class AdminOrderRequestService : IAdminOrderRequestService
 
     public async Task<AdminOrderRequestDto> UpdateStatusAsync(int id, UpdateOrderRequestStatusDto dto, Guid changedByUserId, CancellationToken cancellationToken = default)
     {
-        var repository = _unitOfWork.Repository<OrderRequest, int>();
-
-        var entity = await repository.Query()
-            .Include(o => o.ServicePlan)
-            .Include(o => o.AssignedToUser)
-            .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
-
-        if (entity is null)
-        {
-            throw new NotFoundException(nameof(OrderRequest), id);
-        }
-
-        var oldStatus = entity.Status;
-        entity.Status = dto.NewStatus;
-        entity.AssignedToUserId ??= changedByUserId;
-        entity.UpdatedAt = DateTime.UtcNow;
-
-        repository.Update(entity);
-
-        // Observer pattern (Phase 2.5): AuditLogOrderObserver tự thêm 1 dòng AuditLog vào cùng
-        // UnitOfWork — chỉ SaveChanges 1 lần dưới đây để gộp chung transaction.
-        await _orderStatusNotifier.NotifyAsync(entity.Id, oldStatus, dto.NewStatus, changedByUserId, cancellationToken);
-
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
-
+        var entity = await _transitionService.TransitionAsync(id, dto.NewStatus, changedByUserId, cancellationToken);
         return MapToDto(entity);
     }
 
@@ -80,10 +57,7 @@ public class AdminOrderRequestService : IAdminOrderRequestService
             CustomerEmail = order.CustomerEmail,
             CustomerPhone = order.CustomerPhone,
             CompanyName = order.CompanyName,
-            ServicePlanId = order.ServicePlanId,
-            ServicePlanName = order.ServicePlan?.Name,
-            PeriodMonths = order.PeriodMonths,
-            Quantity = order.Quantity,
+            Items = order.Items.Select(OrderRequestItemDto.FromEntity).ToList(),
             TotalPrice = order.TotalPrice,
             Note = order.Note,
             Status = order.Status.ToString(),
