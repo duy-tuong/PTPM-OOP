@@ -10,7 +10,7 @@ import type { ServicePlanDetailDto } from "@/lib/types/catalog";
 // chu kỳ - OrderRequestForm.tsx đã có sẵn dropdown chọn chu kỳ, tránh trùng lặp hành vi).
 export function PlanDetailContent({ plan }: { plan: ServicePlanDetailDto }) {
   return (
-    <section id="pricing" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <section id="pricing" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-[3fr_2fr]">
         {plan.features.length > 0 && (
           <div>

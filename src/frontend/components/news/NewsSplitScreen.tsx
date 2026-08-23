@@ -46,7 +46,7 @@ export function NewsSplitScreen({
   ];
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-16 sm:px-6 lg:flex-row lg:gap-12 lg:px-8">
+    <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-12 sm:px-6 lg:flex-row lg:gap-12 lg:px-8">
       <div className="flex flex-col gap-8 lg:sticky lg:top-32 lg:h-fit lg:w-[35%] lg:self-start">
         <div className="flex flex-col gap-3">
           <h1 className="font-heading text-4xl font-bold text-foreground sm:text-5xl">Tin Tức & Cập Nhật</h1>
@@ -96,7 +96,7 @@ export function NewsSplitScreen({
             ))}
           </div>
         ) : (
-          <p className="py-16 text-center text-muted-foreground">Chưa có bài viết nào.</p>
+          <p className="py-12 text-center text-muted-foreground">Chưa có bài viết nào.</p>
         )}
 
         {articlesResult.totalPages > 1 && (

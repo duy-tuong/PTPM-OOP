@@ -32,7 +32,7 @@ export function NewsArticleDetail({
   return (
     <div className="relative">
       <ReadingProgressBar />
-      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-x-12 gap-y-10 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_3fr_1fr] lg:px-8">
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-x-12 gap-y-10 px-4 py-12 sm:px-6 lg:grid-cols-[1fr_3fr_1fr] lg:px-8">
         <ArticleToc headings={headings} />
 
         <article className="max-w-prose lg:col-start-2 lg:mx-auto">

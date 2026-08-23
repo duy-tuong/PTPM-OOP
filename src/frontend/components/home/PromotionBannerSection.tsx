@@ -24,14 +24,13 @@ export async function PromotionBannerSection() {
   const promotion = promotions[0];
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
+    <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
       <ScrollReveal>
-        <div className="glass-card relative overflow-hidden rounded-3xl border border-primary/40 p-8 md:p-14">
-          {/* Blob nền trôi chậm - tái dùng nguyên .animate-ambient-blob đã có (Hero), không viết
-              animation liên tục mới. */}
+        <div className="glass-card relative overflow-hidden rounded-3xl border border-border bg-card p-8 md:p-14">
+          {/* Subtle radial glow ở một góc, thay vì primary gradient mạnh */}
           <div
             aria-hidden
-            className="animate-ambient-blob pointer-events-none absolute -top-16 -left-16 size-72 rounded-full bg-primary/20 blur-3xl"
+            className="pointer-events-none absolute -top-16 -left-16 size-72 rounded-full bg-indigo-500/15 blur-3xl dark:bg-indigo-500/10"
           />
 
           <div className="relative flex flex-col items-center gap-10 md:flex-row md:items-center md:justify-between">
@@ -40,7 +39,7 @@ export async function PromotionBannerSection() {
                 <Lightning className="size-4" weight="fill" />
                 Ưu Đãi Có Hạn
               </span>
-              <h2 className="text-gradient-primary font-heading max-w-[520px] text-3xl font-bold text-balance sm:text-4xl md:text-5xl">
+              <h2 className="font-heading max-w-[520px] text-3xl font-bold text-foreground text-balance sm:text-4xl md:text-5xl">
                 {promotion.name}
               </h2>
               {promotion.description && <p className="max-w-[500px] text-muted-foreground">{promotion.description}</p>}

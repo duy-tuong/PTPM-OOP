@@ -49,7 +49,7 @@ export default async function ContactPage({
     params.intent === "tu-van" ? "tu-van" : params.intent === "ten-mien" ? "dat-ten-mien" : "dat-dich-vu";
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:px-8">
       <AutoAddFromQuery
         key={defaultPlan?.id ?? defaultTldPricing?.id ?? "none"}
         defaultPlan={defaultPlan}

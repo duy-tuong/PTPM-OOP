@@ -15,7 +15,7 @@ export function AboutHero({ description }: { description?: string | null }) {
           backgroundSize: "16px 16px",
         }}
       />
-      <div className="relative mx-auto max-w-7xl px-4 py-16 text-center sm:px-6 lg:px-8 lg:py-20">
+      <div className="relative mx-auto max-w-7xl px-4 py-12 text-center sm:px-6 lg:px-8 lg:py-12">
         <nav aria-label="Breadcrumb" className="mb-6 text-xs text-muted-foreground">
           <Link href="/" className="hover:text-foreground">
             Trang chủ

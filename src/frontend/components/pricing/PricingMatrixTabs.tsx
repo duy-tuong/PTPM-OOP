@@ -97,7 +97,7 @@ export function PricingMatrixTabs({
       ) : activePlans.length === 1 ? (
         <SinglePlanCard plan={activePlans[0]} period={period} />
       ) : (
-        <p className="py-16 text-center text-muted-foreground">Chưa có gói dịch vụ nào cho danh mục này.</p>
+        <p className="py-12 text-center text-muted-foreground">Chưa có gói dịch vụ nào cho danh mục này.</p>
       )}
     </div>
   );

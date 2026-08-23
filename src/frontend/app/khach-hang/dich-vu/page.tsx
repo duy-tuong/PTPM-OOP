@@ -13,10 +13,11 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { formatDate } from "@/lib/utils";
 import type { MyServiceItemDto } from "@/lib/types/sales";
 
-export const metadata = { title: "Dịch vụ của tôi" };
+export const metadata = { title: "Dịch vụ đang chạy" };
 
 const PAGE_SIZE = 10;
 
@@ -61,46 +62,56 @@ export default async function MyServicesPage({
   }
 
   return (
-    <div>
-      {result.items.length > 0 ? (
-        <div className="overflow-x-auto rounded-xl border border-border">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-border bg-muted/50 text-xs text-muted-foreground uppercase">
-              <tr>
-                <th className="px-4 py-3 font-medium">Dịch vụ</th>
-                <th className="px-4 py-3 font-medium">Mã đơn</th>
-                <th className="px-4 py-3 font-medium">Trạng thái đơn</th>
-                <th className="px-4 py-3 font-medium">Hạn dùng</th>
-                <th className="px-4 py-3 font-medium" aria-label="Gia hạn" />
-              </tr>
-            </thead>
-            <tbody>
-              {result.items.map((item) => (
-                <tr key={item.itemId} className="border-b border-border last:border-0">
-                  <td className="px-4 py-3">
-                    <div className="flex flex-col">
-                      <span className="font-medium text-foreground">{formatServiceName(item)}</span>
-                      {(item.provisionedIpAddress || item.provisionedNameservers) && (
-                        <span className="mt-0.5 font-mono text-xs text-muted-foreground">
-                          {item.provisionedIpAddress ? `IP: ${item.provisionedIpAddress}` : `NS: ${item.provisionedNameservers}`}
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">{item.orderCode}</td>
-                  <td className="px-4 py-3">
-                    <OrderStatusBadge status={item.orderStatus} />
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">{item.expiresAt ? formatDate(item.expiresAt) : "-"}</td>
-                  <td className="px-4 py-3 text-right">{item.expiresAt && <RenewServiceDialog item={item} />}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <p className="py-16 text-center text-muted-foreground">Bạn chưa có dịch vụ nào.</p>
-      )}
+    <div className="w-full">
+      <Card>
+        <CardHeader>
+          <CardTitle>Dịch vụ đang chạy</CardTitle>
+          <CardDescription>Quản lý và gia hạn các dịch vụ Cloudverse của bạn</CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          {result.items.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b border-t border-border bg-muted/50 text-xs text-muted-foreground uppercase">
+                  <tr>
+                    <th className="px-6 py-4 font-medium">Dịch vụ</th>
+                    <th className="px-6 py-4 font-medium">Mã đơn</th>
+                    <th className="px-6 py-4 font-medium">Trạng thái đơn</th>
+                    <th className="px-6 py-4 font-medium">Hạn dùng</th>
+                    <th className="px-6 py-4 font-medium" aria-label="Gia hạn" />
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {result.items.map((item) => (
+                    <tr key={item.itemId} className="group transition-colors hover:bg-muted/50">
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          <span className="font-medium text-foreground">{formatServiceName(item)}</span>
+                          {(item.provisionedIpAddress || item.provisionedNameservers) && (
+                            <span className="mt-1 font-mono text-xs text-muted-foreground bg-muted w-fit px-2 py-0.5 rounded-md">
+                              {item.provisionedIpAddress ? `IP: ${item.provisionedIpAddress}` : `NS: ${item.provisionedNameservers}`}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-muted-foreground font-mono text-xs">{item.orderCode}</td>
+                      <td className="px-6 py-4">
+                        <OrderStatusBadge status={item.orderStatus} />
+                      </td>
+                      <td className="px-6 py-4 text-muted-foreground">{item.expiresAt ? formatDate(item.expiresAt) : "-"}</td>
+                      <td className="px-6 py-4 text-right">{item.expiresAt && <RenewServiceDialog item={item} />}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="py-16 text-center text-muted-foreground flex flex-col items-center justify-center border-t border-border">
+              <p>Bạn chưa có dịch vụ nào.</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {result.totalPages > 1 && (
         <Pagination className="mt-8">

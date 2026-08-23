@@ -27,7 +27,7 @@ const VALUES = [
 // lên) tái dùng đúng convention đã có, không thêm box-shadow rời.
 export function AboutValuesBento() {
   return (
-    <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <div className="mb-10 text-center">
         <h2 className="font-heading text-3xl font-bold text-balance sm:text-4xl">Sứ Mệnh &amp; Giá Trị Cốt Lõi</h2>
       </div>

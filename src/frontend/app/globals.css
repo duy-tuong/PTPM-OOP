@@ -62,8 +62,8 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: #00f0ff;
-  --primary-foreground: #0b0f19;
+  --primary: #4f46e5;
+  --primary-foreground: #ffffff;
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
@@ -73,8 +73,8 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: #00f0ff;
-  --chart-1: oklch(0.87 0 0);
+  --ring: #4f46e5;
+  --chart-1: #4f46e5;
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
@@ -94,27 +94,26 @@
    hex thật trong bản Stitch dán vào (không suy đoán): nền #0B0F19, accent cyan #00F0FF, tím #6B46C1
    dùng cho gradient chữ. Gắn class "dark" ở app/(public)/layout.tsx để scope riêng cho public site. */
 .dark {
-  --background: #0b0f19;
-  --foreground: #f1f5f9;
-  --card: #131826;
-  --card-foreground: #f1f5f9;
-  --popover: #131826;
-  --popover-foreground: #f1f5f9;
-  --primary: #00f0ff;
-  --primary-foreground: #0b0f19;
-  --secondary: #1b2233;
-  --secondary-foreground: #f1f5f9;
-  --muted: #1b2233;
+  --background: #070b14;
+  --foreground: #f8fafc;
+  --card: #0f172a;
+  --card-foreground: #f8fafc;
+  --popover: #0f172a;
+  --popover-foreground: #f8fafc;
+  --primary: #6366f1;
+  --primary-foreground: #ffffff;
+  --secondary: #111827;
+  --secondary-foreground: #f8fafc;
+  --muted: #111827;
   --muted-foreground: #94a3b8;
-  --accent: #1b2233;
-  --accent-foreground: #f1f5f9;
+  --accent: #111827;
+  --accent-foreground: #f8fafc;
   --accent-purple: #6b46c1;
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: #00f0ff;
-  --chart-1: #00f0ff;
-  --chart-2: #6b46c1;
+  --border: #1e293b;
+  --input: #1e293b;
+  --ring: #6366f1;
+  --chart-1: #6366f1;
   --chart-3: oklch(0.87 0 0);
   --chart-4: oklch(0.556 0 0);
   --chart-5: oklch(0.439 0 0);
@@ -135,24 +134,24 @@
    làm chữ trên nền trắng; đánh đổi là nút bg-primary ở light mode đậm hơn dark mode, không neon. Gắn
    class "light" ở <html> theo lựa chọn người dùng (localStorage) qua THEME_INIT_SCRIPT, xem app/layout.tsx. */
 .light {
-  --background: #f4f7fb;
-  --foreground: #0b0f19;
+  --background: #f8fafc;
+  --foreground: #0f172a;
   --card: #ffffff;
-  --card-foreground: #0b0f19;
+  --card-foreground: #0f172a;
   --popover: #ffffff;
-  --popover-foreground: #0b0f19;
-  --primary: #4f46e5;
+  --popover-foreground: #0f172a;
+  --primary: #6366f1;
   --primary-foreground: #ffffff;
-  --secondary: #eef1f6;
-  --secondary-foreground: #0b0f19;
-  --muted: #eef1f6;
-  --muted-foreground: #55627a;
-  --accent: #eef1f6;
-  --accent-foreground: #0b0f19;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
   --accent-purple: #6b46c1;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0 0 0 / 10%);
-  --input: oklch(0 0 0 / 12%);
+  --border: #e2e8f0;
+  --input: #e2e8f0;
   --ring: #4f46e5;
   --chart-1: #4f46e5;
   --chart-2: #6b46c1;
@@ -238,11 +237,11 @@
 /* Thẻ kính (glassmorphism) dùng chung xuyên suốt Trang chủ - nền translucent + blur + viền/glow theo
    var(--primary), tự đổi màu theo theme (sky-blue trước đây, cyan ở pivot 2) vì dùng color-mix. */
 .glass-card {
-  background-color: color-mix(in oklch, var(--card) 78%, transparent);
+  background-color: color-mix(in oklch, var(--card) 90%, transparent);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid color-mix(in oklch, var(--primary) 15%, transparent);
-  box-shadow: 0 8px 40px color-mix(in oklch, var(--primary) 12%, transparent);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 40px color-mix(in oklch, var(--foreground) 5%, transparent);
 }
 
 /* Chất liệu "Floating Pill" Header (Navbar) - khác .glass-card: nền đậm hơn (85% thay vì 78%), viền
