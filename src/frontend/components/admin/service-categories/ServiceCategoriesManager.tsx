@@ -8,6 +8,7 @@ import { StatusBadge } from "@/components/admin/StatusBadge";
 import { ConfirmDeleteButton } from "@/components/admin/ConfirmDeleteButton";
 import { ServiceCategoryDialog } from "@/components/admin/service-categories/ServiceCategoryDialog";
 import { deleteServiceCategoryAction } from "@/app/admin/service-categories/actions";
+import { FallbackImage } from "@/components/shared/FallbackImage";
 import type { AdminServiceCategoryDto } from "@/lib/types/admin";
 
 // unpaged-list-in-Dialog: getAdminServiceCategories trả về danh sách phẳng (không phân trang) - Sửa
@@ -32,12 +33,12 @@ export function ServiceCategoriesManager({ categories }: { categories: AdminServ
       header: "Danh mục",
       cell: (row) => (
         <div className="flex items-center gap-3">
-          {row.iconUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={row.iconUrl} alt="" className="size-8 rounded-lg border border-zinc-200 object-cover" />
-          ) : (
-            <div className="size-8 rounded-lg bg-zinc-100" />
-          )}
+          <FallbackImage
+            src={row.iconUrl}
+            alt={row.name}
+            className="size-8 rounded-lg border border-zinc-200 object-cover"
+            fallbackClassName="flex size-8 items-center justify-center rounded-lg bg-zinc-100 text-xs font-semibold text-zinc-600"
+          />
           <div className="flex flex-col">
             <span className="font-medium text-zinc-900">{row.name}</span>
             <span className="text-xs text-zinc-500">{row.slug}</span>

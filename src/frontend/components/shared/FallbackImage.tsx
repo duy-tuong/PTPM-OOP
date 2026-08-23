@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { ReactNode } from "react";
+import { resolveImageUrl } from "@/lib/utils";
 
 // Nhiều field ảnh trong dữ liệu seed (Phase 3.0: Partner.logoUrl, Testimonial.avatarUrl,
 // NewsArticle.thumbnailUrl...) là URL placeholder giả (domain cloudservicestore.local không tồn
@@ -23,8 +24,9 @@ export function FallbackImage({
   fallback?: ReactNode;
 }) {
   const [failed, setFailed] = useState(false);
+  const resolvedSrc = resolveImageUrl(src);
 
-  if (failed || !src) {
+  if (failed || !resolvedSrc) {
     if (fallback) {
       return <>{fallback}</>;
     }
@@ -45,6 +47,6 @@ export function FallbackImage({
 
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt={alt} className={className} onError={() => setFailed(true)} />
+    <img src={resolvedSrc} alt={alt} className={className} onError={() => setFailed(true)} />
   );
 }

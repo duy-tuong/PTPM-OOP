@@ -69,3 +69,14 @@ export function downloadBlob(blob: Blob, filename: string): void {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
+
+// Chuyển đổi mọi URL ảnh /uploads/ (kể cả URL chứa host nội bộ container http://backend:5000/uploads/...)
+// thành đường dẫn tương đối /uploads/... để proxy qua Next.js rewrites hiển thị chuẩn trên mọi môi trường.
+export function resolveImageUrl(url?: string | null): string {
+  if (!url) return "";
+  const uploadsIdx = url.indexOf("/uploads/");
+  if (uploadsIdx !== -1) {
+    return url.substring(uploadsIdx);
+  }
+  return url;
+}

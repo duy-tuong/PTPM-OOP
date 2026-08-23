@@ -6,6 +6,7 @@ import { DataTable, type DataTableColumn } from "@/components/admin/DataTable";
 import { PublishBadge } from "@/components/admin/PublishBadge";
 import { ConfirmDeleteButton } from "@/components/admin/ConfirmDeleteButton";
 import { deleteNewsArticleAction } from "@/app/admin/news-articles/actions";
+import { FallbackImage } from "@/components/shared/FallbackImage";
 import { formatDate } from "@/lib/utils";
 import type { AdminNewsArticleDto } from "@/lib/types/admin";
 
@@ -23,12 +24,12 @@ export function NewsArticlesTable({ articles, categoryNameById }: NewsArticlesTa
       header: "Bài viết",
       cell: (row) => (
         <div className="flex items-center gap-3">
-          {row.thumbnailUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={row.thumbnailUrl} alt="" className="size-10 rounded-lg border border-zinc-200 object-cover" />
-          ) : (
-            <div className="size-10 rounded-lg bg-zinc-100" />
-          )}
+          <FallbackImage
+            src={row.thumbnailUrl}
+            alt={row.title}
+            className="size-10 rounded-lg border border-zinc-200 object-cover"
+            fallbackClassName="flex size-10 items-center justify-center rounded-lg bg-zinc-100 text-xs font-semibold text-zinc-600"
+          />
           <div className="flex flex-col">
             <span className="font-medium text-zinc-900">{row.title}</span>
             <span className="text-xs text-zinc-500">{row.slug}</span>

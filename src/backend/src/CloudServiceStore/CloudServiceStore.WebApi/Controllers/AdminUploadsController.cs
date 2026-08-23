@@ -53,8 +53,7 @@ public class AdminUploadsController : ControllerBase
 
         await using var stream = file.OpenReadStream();
         var relativePath = await _fileStorageService.SaveAsync(stream, extension, cancellationToken);
-        var absoluteUrl = $"{Request.Scheme}://{Request.Host}{relativePath}";
 
-        return Ok(new { url = absoluteUrl });
+        return Ok(new { url = relativePath });
     }
 }
