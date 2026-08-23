@@ -4,6 +4,7 @@ import type {
   CreateOrderRequestDto,
   OrderRequestDto,
   OrderLookupDto,
+  CreateRenewalOrderRequestDto,
   CreateConsultationRequestDto,
   ConsultationRequestDto,
   CreateAffiliateApplicationDto,
@@ -22,6 +23,12 @@ export function submitOrderRequest(dto: CreateOrderRequestDto, token?: string) {
 // đơn (New/Paid/...) có thể đổi bất cứ lúc nào sau khi Admin xác nhận đã nhận tiền.
 export function getOrderByCode(orderCode: string) {
   return apiFetch<OrderLookupDto>(getApiUrl(), `/order-requests/by-code/${orderCode}`, "GET", { cache: "no-store" });
+}
+
+// Khác submitOrderRequest: gia hạn không có luồng ẩn danh, token luôn bắt buộc (đúng
+// [Authorize(Roles="Customer")] phía backend) - gọi từ app/api/order-requests/renewals/route.ts.
+export function submitRenewalOrderRequest(dto: CreateRenewalOrderRequestDto, token: string) {
+  return apiFetch<OrderRequestDto>(getApiUrl(), "/order-requests/mine/renewals", "POST", { body: dto, token });
 }
 
 export function submitConsultationRequest(dto: CreateConsultationRequestDto) {

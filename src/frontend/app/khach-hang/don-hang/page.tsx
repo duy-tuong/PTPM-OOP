@@ -2,8 +2,7 @@ import { redirect } from "next/navigation";
 import { getCustomerAccessToken } from "@/lib/auth/customerSession";
 import { getMyOrders } from "@/lib/api/customer";
 import { ApiError } from "@/lib/api/http";
-import { OrderStatusBadge } from "@/components/admin/OrderStatusBadge";
-import { formatOrderProductSummary } from "@/lib/utils/orderItems";
+import { MyOrderRow } from "@/components/account/MyOrderRow";
 import {
   Pagination,
   PaginationContent,
@@ -13,7 +12,6 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { formatCurrency, formatDate } from "@/lib/utils";
 
 export const metadata = { title: "Đơn hàng của tôi" };
 
@@ -61,19 +59,12 @@ export default async function MyOrdersPage({
                 <th className="px-4 py-3 font-medium">Thành tiền</th>
                 <th className="px-4 py-3 font-medium">Trạng thái</th>
                 <th className="px-4 py-3 font-medium">Ngày đặt</th>
+                <th className="px-4 py-3 font-medium" aria-label="Chi tiết" />
               </tr>
             </thead>
             <tbody>
               {result.items.map((order) => (
-                <tr key={order.id} className="border-b border-border last:border-0">
-                  <td className="px-4 py-3 font-medium text-foreground">{order.orderCode}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{formatOrderProductSummary(order.items)}</td>
-                  <td className="px-4 py-3 font-medium text-foreground">{formatCurrency(order.totalPrice)}</td>
-                  <td className="px-4 py-3">
-                    <OrderStatusBadge status={order.status} />
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">{formatDate(order.createdAt)}</td>
-                </tr>
+                <MyOrderRow key={order.id} order={order} />
               ))}
             </tbody>
           </table>

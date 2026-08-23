@@ -14,6 +14,9 @@ public class OrderRequestItemConfiguration : IEntityTypeConfiguration<OrderReque
         builder.Property(x => x.DomainName).HasMaxLength(100);
         builder.Property(x => x.UnitPrice).HasColumnType("decimal(18,2)");
         builder.Property(x => x.LineTotal).HasColumnType("decimal(18,2)");
+        builder.Property(x => x.ProvisionedIpAddress).HasMaxLength(45);
+        builder.Property(x => x.ProvisionedRootPassword).HasMaxLength(100);
+        builder.Property(x => x.ProvisionedNameservers).HasMaxLength(200);
 
         builder.HasIndex(x => x.OrderRequestId);
 
@@ -32,6 +35,15 @@ public class OrderRequestItemConfiguration : IEntityTypeConfiguration<OrderReque
         builder.HasOne(x => x.TldPricing)
             .WithMany()
             .HasForeignKey(x => x.TldPricingId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(x => x.RenewsFromItemId);
+
+        // Self-referencing, Restrict (không Cascade) - mirror ServicePlan/TldPricing: item gốc không
+        // bị xoá dây chuyền khi 1 item gia hạn (con) bị xoá.
+        builder.HasOne(x => x.RenewsFromItem)
+            .WithMany()
+            .HasForeignKey(x => x.RenewsFromItemId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -3,9 +3,11 @@ using CloudServiceStore.Application.Common.Interfaces;
 using CloudServiceStore.Application.Common.Services;
 using CloudServiceStore.Application.Features.Admin.Sales.OrderRequests;
 using CloudServiceStore.Application.Features.Admin.Sales.OrderRequests.Dtos;
+using CloudServiceStore.Application.Features.Sales.OrderRequests;
 using CloudServiceStore.Domain.Entities.Sales;
 using CloudServiceStore.Domain.Enums;
 using CloudServiceStore.Infrastructure.Persistence;
+using CloudServiceStore.Infrastructure.Services;
 using CloudServiceStore.Tests.TestHelpers;
 using Moq;
 
@@ -38,8 +40,10 @@ public class AdminOrderRequestServiceTests
 
     private static AdminOrderRequestService CreateSut(AppDbContext context, Mock<IOrderStatusObserver> observerMock)
     {
+        var unitOfWork = TestDbContextFactory.CreateUnitOfWork(context);
         var notifier = new OrderStatusNotifier([observerMock.Object]);
-        return new AdminOrderRequestService(TestDbContextFactory.CreateUnitOfWork(context), notifier);
+        var transitionService = new OrderRequestStatusTransitionService(unitOfWork, notifier, new FakeProvisioningGenerator());
+        return new AdminOrderRequestService(unitOfWork, transitionService);
     }
 
     [Fact]

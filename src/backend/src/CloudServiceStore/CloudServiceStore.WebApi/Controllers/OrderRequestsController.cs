@@ -56,4 +56,27 @@ public class OrderRequestsController : ControllerBase
     {
         return Ok(await _service.GetByCodeAsync(orderCode, cancellationToken));
     }
+
+    // Gia hạn (Tier 4) - luôn đòi hỏi đăng nhập (khác Create, không có luồng ẩn danh) vì cần biết
+    // đúng chủ đơn để kiểm tra quyền sở hữu item gốc + tự điền thông tin khách hàng từ hồ sơ.
+    [HttpPost("mine/renewals")]
+    [Authorize(Roles = "Customer")]
+    public async Task<ActionResult<OrderRequestDto>> CreateRenewal(CreateRenewalOrderRequestDto dto, CancellationToken cancellationToken)
+    {
+        var sub = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        var customerId = Guid.Parse(sub!);
+        var result = await _service.CreateRenewalAsync(dto, customerId, cancellationToken);
+        return CreatedAtAction(nameof(Create), new { id = result.Id }, result);
+    }
+
+    // Tier 4 - "Dịch vụ của tôi": danh sách dịch vụ đang sống (không phải lịch sử đơn hàng) để khách
+    // thấy ExpiresAt + bấm gia hạn.
+    [HttpGet("mine/services")]
+    [Authorize(Roles = "Customer")]
+    public async Task<ActionResult<PagedResult<MyServiceItemDto>>> GetMyServices([FromQuery] PaginationParams query, CancellationToken cancellationToken)
+    {
+        var sub = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        var customerId = Guid.Parse(sub!);
+        return Ok(await _service.GetMyServicesAsync(customerId, query, cancellationToken));
+    }
 }

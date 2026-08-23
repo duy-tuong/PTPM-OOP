@@ -1,5 +1,6 @@
 using CloudServiceStore.Application.Common.Interfaces;
 using CloudServiceStore.Application.Features.Admin.Sales.OrderRequests;
+using CloudServiceStore.Infrastructure.BackgroundServices;
 using CloudServiceStore.Infrastructure.Caching;
 using CloudServiceStore.Infrastructure.Persistence;
 using CloudServiceStore.Infrastructure.Observers;
@@ -44,6 +45,10 @@ public static class DependencyInjection
         services.AddScoped<IOrderStatusObserver, AuditLogOrderObserver>();
         services.AddScoped<IOrderStatusObserver, EmailOrderObserver>();
         services.AddScoped<IOrderRequestExportService, OrderRequestExportService>();
+
+        services.AddSingleton<IFakeProvisioningGenerator, FakeProvisioningGenerator>();
+        services.AddHostedService<OrderAutoProvisioningBackgroundService>();
+        services.AddHostedService<RenewalReminderBackgroundService>();
 
         return services;
     }

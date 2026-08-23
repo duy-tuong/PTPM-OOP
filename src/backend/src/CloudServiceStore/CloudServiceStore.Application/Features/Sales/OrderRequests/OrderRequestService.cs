@@ -5,6 +5,7 @@ using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Common.Utils;
 using CloudServiceStore.Application.Features.Sales.OrderRequests.Dtos;
 using CloudServiceStore.Domain.Entities.Catalog;
+using CloudServiceStore.Domain.Entities.Identity;
 using CloudServiceStore.Domain.Entities.Marketing;
 using CloudServiceStore.Domain.Entities.Sales;
 using CloudServiceStore.Domain.Enums;
@@ -31,10 +32,6 @@ public class OrderRequestService : IOrderRequestService
 
     public async Task<OrderRequestDto> CreateAsync(CreateOrderRequestDto dto, Guid? customerId = null, CancellationToken cancellationToken = default)
     {
-        var planRepository = _unitOfWork.Repository<ServicePlan, int>();
-        var priceRepository = _unitOfWork.Repository<PlanPrice, int>();
-        var tldRepository = _unitOfWork.Repository<TldPricing, int>();
-
         Promotion? promotion = null;
         if (dto.PromotionId is not null)
         {
@@ -70,72 +67,12 @@ public class OrderRequestService : IOrderRequestService
                 throw new ValidationException("Mỗi dòng trong đơn hàng phải chọn đúng 1 trong 2: gói dịch vụ hoặc tên miền.");
             }
 
-            if (itemDto.ServicePlanId is not null)
-            {
-                var plan = await planRepository.GetByIdAsync(itemDto.ServicePlanId.Value, cancellationToken);
-                if (plan is null)
-                {
-                    throw new NotFoundException(nameof(ServicePlan), itemDto.ServicePlanId.Value);
-                }
+            var (item, planId, categoryId) = itemDto.ServicePlanId is not null
+                ? await BuildServicePlanItemAsync(itemDto.ServicePlanId.Value, itemDto.PeriodMonths, itemDto.Quantity, cancellationToken)
+                : await BuildTldItemAsync(itemDto.TldPricingId!.Value, itemDto.DomainName, itemDto.Quantity, isRenewal: false, cancellationToken);
 
-                if (!plan.IsActive)
-                {
-                    throw new ValidationException("Gói dịch vụ này hiện không khả dụng để đặt mua.");
-                }
-
-                var priceQuery = priceRepository.Query()
-                    .Where(p => p.PlanId == itemDto.ServicePlanId.Value && p.IsActive);
-
-                var price = itemDto.PeriodMonths is not null
-                    ? await priceQuery.FirstOrDefaultAsync(p => p.PeriodMonths == itemDto.PeriodMonths.Value, cancellationToken)
-                    : await priceQuery.FirstOrDefaultAsync(p => p.IsDefault, cancellationToken);
-
-                if (price is null)
-                {
-                    throw new ValidationException("Gói dịch vụ chưa có giá cho kỳ hạn đã chọn.");
-                }
-
-                var unitPrice = price.PromotionalPrice ?? price.Price;
-                items.Add(new OrderRequestItem
-                {
-                    ServicePlanId = plan.Id,
-                    PeriodMonths = price.PeriodMonths,
-                    Quantity = itemDto.Quantity,
-                    UnitPrice = unitPrice,
-                    LineTotal = unitPrice * itemDto.Quantity
-                });
-                itemScopes.Add((plan.Id, plan.CategoryId));
-            }
-            else
-            {
-                var tldPricing = await tldRepository.GetByIdAsync(itemDto.TldPricingId!.Value, cancellationToken);
-                if (tldPricing is null)
-                {
-                    throw new NotFoundException(nameof(TldPricing), itemDto.TldPricingId.Value);
-                }
-
-                if (!tldPricing.IsActive)
-                {
-                    throw new ValidationException("Tên miền này hiện không khả dụng để đặt mua.");
-                }
-
-                var domainName = itemDto.DomainName?.Trim();
-                if (string.IsNullOrEmpty(domainName) || !DomainLabelPattern.IsMatch(domainName))
-                {
-                    throw new ValidationException("Vui lòng nhập tên miền hợp lệ (chỉ chữ, số, gạch ngang, không có dấu chấm).");
-                }
-
-                var unitPrice = tldPricing.RegisterPrice;
-                items.Add(new OrderRequestItem
-                {
-                    TldPricingId = tldPricing.Id,
-                    DomainName = domainName,
-                    Quantity = itemDto.Quantity,
-                    UnitPrice = unitPrice,
-                    LineTotal = unitPrice * itemDto.Quantity
-                });
-                itemScopes.Add((null, tldPricing.ServiceCategoryId));
-            }
+            items.Add(item);
+            itemScopes.Add((planId, categoryId));
         }
 
         var grandSubtotal = items.Sum(i => i.LineTotal);
@@ -234,6 +171,45 @@ public class OrderRequestService : IOrderRequestService
         return PagedResult<MyOrderRequestDto>.Create(dtos, totalCount, query.PageNumber, query.PageSize);
     }
 
+    public async Task<PagedResult<MyServiceItemDto>> GetMyServicesAsync(Guid customerId, PaginationParams query, CancellationToken cancellationToken = default)
+    {
+        var repository = _unitOfWork.Repository<OrderRequestItem, int>();
+
+        // RenewsFromItemId == null - lọc bỏ các dòng "biên lai gia hạn" (Tier 4), chỉ hiện dịch vụ
+        // đang sống. Sắp theo ExpiresAt tăng dần (sắp hết hạn nhất lên đầu), item chưa có ExpiresAt
+        // (đơn chưa Completed) đẩy xuống cuối.
+        var baseQuery = repository.Query()
+            .Include(i => i.OrderRequest)
+            .Include(i => i.ServicePlan)
+            .Include(i => i.TldPricing)
+            .Where(i => i.OrderRequest.CustomerId == customerId && i.RenewsFromItemId == null)
+            .OrderBy(i => i.ExpiresAt == null)
+            .ThenBy(i => i.ExpiresAt);
+
+        var totalCount = await baseQuery.CountAsync(cancellationToken);
+        var entities = await baseQuery
+            .Skip((query.PageNumber - 1) * query.PageSize)
+            .Take(query.PageSize)
+            .ToListAsync(cancellationToken);
+
+        var dtos = entities.Select(i => new MyServiceItemDto
+        {
+            ItemId = i.Id,
+            OrderCode = i.OrderRequest.OrderCode,
+            OrderStatus = i.OrderRequest.Status.ToString(),
+            ServicePlanName = i.ServicePlan?.Name,
+            DomainName = i.DomainName,
+            TldName = i.TldPricing?.Tld,
+            PeriodMonths = i.PeriodMonths,
+            ExpiresAt = i.ExpiresAt,
+            ProvisionedIpAddress = i.ProvisionedIpAddress,
+            ProvisionedRootPassword = i.ProvisionedRootPassword,
+            ProvisionedNameservers = i.ProvisionedNameservers
+        }).ToList();
+
+        return PagedResult<MyServiceItemDto>.Create(dtos, totalCount, query.PageNumber, query.PageSize);
+    }
+
     public async Task<OrderLookupDto> GetByCodeAsync(string orderCode, CancellationToken cancellationToken = default)
     {
         var order = await _unitOfWork.Repository<OrderRequest, int>().Query()
@@ -259,6 +235,149 @@ public class OrderRequestService : IOrderRequestService
             BankAccountNumber = _appSettings.BankAccountNumber,
             BankAccountHolder = _appSettings.BankAccountHolder
         };
+    }
+
+    public async Task<OrderRequestDto> CreateRenewalAsync(CreateRenewalOrderRequestDto dto, Guid customerId, CancellationToken cancellationToken = default)
+    {
+        var itemRepository = _unitOfWork.Repository<OrderRequestItem, int>();
+        var original = await itemRepository.Query()
+            .Include(i => i.OrderRequest)
+            .FirstOrDefaultAsync(i => i.Id == dto.OrderRequestItemId, cancellationToken);
+
+        // Dùng chung 404 cho cả "không tồn tại" lẫn "không phải chủ đơn" - đúng tinh thần tránh lộ
+        // thông tin đã áp dụng ở OrderLookupDto (không cho khách đoán được item của người khác tồn tại).
+        if (original is null || original.OrderRequest.CustomerId != customerId)
+        {
+            throw new NotFoundException(nameof(OrderRequestItem), dto.OrderRequestItemId);
+        }
+
+        // Item gia hạn (RenewsFromItemId đã có giá trị) không có ExpiresAt riêng - gia hạn tiếp từ 1
+        // "biên lai" như vậy sẽ phá vỡ bất biến "chỉ item đang sống mới có ExpiresAt".
+        if (original.RenewsFromItemId is not null)
+        {
+            throw new ValidationException("Không thể gia hạn từ 1 đơn gia hạn khác - vui lòng chọn đúng dịch vụ gốc.");
+        }
+
+        var customer = await _unitOfWork.Repository<Customer, Guid>().GetByIdAsync(customerId, cancellationToken)
+            ?? throw new NotFoundException(nameof(Customer), customerId);
+
+        var (item, _, _) = original.ServicePlanId is not null
+            ? await BuildServicePlanItemAsync(original.ServicePlanId.Value, dto.PeriodMonths ?? original.PeriodMonths, original.Quantity, cancellationToken)
+            : await BuildTldItemAsync(original.TldPricingId!.Value, original.DomainName, dto.Years ?? original.Quantity, isRenewal: true, cancellationToken);
+
+        item.RenewsFromItemId = original.Id;
+
+        var orderRequest = new OrderRequest
+        {
+            OrderCode = RequestCodeGenerator.Generate("ORD"),
+            CustomerId = customerId,
+            CustomerType = customer.CustomerType,
+            CustomerName = customer.FullName,
+            CustomerEmail = customer.Email,
+            CustomerPhone = customer.Phone ?? string.Empty,
+            CompanyName = customer.CompanyName,
+            TaxCode = customer.TaxCode,
+            TotalPrice = item.LineTotal,
+            Source = "renewal",
+            CreatedAt = DateTime.UtcNow,
+            Items = { item }
+        };
+
+        var orderRepository = _unitOfWork.Repository<OrderRequest, int>();
+        await orderRepository.AddAsync(orderRequest, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        var paymentUrl = $"{_appSettings.PublicBaseUrl}/thanh-toan/{orderRequest.OrderCode}";
+        await _emailService.SendAsync(
+            customer.Email,
+            "Đã nhận đơn hàng - Cloudverse",
+            $"Cảm ơn bạn đã gia hạn dịch vụ. Đơn {orderRequest.OrderCode} đang chờ thanh toán, xem hướng dẫn tại: {paymentUrl}",
+            cancellationToken);
+
+        return new OrderRequestDto
+        {
+            Id = orderRequest.Id,
+            OrderCode = orderRequest.OrderCode,
+            Status = orderRequest.Status.ToString(),
+            TotalPrice = orderRequest.TotalPrice,
+            CreatedAt = orderRequest.CreatedAt
+        };
+    }
+
+    // Dùng chung cho CreateAsync (mỗi dòng trong giỏ) và CreateRenewalAsync (item gia hạn) - trả kèm
+    // (planId, categoryId) để caller tính khuyến mãi theo dòng mà không cần tra lại DB.
+    private async Task<(OrderRequestItem Item, int? PlanId, int? CategoryId)> BuildServicePlanItemAsync(
+        int servicePlanId, int? periodMonths, int quantity, CancellationToken cancellationToken)
+    {
+        var plan = await _unitOfWork.Repository<ServicePlan, int>().GetByIdAsync(servicePlanId, cancellationToken);
+        if (plan is null)
+        {
+            throw new NotFoundException(nameof(ServicePlan), servicePlanId);
+        }
+
+        if (!plan.IsActive)
+        {
+            throw new ValidationException("Gói dịch vụ này hiện không khả dụng để đặt mua.");
+        }
+
+        var priceQuery = _unitOfWork.Repository<PlanPrice, int>().Query()
+            .Where(p => p.PlanId == servicePlanId && p.IsActive);
+
+        var price = periodMonths is not null
+            ? await priceQuery.FirstOrDefaultAsync(p => p.PeriodMonths == periodMonths.Value, cancellationToken)
+            : await priceQuery.FirstOrDefaultAsync(p => p.IsDefault, cancellationToken);
+
+        if (price is null)
+        {
+            throw new ValidationException("Gói dịch vụ chưa có giá cho kỳ hạn đã chọn.");
+        }
+
+        var unitPrice = price.PromotionalPrice ?? price.Price;
+        var item = new OrderRequestItem
+        {
+            ServicePlanId = plan.Id,
+            PeriodMonths = price.PeriodMonths,
+            Quantity = quantity,
+            UnitPrice = unitPrice,
+            LineTotal = unitPrice * quantity
+        };
+
+        return (item, plan.Id, plan.CategoryId);
+    }
+
+    // isRenewal chọn RenewPrice (gia hạn) thay vì RegisterPrice (mua mới) - lần đầu tiên RenewPrice
+    // được dùng để tính tiền thật trong hệ thống (trước đó chỉ hiển thị ở bảng giá Admin).
+    private async Task<(OrderRequestItem Item, int? PlanId, int? CategoryId)> BuildTldItemAsync(
+        int tldPricingId, string? domainName, int quantity, bool isRenewal, CancellationToken cancellationToken)
+    {
+        var tldPricing = await _unitOfWork.Repository<TldPricing, int>().GetByIdAsync(tldPricingId, cancellationToken);
+        if (tldPricing is null)
+        {
+            throw new NotFoundException(nameof(TldPricing), tldPricingId);
+        }
+
+        if (!tldPricing.IsActive)
+        {
+            throw new ValidationException("Tên miền này hiện không khả dụng để đặt mua.");
+        }
+
+        var trimmedDomain = domainName?.Trim();
+        if (string.IsNullOrEmpty(trimmedDomain) || !DomainLabelPattern.IsMatch(trimmedDomain))
+        {
+            throw new ValidationException("Vui lòng nhập tên miền hợp lệ (chỉ chữ, số, gạch ngang, không có dấu chấm).");
+        }
+
+        var unitPrice = isRenewal ? tldPricing.RenewPrice : tldPricing.RegisterPrice;
+        var item = new OrderRequestItem
+        {
+            TldPricingId = tldPricing.Id,
+            DomainName = trimmedDomain,
+            Quantity = quantity,
+            UnitPrice = unitPrice,
+            LineTotal = unitPrice * quantity
+        };
+
+        return (item, null, tldPricing.ServiceCategoryId);
     }
 
     // planId: chỉ set khi đặt ServicePlan (PromotionScope.ServicePlanId chỉ FK tới ServicePlan, TLD

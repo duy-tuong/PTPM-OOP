@@ -33,6 +33,13 @@ public class OrderRequest
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
 
+    // Thời điểm gần nhất đơn VÀO trạng thái Paid/Provisioning - dùng riêng cho
+    // OrderAutoProvisioningBackgroundService tính đã tới lúc tự chuyển bước tiếp theo chưa. Cố tình
+    // KHÔNG dùng chung UpdatedAt (field đó có thể bị đổi bởi các thao tác khác không phải chuyển trạng
+    // thái trong tương lai, làm sai lệch mốc thời gian đếm giờ tự động).
+    public DateTime? PaidAt { get; set; }
+    public DateTime? ProvisioningStartedAt { get; set; }
+
     // Giỏ hàng nhiều sản phẩm - 1 đơn có thể gồm nhiều dòng gói dịch vụ/tên miền trộn lẫn.
     public ICollection<OrderRequestItem> Items { get; set; } = new List<OrderRequestItem>();
 }
