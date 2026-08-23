@@ -1,7 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { getApiUrl } from "@/lib/api/config";
 import { ApiError } from "@/lib/api/http";
 import { ADMIN_ACCESS_TOKEN_COOKIE } from "@/lib/auth/adminAuthCookies";
@@ -25,7 +25,7 @@ export async function createTestimonialAction(
   try {
     const data = await createAdminTestimonial(getApiUrl(), dto, await getToken());
     revalidatePath("/admin/testimonials");
-    revalidatePath("/", "layout");
+    revalidateTag("testimonials");
     return { success: true, data };
   } catch (error) {
     if (error instanceof ApiError) return { success: false, message: error.message };
@@ -40,7 +40,7 @@ export async function updateTestimonialAction(
   try {
     const data = await updateAdminTestimonial(getApiUrl(), id, dto, await getToken());
     revalidatePath("/admin/testimonials");
-    revalidatePath("/", "layout");
+    revalidateTag("testimonials");
     return { success: true, data };
   } catch (error) {
     if (error instanceof ApiError) return { success: false, message: error.message };
@@ -52,7 +52,7 @@ export async function deleteTestimonialAction(id: number): Promise<{ success: bo
   try {
     await deleteAdminTestimonial(getApiUrl(), id, await getToken());
     revalidatePath("/admin/testimonials");
-    revalidatePath("/", "layout");
+    revalidateTag("testimonials");
     return { success: true };
   } catch (error) {
     if (error instanceof ApiError) return { success: false, message: error.message };

@@ -1,7 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { getApiUrl } from "@/lib/api/config";
 import { ApiError } from "@/lib/api/http";
 import { ADMIN_ACCESS_TOKEN_COOKIE } from "@/lib/auth/adminAuthCookies";
@@ -25,7 +25,7 @@ export async function createServicePlanAction(
   try {
     const data = await createAdminServicePlan(getApiUrl(), dto, await getToken());
     revalidatePath("/admin/service-plans");
-    revalidatePath("/", "layout");
+    revalidateTag("service-plans");
     return { success: true, data };
   } catch (error) {
     if (error instanceof ApiError) return { success: false, message: error.message };
@@ -53,7 +53,7 @@ export async function deleteServicePlanAction(id: number): Promise<{ success: bo
   try {
     await deleteAdminServicePlan(getApiUrl(), id, await getToken());
     revalidatePath("/admin/service-plans");
-    revalidatePath("/", "layout");
+    revalidateTag("service-plans");
     return { success: true };
   } catch (error) {
     if (error instanceof ApiError) return { success: false, message: error.message };
