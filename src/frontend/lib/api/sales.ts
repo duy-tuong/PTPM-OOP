@@ -31,8 +31,12 @@ export function submitRenewalOrderRequest(dto: CreateRenewalOrderRequestDto, tok
   return apiFetch<OrderRequestDto>(getApiUrl(), "/order-requests/mine/renewals", "POST", { body: dto, token });
 }
 
-export function submitConsultationRequest(dto: CreateConsultationRequestDto) {
-  return apiFetch<ConsultationRequestDto>(getPublicApiUrl(), "/consultation-requests", "POST", { body: dto });
+// Server-only (dùng getApiUrl) - gọi từ app/api/consultation-requests/route.ts, KHÔNG import trực tiếp
+// từ Client Component. Token không bắt buộc (endpoint vẫn công khai phía backend, xem comment
+// ConsultationRequestsController.cs) nhưng PHẢI đính kèm khi khách đã đăng nhập, nếu không CustomerId
+// sẽ luôn là null và yêu cầu sẽ không hiện ở trang "Yêu cầu tư vấn của tôi" dù đã đăng nhập lúc gửi.
+export function submitConsultationRequest(dto: CreateConsultationRequestDto, token?: string) {
+  return apiFetch<ConsultationRequestDto>(getApiUrl(), "/consultation-requests", "POST", { body: dto, token });
 }
 
 export function submitAffiliateApplication(dto: CreateAffiliateApplicationDto) {
