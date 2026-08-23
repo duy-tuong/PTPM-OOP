@@ -15,7 +15,7 @@ export function DomainPricingTable({ tldPricing }: { tldPricing: TldPricingDto[]
   const [search, setSearch] = useState("");
 
   if (tldPricing.length === 0) {
-    return <p className="py-16 text-center text-muted-foreground">Chưa có bảng giá tên miền nào.</p>;
+    return <p className="py-12 text-center text-muted-foreground">Chưa có bảng giá tên miền nào.</p>;
   }
 
   const filtered = tldPricing.filter((t) => t.tld.toLowerCase().includes(search.trim().toLowerCase()));

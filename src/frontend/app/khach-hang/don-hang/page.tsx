@@ -12,8 +12,9 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
-export const metadata = { title: "Đơn hàng của tôi" };
+export const metadata = { title: "Lịch sử đơn hàng" };
 
 const PAGE_SIZE = 10;
 
@@ -48,30 +49,40 @@ export default async function MyOrdersPage({
   }
 
   return (
-    <div>
-      {result.items.length > 0 ? (
-        <div className="overflow-x-auto rounded-xl border border-border">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-border bg-muted/50 text-xs text-muted-foreground uppercase">
-              <tr>
-                <th className="px-4 py-3 font-medium">Mã đơn</th>
-                <th className="px-4 py-3 font-medium">Sản phẩm</th>
-                <th className="px-4 py-3 font-medium">Thành tiền</th>
-                <th className="px-4 py-3 font-medium">Trạng thái</th>
-                <th className="px-4 py-3 font-medium">Ngày đặt</th>
-                <th className="px-4 py-3 font-medium" aria-label="Chi tiết" />
-              </tr>
-            </thead>
-            <tbody>
-              {result.items.map((order) => (
-                <MyOrderRow key={order.id} order={order} />
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <p className="py-16 text-center text-muted-foreground">Bạn chưa có đơn hàng nào.</p>
-      )}
+    <div className="w-full">
+      <Card>
+        <CardHeader>
+          <CardTitle>Lịch sử đơn hàng</CardTitle>
+          <CardDescription>Xem lại tất cả các đơn hàng bạn đã giao dịch với Cloudverse</CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          {result.items.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b border-t border-border bg-muted/50 text-xs text-muted-foreground uppercase">
+                  <tr>
+                    <th className="px-6 py-4 font-medium">Mã đơn</th>
+                    <th className="px-6 py-4 font-medium">Sản phẩm</th>
+                    <th className="px-6 py-4 font-medium">Thành tiền</th>
+                    <th className="px-6 py-4 font-medium">Trạng thái</th>
+                    <th className="px-6 py-4 font-medium">Ngày đặt</th>
+                    <th className="px-6 py-4 font-medium" aria-label="Chi tiết" />
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {result.items.map((order) => (
+                    <MyOrderRow key={order.id} order={order} />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="py-16 text-center text-muted-foreground flex flex-col items-center justify-center border-t border-border">
+              <p>Bạn chưa có đơn hàng nào.</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {result.totalPages > 1 && (
         <Pagination className="mt-8">

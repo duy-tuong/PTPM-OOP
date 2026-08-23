@@ -6,10 +6,27 @@ import { useRouter } from "next/navigation";
 import { List, ShoppingCart } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { MagneticButton } from "@/components/shared/MagneticButton";
 import { Logo } from "@/components/shared/Logo";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { cn } from "@/lib/utils";
+
+function getInitials(name: string) {
+  const parts = name.split(" ").filter(Boolean);
+  if (parts.length === 0) return "U";
+  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
 import {
   CUSTOMER_SESSION_CHANGED_EVENT,
   notifyCustomerSessionChanged,
@@ -95,15 +112,17 @@ export function Navbar() {
         hidden && "-translate-y-24 opacity-0",
       )}
     >
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Logo />
+      <div className="relative mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 flex items-center">
+          <Logo />
+        </div>
 
-        <nav className="hidden items-center gap-6 lg:flex">
+        <nav className="pointer-events-none absolute inset-0 hidden items-center justify-center gap-6 lg:flex z-0">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="group relative text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="pointer-events-auto group relative text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               {link.label}
               <span className="absolute left-1/2 -bottom-2 h-1 w-1 -translate-x-1/2 scale-0 rounded-full bg-primary transition-transform duration-200 group-hover:scale-100" />
@@ -111,29 +130,7 @@ export function Navbar() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-4 lg:flex">
-          {session ? (
-            <div className="flex items-center gap-3 text-sm">
-              <Link href="/khach-hang" className="font-medium text-foreground hover:text-primary">
-                Xin chào, {session.fullName}
-              </Link>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="text-muted-foreground transition-colors hover:text-primary"
-              >
-                Đăng xuất
-              </button>
-            </div>
-          ) : (
-            <Link
-              href="/login"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Đăng nhập
-            </Link>
-          )}
-
+        <div className="relative z-10 hidden items-center gap-4 lg:flex">
           <Link
             href="/lien-he"
             aria-label={cartCount > 0 ? `Giỏ hàng, ${cartCount} sản phẩm` : "Giỏ hàng"}
@@ -148,6 +145,52 @@ export function Navbar() {
           </Link>
 
           <ThemeToggle />
+
+          <div className="mx-1 h-6 w-px bg-border/60" />
+
+          {session ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className="group rounded-full outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <Avatar className="size-8 transition-transform group-hover:scale-105 border border-border/50">
+                  <AvatarFallback className="bg-primary/10 text-primary font-medium text-xs">
+                    {getInitials(session.fullName)}
+                  </AvatarFallback>
+                </Avatar>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56" sideOffset={12}>
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{session.fullName}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem render={<Link href="/khach-hang" />} className="cursor-pointer">
+                  Bảng điều khiển
+                </DropdownMenuItem>
+                <DropdownMenuItem render={<Link href="/khach-hang/don-hang" />} className="cursor-pointer">
+                  Lịch sử đơn hàng
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive"
+                >
+                  Đăng xuất
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link
+              href="/login"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Đăng nhập
+            </Link>
+          )}
 
           <MagneticButton>
             <Button

@@ -51,33 +51,42 @@ export function CloudDataFlowBackground() {
 
   return (
     <div className="fixed inset-0 -z-20 overflow-hidden bg-background transition-colors duration-700">
-      
-      {/* 1. Base Gradient Glows */}
-      <div className="absolute -top-[20%] -left-[10%] h-[70%] w-[50%] rounded-full bg-purple-500/20 blur-[120px] dark:bg-purple-600/20" />
-      <div className="absolute top-[40%] -right-[10%] h-[60%] w-[40%] rounded-full bg-blue-500/15 blur-[120px] dark:bg-blue-600/15" />
-      <div className="absolute -bottom-[20%] left-[20%] h-[50%] w-[60%] rounded-full bg-indigo-500/15 blur-[120px] dark:bg-indigo-600/15" />
+      <div className="absolute inset-0 opacity-15 dark:opacity-10">
+        {/* 1. Base Gradient Glows (Ambient) */}
+        <div className="absolute -top-[20%] -left-[10%] h-[70%] w-[50%] rounded-full bg-indigo-500 blur-[120px]" />
+        <div className="absolute top-[40%] -right-[10%] h-[60%] w-[40%] rounded-full bg-cyan-500 blur-[120px]" />
+        <div className="absolute -bottom-[20%] left-[20%] h-[50%] w-[60%] rounded-full bg-blue-500 blur-[120px]" />
+      </div>
 
-      {/* 2. Grid */}
+      {/* 2. Grid (Extremely Subtle) */}
       <div 
-        className="absolute inset-0 bg-[linear-gradient(to_right,rgba(99,102,241,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(99,102,241,0.05)_1px,transparent_1px)] bg-[size:4rem_4rem] dark:bg-[linear-gradient(to_right,rgba(99,102,241,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(99,102,241,0.08)_1px,transparent_1px)]"
+        className="absolute inset-0 bg-[linear-gradient(to_right,rgba(100,116,139,0.07)_1px,transparent_1px),linear-gradient(to_bottom,rgba(100,116,139,0.07)_1px,transparent_1px)] bg-[size:4rem_4rem] dark:bg-[linear-gradient(to_right,rgba(148,163,184,0.07)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.07)_1px,transparent_1px)]"
         style={{ 
-          maskImage: 'radial-gradient(ellipse at center, rgba(0,0,0,0.2) 10%, rgba(0,0,0,1) 70%)',
-          WebkitMaskImage: 'radial-gradient(ellipse at center, rgba(0,0,0,0.2) 10%, rgba(0,0,0,1) 70%)'
+          maskImage: 'radial-gradient(ellipse at center, rgba(0,0,0,0.4) 10%, rgba(0,0,0,0) 70%)',
+          WebkitMaskImage: 'radial-gradient(ellipse at center, rgba(0,0,0,0.4) 10%, rgba(0,0,0,0) 70%)'
         }}
       />
 
-      {/* 3. Floating Clouds */}
+      {/* 3. Floating Clouds (Abstract) */}
       <FloatingClouds prefersReducedMotion={prefersReducedMotion} />
 
       {/* 4. Horizontal Data Lanes & Moving Icons */}
       <div className="absolute inset-0">
         {lanes.map(lane => {
           const Icon = lane.iconNode;
+          // Alternate between cyan->blue and blue->purple lines
+          const isCyanBlue = lane.id % 2 === 0;
+          const lineColor = isCyanBlue ? "bg-cyan-500/10 dark:bg-cyan-400/10" : "bg-blue-500/10 dark:bg-blue-400/10";
+          const trailColor = isCyanBlue 
+            ? "to-cyan-500/60 dark:to-cyan-400/60" 
+            : "to-blue-500/60 dark:to-blue-400/60";
+          const iconColor = isCyanBlue ? "text-cyan-600 dark:text-cyan-400" : "text-blue-600 dark:text-blue-400";
+          const glowColor = isCyanBlue ? "rgba(6,182,212,0.15)" : "rgba(59,130,246,0.15)";
+          
           return (
             <div 
               key={lane.id} 
-              // Đường kẻ ngang mờ nhẹ
-              className="absolute left-0 right-0 h-[1px] bg-indigo-500/15 dark:bg-indigo-400/20"
+              className={`absolute left-0 right-0 h-[1px] ${lineColor}`}
               style={{ top: lane.top }}
             >
               {!prefersReducedMotion && (
@@ -92,13 +101,13 @@ export function CloudDataFlowBackground() {
                     delay: lane.delay 
                   }}
                 >
-                  {/* Trail sáng */}
-                  <div className="h-[2px] w-24 bg-gradient-to-r from-transparent to-purple-500/80 dark:to-purple-400/80 sm:w-40" />
+                  <div className={`h-[1px] w-24 bg-gradient-to-r from-transparent ${trailColor} sm:w-40`} />
                   
-                  {/* Khối chứa Icon */}
-                  <div className="relative flex size-8 items-center justify-center rounded-[8px] border border-purple-500/40 bg-white/80 shadow-[0_0_15px_rgba(168,85,247,0.3)] backdrop-blur-md dark:border-purple-400/50 dark:bg-background/80 dark:shadow-[0_0_15px_rgba(168,85,247,0.4)] sm:size-10 sm:rounded-[10px]">
-                    <Icon className="size-4 text-purple-600 dark:text-purple-400 sm:size-5" strokeWidth={1.5} />
-                    <div className="absolute inset-0 rounded-[8px] bg-purple-500/5 sm:rounded-[10px]" />
+                  <div 
+                    className="relative flex size-6 items-center justify-center rounded-[6px] border border-border bg-background shadow-sm sm:size-8"
+                    style={{ boxShadow: `0 0 10px ${glowColor}` }}
+                  >
+                    <Icon className={`size-3 sm:size-4 ${iconColor}`} strokeWidth={1.5} />
                   </div>
                 </motion.div>
               )}
@@ -111,28 +120,29 @@ export function CloudDataFlowBackground() {
 }
 
 function FloatingClouds({ prefersReducedMotion }: { prefersReducedMotion: boolean | null }) {
+  // Use abstract blurred circles to represent clouds instead of literal cloud shapes
   const clouds = [
-    { top: '15%', left: '-2%', delay: 0, duration: 18, scale: 1.1 },
-    { top: '65%', left: '4%', delay: 2, duration: 22, scale: 0.8 },
-    { top: '25%', right: '2%', delay: 4, duration: 20, scale: 1 },
-    { top: '75%', right: '-4%', delay: 1, duration: 15, scale: 1.2 },
+    { top: '15%', left: '10%', delay: 0, duration: 8, size: 'w-48 h-24' },
+    { top: '65%', left: '5%', delay: 2, duration: 10, size: 'w-64 h-32' },
+    { top: '25%', right: '10%', delay: 4, duration: 9, size: 'w-56 h-28' },
+    { top: '75%', right: '5%', delay: 1, duration: 7, size: 'w-40 h-20' },
   ];
 
+  if (prefersReducedMotion) return null;
+
   return (
-    <div className="absolute inset-0 overflow-hidden">
+    <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
       {clouds.map((cloud, i) => (
         <motion.div
           key={i}
-          className="absolute pointer-events-none"
+          className={`absolute rounded-[100%] blur-[60px] opacity-35 dark:opacity-[0.15] bg-white dark:bg-cyan-300 ${cloud.size}`}
           style={{
             top: cloud.top,
             ...(cloud.left ? { left: cloud.left } : {}),
             ...(cloud.right ? { right: cloud.right } : {}),
-            transform: `scale(${cloud.scale})`,
           }}
-          animate={prefersReducedMotion ? {} : {
-            y: [0, -15, 0],
-            x: [0, 8, 0],
+          animate={{
+            y: [0, -6, 0],
           }}
           transition={{
             duration: cloud.duration,
@@ -140,19 +150,7 @@ function FloatingClouds({ prefersReducedMotion }: { prefersReducedMotion: boolea
             ease: "easeInOut",
             delay: cloud.delay,
           }}
-        >
-          {/* Cấu trúc Cloud */}
-          <div className="relative h-32 w-48 opacity-90 drop-shadow-2xl dark:opacity-60">
-            {/* Bóng đổ / Glow phía sau mây */}
-            <div className="absolute inset-0 scale-75 rounded-full bg-indigo-200/40 blur-2xl dark:bg-indigo-900/40" />
-            
-            {/* Các cục bông của đám mây */}
-            <div className="absolute bottom-4 left-4 h-16 w-16 rounded-full bg-white shadow-[inset_-3px_-3px_6px_rgba(0,0,0,0.04)] dark:bg-slate-800 dark:shadow-[inset_-3px_-3px_6px_rgba(0,0,0,0.2)]" />
-            <div className="absolute bottom-4 right-6 h-20 w-20 rounded-full bg-white shadow-[inset_-3px_-3px_6px_rgba(0,0,0,0.04)] dark:bg-slate-800 dark:shadow-[inset_-3px_-3px_6px_rgba(0,0,0,0.2)]" />
-            <div className="absolute top-4 left-10 h-24 w-24 rounded-full bg-white shadow-[inset_-3px_-3px_6px_rgba(0,0,0,0.04)] dark:bg-slate-800 dark:shadow-[inset_-3px_-3px_6px_rgba(0,0,0,0.2)]" />
-            <div className="absolute bottom-4 left-8 h-12 w-28 rounded-full bg-white dark:bg-slate-800" />
-          </div>
-        </motion.div>
+        />
       ))}
     </div>
   );

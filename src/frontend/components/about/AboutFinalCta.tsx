@@ -9,7 +9,7 @@ import { MagneticButton } from "@/components/shared/MagneticButton";
 // bấm dùng sẵn active:translate-y-px toàn cục của Button (button.tsx), không cần code riêng.
 export function AboutFinalCta() {
   return (
-    <section className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
+    <section className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
       <div className="rounded-3xl border-2 border-primary bg-background p-12 text-center md:p-20">
         <h2 className="font-heading text-3xl font-bold text-balance text-foreground sm:text-4xl lg:text-5xl">
           Sẵn sàng nâng tầm hạ tầng?

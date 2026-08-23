@@ -82,7 +82,7 @@ export function PartnerApplicationForm() {
   }
 
   return (
-    <section className="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:px-8">
+    <section className="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:px-8">
       <div className="glass-card rounded-3xl p-8 sm:p-10">
         <h2 className="font-heading mb-8 text-center text-2xl font-bold sm:text-3xl">Đăng Ký Làm Đối Tác</h2>
 
