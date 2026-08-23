@@ -88,7 +88,7 @@ export function DomainOrderForm({
             />
             <Select
               items={tldPricing.map((t) => ({ value: String(t.id), label: t.tld }))}
-              value={tldPricingId ? String(tldPricingId) : undefined}
+              value={tldPricingId ? String(tldPricingId) : null}
               onValueChange={(v) => setTldPricingId(v ? Number(v) : null)}
             >
               <SelectTrigger id="domain-tld" className="h-11 w-40 shrink-0">

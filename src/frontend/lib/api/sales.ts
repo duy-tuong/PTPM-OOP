@@ -12,9 +12,9 @@ import type {
 } from "@/lib/types/sales";
 
 // Server-only (dùng getApiUrl) - gọi từ app/api/order-requests/route.ts, KHÔNG import trực tiếp từ
-// Client Component. Nhận token tuỳ chọn: nếu khách đã đăng nhập, backend gán CustomerId cho đơn hàng
-// (OrderRequestsController đọc role "Customer" từ JWT); nếu không có token, đơn vẫn tạo được (ẩn danh).
-export function submitOrderRequest(dto: CreateOrderRequestDto, token?: string) {
+// Client Component. Token luôn bắt buộc - đặt hàng đòi hỏi đăng nhập (khớp
+// [Authorize(Roles="Customer")] phía backend), không còn luồng ẩn danh như trước.
+export function submitOrderRequest(dto: CreateOrderRequestDto, token: string) {
   return apiFetch<OrderRequestDto>(getApiUrl(), "/order-requests", "POST", { body: dto, token });
 }
 
