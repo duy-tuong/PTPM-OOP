@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { X } from "@phosphor-icons/react";
@@ -12,6 +13,11 @@ import { CustomerTypeToggle } from "@/components/contact/CustomerTypeToggle";
 import { useCart } from "@/lib/cart/CartContext";
 import { CustomerType } from "@/lib/types/enums";
 import { cn, formatCurrency } from "@/lib/utils";
+import {
+  CUSTOMER_SESSION_CHANGED_EVENT,
+  readCustomerSessionCookie,
+} from "@/lib/auth/customerSessionClient";
+import type { CustomerSessionUser } from "@/lib/types/customerAuth";
 import type { PromotionDto } from "@/lib/types/catalog";
 import type { CreateOrderRequestDto, OrderRequestDto } from "@/lib/types/sales";
 
@@ -32,6 +38,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export function CartCheckoutPanel({ promotion }: { promotion: PromotionDto | null }) {
   const cart = useCart();
   const router = useRouter();
+  const [session, setSession] = useState<CustomerSessionUser | null>(null);
   const [customerType, setCustomerType] = useState(CustomerType.Individual);
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
@@ -41,6 +48,18 @@ export function CartCheckoutPanel({ promotion }: { promotion: PromotionDto | nul
   const [note, setNote] = useState("");
   const [errors, setErrors] = useState<CheckoutErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Đặt hàng bắt buộc đăng nhập (khớp [Authorize(Roles="Customer")] phía backend) - đọc cookie
+  // "customer_session" y hệt Navbar.tsx để biết trạng thái đăng nhập mà không cần gọi API riêng.
+  useEffect(() => {
+    function syncSession() {
+      setSession(readCustomerSessionCookie());
+    }
+
+    syncSession();
+    window.addEventListener(CUSTOMER_SESSION_CHANGED_EVENT, syncSession);
+    return () => window.removeEventListener(CUSTOMER_SESSION_CHANGED_EVENT, syncSession);
+  }, []);
 
   function validate(): boolean {
     const nextErrors: CheckoutErrors = {};
@@ -166,7 +185,22 @@ export function CartCheckoutPanel({ promotion }: { promotion: PromotionDto | nul
         </div>
       )}
 
-      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-6">
+      {!session && (
+        <div className="rounded-xl border border-primary/40 bg-primary/5 px-4 py-4 text-sm">
+          <p className="font-medium text-foreground">Vui lòng đăng nhập để đặt hàng</p>
+          <p className="mt-1 text-muted-foreground">
+            Đăng nhập giúp bạn xem lại đơn hàng, thông tin bàn giao dịch vụ và tự gia hạn sau này. Giỏ
+            hàng của bạn vẫn được giữ nguyên trong lúc đăng nhập.
+          </p>
+          <Button
+            nativeButton={false}
+            className="mt-3 h-10 rounded-full px-6"
+            render={<Link href="/login">Đăng nhập</Link>}
+          />
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} noValidate className={cn("flex flex-col gap-6", !session && "hidden")}>
         <CustomerTypeToggle value={customerType} onChange={setCustomerType} />
 
         <FieldGroup>
