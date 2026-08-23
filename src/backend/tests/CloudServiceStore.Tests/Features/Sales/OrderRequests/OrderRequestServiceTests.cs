@@ -18,16 +18,30 @@ public class OrderRequestServiceTests
 {
     private readonly Mock<IEmailService> _emailServiceMock = new();
     private readonly Mock<IAppSettings> _appSettingsMock = new();
+    private readonly Mock<IPaymentGatewayService> _paymentGatewayServiceMock = new();
+    private readonly Mock<IQrCodeFactory> _qrCodeFactoryMock = new();
 
     public OrderRequestServiceTests()
     {
         _appSettingsMock.SetupGet(a => a.PublicBaseUrl).Returns("http://localhost:3000");
+        _paymentGatewayServiceMock
+            .Setup(p => p.CreatePaymentLinkAsync(It.IsAny<OrderRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PaymentLinkResult
+            {
+                CheckoutUrl = "https://pay.payos.vn/web/test-link",
+                QrCode = "00020101...test-qr-payload",
+                PaymentLinkId = "test-payment-link-id",
+                ExpiresAt = DateTime.UtcNow.AddMinutes(15)
+            });
+        _qrCodeFactoryMock.Setup(q => q.GenerateFromContent(It.IsAny<string>())).Returns("data:image/png;base64,test");
     }
 
     private OrderRequestService CreateSut(AppDbContext context) => new(
         TestDbContextFactory.CreateUnitOfWork(context),
         _emailServiceMock.Object,
-        _appSettingsMock.Object);
+        _appSettingsMock.Object,
+        _paymentGatewayServiceMock.Object,
+        _qrCodeFactoryMock.Object);
 
     // Id/slug cố ý khác dữ liệu HasData (ServicePlan Id 1-2, PlanPrice Id 1-4) đã seed sẵn trong model
     // để test không phụ thuộc vào việc InMemory provider có tự nạp seed data hay không.
@@ -569,6 +583,9 @@ public class OrderRequestServiceTests
         Assert.Equal("Ngân hàng Test", result.BankName);
         Assert.Equal("999888777", result.BankAccountNumber);
         Assert.Equal("CLOUDVERSE", result.BankAccountHolder);
+        Assert.Equal("https://pay.payos.vn/web/test-link", result.PayOsCheckoutUrl);
+        Assert.Equal("data:image/png;base64,test", result.PayOsQrCodeImage);
+        _paymentGatewayServiceMock.Verify(p => p.CreatePaymentLinkAsync(It.IsAny<OrderRequest>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -578,6 +595,96 @@ public class OrderRequestServiceTests
         var sut = CreateSut(context);
 
         await Assert.ThrowsAsync<NotFoundException>(() => sut.GetByCodeAsync("ORD-DOES-NOT-EXIST"));
+    }
+
+    [Fact]
+    public async Task GetByCodeAsync_LinkStillValid_DoesNotCallPaymentGatewayAgain()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var sut = CreateSut(context);
+        var created = await sut.CreateAsync(BuildDto(plan.Id, periodMonths: 1, quantity: 1));
+        var orderCode = context.OrderRequests.Single(o => o.Id == created.Id).OrderCode;
+        await sut.GetByCodeAsync(orderCode); // lần 1 - tạo link mới, cache lên OrderRequest
+        _paymentGatewayServiceMock.Invocations.Clear();
+
+        await sut.GetByCodeAsync(orderCode); // lần 2 - link vừa tạo (ExpiresAt +15 phút) vẫn còn hạn, không được tạo lại
+
+        _paymentGatewayServiceMock.Verify(p => p.CreatePaymentLinkAsync(It.IsAny<OrderRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    // Bug thật phát hiện lúc live-test với PayOS thật: nếu CreatePaymentLinkAsync trả ExpiresAt=null
+    // (PayOS không luôn set hạn), code cũ coi null = "đã hết hạn" -> gọi lại PayOS lần 2 cho cùng
+    // OrderCode -> bị PayOS từ chối thẳng ("Đơn thanh toán đã tồn tại"). null phải nghĩa là "chưa biết
+    // hạn, coi như còn hiệu lực", không phải "hết hạn".
+    [Fact]
+    public async Task GetByCodeAsync_CachedLinkHasNoExpiry_DoesNotTreatAsExpired()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        _paymentGatewayServiceMock
+            .Setup(p => p.CreatePaymentLinkAsync(It.IsAny<OrderRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PaymentLinkResult
+            {
+                CheckoutUrl = "https://pay.payos.vn/web/no-expiry-link",
+                QrCode = "00020101...no-expiry-qr",
+                PaymentLinkId = "no-expiry-link-id",
+                ExpiresAt = null
+            });
+        var sut = CreateSut(context);
+        var created = await sut.CreateAsync(BuildDto(plan.Id, periodMonths: 1, quantity: 1));
+        var orderCode = context.OrderRequests.Single(o => o.Id == created.Id).OrderCode;
+        await sut.GetByCodeAsync(orderCode); // lần 1 - cache link với ExpiresAt=null
+        _paymentGatewayServiceMock.Invocations.Clear();
+
+        await sut.GetByCodeAsync(orderCode); // lần 2 - KHÔNG được coi ExpiresAt=null là hết hạn
+
+        _paymentGatewayServiceMock.Verify(p => p.CreatePaymentLinkAsync(It.IsAny<OrderRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetByCodeAsync_CachedLinkExpired_CreatesNewLink()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var sut = CreateSut(context);
+        var created = await sut.CreateAsync(BuildDto(plan.Id, periodMonths: 1, quantity: 1));
+        var order = context.OrderRequests.Single(o => o.Id == created.Id);
+        order.PayOsLinkExpiresAt = DateTime.UtcNow.AddMinutes(-1);
+        await context.SaveChangesAsync();
+        _paymentGatewayServiceMock.Invocations.Clear();
+
+        await sut.GetByCodeAsync(order.OrderCode);
+
+        _paymentGatewayServiceMock.Verify(p => p.CreatePaymentLinkAsync(It.IsAny<OrderRequest>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetByCodeAsync_OrderAlreadyPaid_DoesNotCreatePaymentLink()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var order = new OrderRequest
+        {
+            OrderCode = "ORD-ALREADY-PAID",
+            CustomerType = CustomerType.Individual,
+            CustomerName = "Test Customer",
+            CustomerEmail = "test@example.com",
+            CustomerPhone = "0900000000",
+            TotalPrice = 100000m,
+            Status = OrderRequestStatus.Paid,
+            CreatedAt = DateTime.UtcNow,
+            Items = { new OrderRequestItem { ServicePlanId = plan.Id, PeriodMonths = 1, Quantity = 1, UnitPrice = 100000m, LineTotal = 100000m } }
+        };
+        context.OrderRequests.Add(order);
+        await context.SaveChangesAsync();
+        var sut = CreateSut(context);
+
+        var result = await sut.GetByCodeAsync(order.OrderCode);
+
+        Assert.Null(result.PayOsCheckoutUrl);
+        Assert.Null(result.PayOsQrCodeImage);
+        _paymentGatewayServiceMock.Verify(p => p.CreatePaymentLinkAsync(It.IsAny<OrderRequest>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

@@ -33,6 +33,13 @@ services:
       dockerfile: Dockerfile
     container_name: cloudstore_backend
     restart: always
+    # Khoá PayOS/Resend (App__PayOsClientId, App__PayOsApiKey, App__PayOsChecksumKey, App__ResendApiKey,
+    # App__EmailFromAddress, App__EmailFromName) KHÔNG hardcode ở đây như Jwt__SecretKey/ConnectionStrings
+    # bên dưới - đọc từ file .env cùng cấp (gitignore, xem .env.example) để không lộ khoá tài chính/email
+    # thật vào lịch sử git. Workflow CI/CD (.github/workflows/main.yml) tự sinh file .env này trên VM từ
+    # GitHub Secrets trước mỗi lần deploy.
+    env_file:
+      - .env
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Server=cloudstore_sqlserver,1433;Database=CloudServiceStoreDb;User Id=sa;Password=CloudServiceStore@2026!;TrustServerCertificate=True;Connect Retry Count=5;

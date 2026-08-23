@@ -23,6 +23,10 @@ public class OrderRequestConfiguration : IEntityTypeConfiguration<OrderRequest>
         builder.Property(x => x.Source).HasMaxLength(50);
         builder.Property(x => x.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
 
+        builder.Property(x => x.PayOsCheckoutUrl).HasMaxLength(500);
+        builder.Property(x => x.PayOsQrCode).HasMaxLength(1000);
+        builder.Property(x => x.PayOsPaymentLinkId).HasMaxLength(100);
+
         builder.HasIndex(x => x.OrderCode).IsUnique();
         builder.HasIndex(x => new { x.Status, x.CreatedAt });
         builder.HasIndex(x => x.CustomerId);

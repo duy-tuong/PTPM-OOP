@@ -40,6 +40,15 @@ public class OrderRequest
     public DateTime? PaidAt { get; set; }
     public DateTime? ProvisioningStartedAt { get; set; }
 
+    // Cache link thanh toán PayOS - sinh lười (lazy) lúc khách vào /thanh-toan/{orderCode} lần đầu
+    // (xem OrderRequestService.GetByCodeAsync), tránh gọi PayOS lại mỗi lần load trang. PayOsQrCode là
+    // chuỗi payload EMV QR thô PayOS trả về (không phải ảnh) - render thành ảnh PNG ở tầng DTO qua
+    // IQrCodeFactory. Chỉ có ý nghĩa khi Status còn ở New/Contacted/Confirmed; hết hạn thì tạo lại link mới.
+    public string? PayOsCheckoutUrl { get; set; }
+    public string? PayOsQrCode { get; set; }
+    public string? PayOsPaymentLinkId { get; set; }
+    public DateTime? PayOsLinkExpiresAt { get; set; }
+
     // Giỏ hàng nhiều sản phẩm - 1 đơn có thể gồm nhiều dòng gói dịch vụ/tên miền trộn lẫn.
     public ICollection<OrderRequestItem> Items { get; set; } = new List<OrderRequestItem>();
 }

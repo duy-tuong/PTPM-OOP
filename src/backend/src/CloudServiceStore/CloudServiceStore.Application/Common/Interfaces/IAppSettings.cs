@@ -9,4 +9,12 @@ public interface IAppSettings
     int ProvisioningDelaySeconds { get; }
     int ProvisioningCompletionDelaySeconds { get; }
     int RenewalReminderLeadDays { get; }
+
+    string PayOsClientId { get; }
+    string PayOsApiKey { get; }
+    string PayOsChecksumKey { get; }
+
+    string ResendApiKey { get; }
+    string EmailFromAddress { get; }
+    string EmailFromName { get; }
 }

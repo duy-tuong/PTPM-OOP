@@ -55,6 +55,15 @@ jobs:
               git fetch origin main
               git reset --hard origin/main
             fi
+            echo "==== Writing .env (PayOS/Resend) from GitHub Secrets ===="
+            {
+              echo "App__PayOsClientId=${{ secrets.PAYOS_CLIENT_ID }}"
+              echo "App__PayOsApiKey=${{ secrets.PAYOS_API_KEY }}"
+              echo "App__PayOsChecksumKey=${{ secrets.PAYOS_CHECKSUM_KEY }}"
+              echo "App__ResendApiKey=${{ secrets.RESEND_API_KEY }}"
+              echo "App__EmailFromAddress=${{ secrets.EMAIL_FROM_ADDRESS }}"
+              echo "App__EmailFromName=${{ secrets.EMAIL_FROM_NAME }}"
+            } > .env
             echo "==== Building Docker Images & Starting Containers ===="
             docker compose up -d --build --remove-orphans
             docker image prune -f

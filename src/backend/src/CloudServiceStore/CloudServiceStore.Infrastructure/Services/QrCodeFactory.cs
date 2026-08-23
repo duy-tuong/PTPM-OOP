@@ -13,9 +13,13 @@ public class QrCodeFactory : IQrCodeFactory
     public string GenerateForServicePlan(int planId, string planSlug)
     {
         var targetUrl = $"{BaseUrl}/{planSlug}";
+        return GenerateFromContent(targetUrl);
+    }
 
+    public string GenerateFromContent(string content)
+    {
         using var generator = new QRCodeGenerator();
-        using var qrCodeData = generator.CreateQrCode(targetUrl, QRCodeGenerator.ECCLevel.Q);
+        using var qrCodeData = generator.CreateQrCode(content, QRCodeGenerator.ECCLevel.Q);
         using var pngQrCode = new PngByteQRCode(qrCodeData);
         var pngBytes = pngQrCode.GetGraphic(20);
 
