@@ -3,19 +3,37 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { List } from "@phosphor-icons/react";
+import { List, ShoppingCart } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { MagneticButton } from "@/components/shared/MagneticButton";
 import { Logo } from "@/components/shared/Logo";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { cn } from "@/lib/utils";
+
+function getInitials(name: string) {
+  const parts = name.split(" ").filter(Boolean);
+  if (parts.length === 0) return "U";
+  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
 import {
   CUSTOMER_SESSION_CHANGED_EVENT,
   notifyCustomerSessionChanged,
   readCustomerSessionCookie,
 } from "@/lib/auth/customerSessionClient";
 import type { CustomerSessionUser } from "@/lib/types/customerAuth";
+import { useCart } from "@/lib/cart/CartContext";
 
 const NAV_LINKS = [
   { href: "/", label: "Trang chủ" },
@@ -45,6 +63,8 @@ export function Navbar() {
   const [session, setSession] = useState<CustomerSessionUser | null>(null);
   const [hidden, setHidden] = useState(false);
   const router = useRouter();
+  const cart = useCart();
+  const cartCount = cart.items.length;
 
   useEffect(() => {
     function syncSession() {
@@ -92,15 +112,17 @@ export function Navbar() {
         hidden && "-translate-y-24 opacity-0",
       )}
     >
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Logo />
+      <div className="relative mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 flex items-center">
+          <Logo />
+        </div>
 
-        <nav className="hidden items-center gap-6 lg:flex">
+        <nav className="pointer-events-none absolute inset-0 hidden items-center justify-center gap-6 lg:flex z-0">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="group relative text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="pointer-events-auto group relative text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               {link.label}
               <span className="absolute left-1/2 -bottom-2 h-1 w-1 -translate-x-1/2 scale-0 rounded-full bg-primary transition-transform duration-200 group-hover:scale-100" />
@@ -108,20 +130,59 @@ export function Navbar() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-4 lg:flex">
+        <div className="relative z-10 hidden items-center gap-4 lg:flex">
+          <Link
+            href="/lien-he"
+            aria-label={cartCount > 0 ? `Giỏ hàng, ${cartCount} sản phẩm` : "Giỏ hàng"}
+            className="relative inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <ShoppingCart className="size-5" />
+            {cartCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] leading-none font-bold text-primary-foreground">
+                {cartCount}
+              </span>
+            )}
+          </Link>
+
+          <ThemeToggle />
+
+          <div className="mx-1 h-6 w-px bg-border/60" />
+
           {session ? (
-            <div className="flex items-center gap-3 text-sm">
-              <Link href="/khach-hang" className="font-medium text-foreground hover:text-primary">
-                Xin chào, {session.fullName}
-              </Link>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="text-muted-foreground transition-colors hover:text-primary"
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className="group rounded-full outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
               >
-                Đăng xuất
-              </button>
-            </div>
+                <Avatar className="size-8 transition-transform group-hover:scale-105 border border-border/50">
+                  <AvatarFallback className="bg-primary/10 text-primary font-medium text-xs">
+                    {getInitials(session.fullName)}
+                  </AvatarFallback>
+                </Avatar>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56" sideOffset={12}>
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{session.fullName}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem render={<Link href="/khach-hang" />} className="cursor-pointer">
+                  Bảng điều khiển
+                </DropdownMenuItem>
+                <DropdownMenuItem render={<Link href="/khach-hang/don-hang" />} className="cursor-pointer">
+                  Lịch sử đơn hàng
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive"
+                >
+                  Đăng xuất
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <Link
               href="/login"
@@ -131,12 +192,10 @@ export function Navbar() {
             </Link>
           )}
 
-          <ThemeToggle />
-
           <MagneticButton>
             <Button
               nativeButton={false}
-              className="rounded-full bg-foreground font-bold text-background hover:bg-foreground/90"
+              className="rounded-full bg-primary font-bold text-primary-foreground hover:bg-primary/90 shadow-[0_4px_14px_0_color-mix(in_oklch,var(--primary)_39%,transparent)] hover:shadow-[0_6px_20px_color-mix(in_oklch,var(--primary)_23%,transparent)] hover:-translate-y-0.5 transition-all"
               render={<Link href="/lien-he">Đặt dịch vụ</Link>}
             />
           </MagneticButton>
@@ -161,6 +220,22 @@ export function Navbar() {
                   {link.label}
                 </Link>
               ))}
+
+              <Link
+                href="/lien-he"
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-between text-base font-medium text-foreground"
+              >
+                <span className="flex items-center gap-2">
+                  <ShoppingCart className="size-5" />
+                  Giỏ hàng
+                </span>
+                {cartCount > 0 && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-bold text-primary-foreground">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
 
               <div className="my-1 border-t border-border" />
 
@@ -197,7 +272,7 @@ export function Navbar() {
 
               <Button
                 nativeButton={false}
-                className="mt-2 rounded-full bg-foreground font-bold text-background hover:bg-foreground/90"
+                className="mt-2 rounded-full bg-primary font-bold text-primary-foreground hover:bg-primary/90 shadow-[0_4px_14px_0_color-mix(in_oklch,var(--primary)_39%,transparent)] transition-all"
                 render={
                   <Link href="/lien-he" onClick={() => setOpen(false)}>
                     Đặt dịch vụ

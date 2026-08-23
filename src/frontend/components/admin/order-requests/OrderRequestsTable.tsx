@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/admin/DataTable";
 import { OrderStatusBadge } from "@/components/admin/OrderStatusBadge";
 import { OrderStatusDialog } from "@/components/admin/order-requests/OrderStatusDialog";
+import { formatOrderProductSummary } from "@/lib/utils/orderItems";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { AdminOrderRequestDto } from "@/lib/types/admin";
 
@@ -38,9 +39,9 @@ export function OrderRequestsTable({ orders }: { orders: AdminOrderRequestDto[] 
       ),
     },
     {
-      key: "servicePlan",
-      header: "Gói dịch vụ",
-      cell: (row) => row.servicePlanName ?? "-",
+      key: "product",
+      header: "Sản phẩm",
+      cell: (row) => formatOrderProductSummary(row.items),
     },
     {
       key: "totalPrice",

@@ -33,16 +33,6 @@ public class OrderRequestConfiguration : IEntityTypeConfiguration<OrderRequest>
             .HasForeignKey(x => x.CustomerId)
             .OnDelete(DeleteBehavior.SetNull);
 
-        builder.HasOne(x => x.ServicePlan)
-            .WithMany()
-            .HasForeignKey(x => x.ServicePlanId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasOne(x => x.TldPricing)
-            .WithMany()
-            .HasForeignKey(x => x.TldPricingId)
-            .OnDelete(DeleteBehavior.Restrict);
-
         builder.HasOne(x => x.Promotion)
             .WithMany()
             .HasForeignKey(x => x.PromotionId)

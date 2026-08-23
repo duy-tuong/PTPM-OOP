@@ -1214,8 +1214,11 @@ namespace CloudServiceStore.Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<string>("PendingEmail")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<string>("Phone")
-                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
@@ -1381,6 +1384,9 @@ namespace CloudServiceStore.Infrastructure.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
 
+                    b.Property<Guid?>("CustomerId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -1419,6 +1425,8 @@ namespace CloudServiceStore.Infrastructure.Migrations
                         .HasColumnType("nvarchar(255)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
 
                     b.HasIndex("ReviewedByUserId");
 
@@ -1563,17 +1571,14 @@ namespace CloudServiceStore.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<int?>("PeriodMonths")
-                        .HasColumnType("int");
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<int?>("PromotionId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ServicePlanId")
-                        .HasColumnType("int");
+                    b.Property<DateTime?>("ProvisioningStartedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Source")
                         .HasMaxLength(50)
@@ -1587,9 +1592,6 @@ namespace CloudServiceStore.Infrastructure.Migrations
                     b.Property<string>("TaxCode")
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
-
-                    b.Property<int?>("TldPricingId")
-                        .HasColumnType("int");
 
                     b.Property<decimal>("TotalPrice")
                         .HasColumnType("decimal(18,2)");
@@ -1608,13 +1610,79 @@ namespace CloudServiceStore.Infrastructure.Migrations
 
                     b.HasIndex("PromotionId");
 
+                    b.HasIndex("Status", "CreatedAt");
+
+                    b.ToTable("OrderRequests", (string)null);
+                });
+
+            modelBuilder.Entity("CloudServiceStore.Domain.Entities.Sales.OrderRequestItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("DomainName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("LineTotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("OrderRequestId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PeriodMonths")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ProvisionedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ProvisionedIpAddress")
+                        .HasMaxLength(45)
+                        .HasColumnType("nvarchar(45)");
+
+                    b.Property<string>("ProvisionedNameservers")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ProvisionedRootPassword")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("RenewalReminderSentAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("RenewsFromItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ServicePlanId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("TldPricingId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderRequestId");
+
+                    b.HasIndex("RenewsFromItemId");
+
                     b.HasIndex("ServicePlanId");
 
                     b.HasIndex("TldPricingId");
 
-                    b.HasIndex("Status", "CreatedAt");
-
-                    b.ToTable("OrderRequests", (string)null);
+                    b.ToTable("OrderRequestItems", (string)null);
                 });
 
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.System.AuditLog", b =>
@@ -1907,10 +1975,17 @@ namespace CloudServiceStore.Infrastructure.Migrations
 
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.Sales.AffiliateApplication", b =>
                 {
+                    b.HasOne("CloudServiceStore.Domain.Entities.Identity.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("CloudServiceStore.Domain.Entities.Identity.AppUser", "ReviewedByUser")
                         .WithMany()
                         .HasForeignKey("ReviewedByUserId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Customer");
 
                     b.Navigation("ReviewedByUser");
                 });
@@ -1956,6 +2031,26 @@ namespace CloudServiceStore.Infrastructure.Migrations
                         .HasForeignKey("PromotionId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.Navigation("AssignedToUser");
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Promotion");
+                });
+
+            modelBuilder.Entity("CloudServiceStore.Domain.Entities.Sales.OrderRequestItem", b =>
+                {
+                    b.HasOne("CloudServiceStore.Domain.Entities.Sales.OrderRequest", "OrderRequest")
+                        .WithMany("Items")
+                        .HasForeignKey("OrderRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CloudServiceStore.Domain.Entities.Sales.OrderRequestItem", "RenewsFromItem")
+                        .WithMany()
+                        .HasForeignKey("RenewsFromItemId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("CloudServiceStore.Domain.Entities.Catalog.ServicePlan", "ServicePlan")
                         .WithMany()
                         .HasForeignKey("ServicePlanId")
@@ -1966,11 +2061,9 @@ namespace CloudServiceStore.Infrastructure.Migrations
                         .HasForeignKey("TldPricingId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.Navigation("AssignedToUser");
+                    b.Navigation("OrderRequest");
 
-                    b.Navigation("Customer");
-
-                    b.Navigation("Promotion");
+                    b.Navigation("RenewsFromItem");
 
                     b.Navigation("ServicePlan");
 
@@ -2046,6 +2139,11 @@ namespace CloudServiceStore.Infrastructure.Migrations
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.Marketing.Promotion", b =>
                 {
                     b.Navigation("Scopes");
+                });
+
+            modelBuilder.Entity("CloudServiceStore.Domain.Entities.Sales.OrderRequest", b =>
+                {
+                    b.Navigation("Items");
                 });
 #pragma warning restore 612, 618
         }

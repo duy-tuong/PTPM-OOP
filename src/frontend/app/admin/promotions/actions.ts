@@ -19,6 +19,7 @@ export async function createPromotionAction(dto: CreatePromotionDto): Promise<Ac
   try {
     const data = await createAdminPromotion(getApiUrl(), dto, await getToken());
     revalidatePath("/admin/promotions");
+    revalidatePath("/", "layout");
     return { success: true, data };
   } catch (error) {
     if (error instanceof ApiError) return { success: false, message: error.message };
@@ -33,6 +34,7 @@ export async function updatePromotionAction(
   try {
     const data = await updateAdminPromotion(getApiUrl(), id, dto, await getToken());
     revalidatePath("/admin/promotions");
+    revalidatePath("/", "layout");
     return { success: true, data };
   } catch (error) {
     if (error instanceof ApiError) return { success: false, message: error.message };
@@ -44,6 +46,7 @@ export async function deletePromotionAction(id: number): Promise<{ success: bool
   try {
     await deleteAdminPromotion(getApiUrl(), id, await getToken());
     revalidatePath("/admin/promotions");
+    revalidatePath("/", "layout");
     return { success: true };
   } catch (error) {
     if (error instanceof ApiError) return { success: false, message: error.message };

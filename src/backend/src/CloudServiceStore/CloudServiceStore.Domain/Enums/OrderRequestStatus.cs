@@ -5,6 +5,8 @@ public enum OrderRequestStatus
     New = 1,
     Contacted = 2,
     Confirmed = 3,
-    Cancelled = 4,
-    Completed = 5
+    Paid = 4,
+    Provisioning = 5,
+    Cancelled = 6,
+    Completed = 7
 }

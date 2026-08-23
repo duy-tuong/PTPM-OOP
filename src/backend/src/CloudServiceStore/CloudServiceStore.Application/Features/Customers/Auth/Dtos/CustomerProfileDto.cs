@@ -12,5 +12,7 @@ public class CustomerProfileDto
     public string CustomerType { get; set; } = string.Empty;
     public string? CompanyName { get; set; }
     public string? TaxCode { get; set; }
+    public bool IsEmailVerified { get; set; }
     public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 }

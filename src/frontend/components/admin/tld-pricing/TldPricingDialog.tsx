@@ -43,6 +43,9 @@ const NO_CATEGORY_VALUE = "none";
 
 interface FormErrors {
   tld?: string;
+  registerPrice?: string;
+  renewPrice?: string;
+  transferPrice?: string;
 }
 
 export function TldPricingDialog({ open, onOpenChange, item, categories }: TldPricingDialogProps) {
@@ -76,6 +79,9 @@ export function TldPricingDialog({ open, onOpenChange, item, categories }: TldPr
     const nextErrors: FormErrors = {};
     if (!form.tld.trim()) nextErrors.tld = "Vui lòng nhập đuôi tên miền";
     else if (form.tld.length > 20) nextErrors.tld = "Tối đa 20 ký tự";
+    if (!Number.isFinite(form.registerPrice) || form.registerPrice < 0) nextErrors.registerPrice = "Không được âm";
+    if (!Number.isFinite(form.renewPrice) || form.renewPrice < 0) nextErrors.renewPrice = "Không được âm";
+    if (!Number.isFinite(form.transferPrice) || form.transferPrice < 0) nextErrors.transferPrice = "Không được âm";
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   }
@@ -151,6 +157,10 @@ export function TldPricingDialog({ open, onOpenChange, item, categories }: TldPr
             <Field>
               <Label htmlFor="tld-category">Danh mục dịch vụ</Label>
               <Select
+                items={[
+                  { value: NO_CATEGORY_VALUE, label: "Không thuộc danh mục" },
+                  ...categories.map((category) => ({ value: String(category.id), label: category.name })),
+                ]}
                 value={form.serviceCategoryId ? String(form.serviceCategoryId) : NO_CATEGORY_VALUE}
                 onValueChange={(value) =>
                   setForm((prev) => ({
@@ -182,7 +192,9 @@ export function TldPricingDialog({ open, onOpenChange, item, categories }: TldPr
                   min={0}
                   value={form.registerPrice}
                   onChange={(e) => setForm((prev) => ({ ...prev, registerPrice: Number(e.target.value) }))}
+                  aria-invalid={!!errors.registerPrice}
                 />
+                <FieldError errors={errors.registerPrice ? [{ message: errors.registerPrice }] : undefined} />
               </Field>
 
               <Field>
@@ -193,7 +205,9 @@ export function TldPricingDialog({ open, onOpenChange, item, categories }: TldPr
                   min={0}
                   value={form.renewPrice}
                   onChange={(e) => setForm((prev) => ({ ...prev, renewPrice: Number(e.target.value) }))}
+                  aria-invalid={!!errors.renewPrice}
                 />
+                <FieldError errors={errors.renewPrice ? [{ message: errors.renewPrice }] : undefined} />
               </Field>
 
               <Field>
@@ -204,7 +218,9 @@ export function TldPricingDialog({ open, onOpenChange, item, categories }: TldPr
                   min={0}
                   value={form.transferPrice}
                   onChange={(e) => setForm((prev) => ({ ...prev, transferPrice: Number(e.target.value) }))}
+                  aria-invalid={!!errors.transferPrice}
                 />
+                <FieldError errors={errors.transferPrice ? [{ message: errors.transferPrice }] : undefined} />
               </Field>
             </div>
 

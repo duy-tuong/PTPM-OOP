@@ -10,6 +10,7 @@ import { Field, FieldGroup } from "@/components/ui/field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { updateOrderRequestStatusAction } from "@/app/admin/order-requests/actions";
 import { OrderRequestStatus, ORDER_REQUEST_STATUS_LABELS } from "@/lib/types/enums";
+import { formatOrderItemLabel } from "@/lib/utils/orderItems";
 import { formatCurrency } from "@/lib/utils";
 import type { AdminOrderRequestDto } from "@/lib/types/admin";
 
@@ -19,8 +20,9 @@ interface OrderStatusDialogProps {
   order: AdminOrderRequestDto | null;
 }
 
-// Backend không ràng buộc chuyển trạng thái (đã verify Update*StatusAsync gán thẳng, không có
-// state-machine) - cho phép chọn tự do cả 5 giá trị, không disable option nào.
+// Cho chọn tự do cả 5 giá trị (không disable option nào) - backend tự chặn transition không hợp lệ
+// (đơn đã Hoàn tất/Đã huỷ không cho chuyển tiếp, xem AdminOrderRequestService.UpdateStatusAsync) và trả
+// lỗi rõ ràng qua toast nếu chọn sai, không cần UI đoán trước state-machine.
 export function OrderStatusDialog({ open, onOpenChange, order }: OrderStatusDialogProps) {
   const router = useRouter();
   const [newStatus, setNewStatus] = useState<OrderRequestStatus>(OrderRequestStatus.New);
@@ -72,9 +74,15 @@ export function OrderStatusDialog({ open, onOpenChange, order }: OrderStatusDial
               <span className="text-zinc-500">Khách hàng</span>
               <span className="font-medium text-zinc-900">{order.customerName}</span>
             </div>
-            <div className="mt-1 flex justify-between gap-4">
-              <span className="text-zinc-500">Gói dịch vụ</span>
-              <span className="font-medium text-zinc-900">{order.servicePlanName ?? "-"}</span>
+            <div className="mt-1 flex flex-col gap-1">
+              <span className="text-zinc-500">Sản phẩm</span>
+              <ul className="flex flex-col gap-0.5">
+                {order.items.map((item) => (
+                  <li key={item.id} className="font-medium text-zinc-900">
+                    {formatOrderItemLabel(item)}
+                  </li>
+                ))}
+              </ul>
             </div>
             <div className="mt-1 flex justify-between gap-4">
               <span className="text-zinc-500">Tổng tiền</span>
@@ -84,7 +92,14 @@ export function OrderStatusDialog({ open, onOpenChange, order }: OrderStatusDial
 
           <Field>
             <Label htmlFor="order-new-status">Trạng thái mới</Label>
-            <Select value={String(newStatus)} onValueChange={(value) => setNewStatus(Number(value) as OrderRequestStatus)}>
+            <Select
+              items={Object.entries(ORDER_REQUEST_STATUS_LABELS).map(([key, label]) => ({
+                value: String(OrderRequestStatus[key as keyof typeof OrderRequestStatus]),
+                label,
+              }))}
+              value={String(newStatus)}
+              onValueChange={(value) => setNewStatus(Number(value) as OrderRequestStatus)}
+            >
               <SelectTrigger id="order-new-status" className="w-full">
                 <SelectValue />
               </SelectTrigger>

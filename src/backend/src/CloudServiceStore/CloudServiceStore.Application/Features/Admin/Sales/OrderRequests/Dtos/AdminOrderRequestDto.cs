@@ -1,3 +1,5 @@
+using CloudServiceStore.Application.Features.Sales.OrderRequests.Dtos;
+
 namespace CloudServiceStore.Application.Features.Admin.Sales.OrderRequests.Dtos;
 
 public class AdminOrderRequestDto
@@ -9,10 +11,7 @@ public class AdminOrderRequestDto
     public string CustomerEmail { get; init; } = string.Empty;
     public string CustomerPhone { get; init; } = string.Empty;
     public string? CompanyName { get; init; }
-    public int? ServicePlanId { get; init; }
-    public string? ServicePlanName { get; init; }
-    public int? PeriodMonths { get; init; }
-    public int Quantity { get; init; }
+    public List<OrderRequestItemDto> Items { get; init; } = new();
     public decimal TotalPrice { get; init; }
     public string? Note { get; init; }
     public string Status { get; init; } = string.Empty;

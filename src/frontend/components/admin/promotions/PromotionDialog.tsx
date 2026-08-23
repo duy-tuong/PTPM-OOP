@@ -59,6 +59,7 @@ const EMPTY_FORM: FormState = {
 interface FormErrors {
   code?: string;
   name?: string;
+  description?: string;
   discountValue?: string;
   dateRange?: string;
   scopes?: string;
@@ -149,6 +150,8 @@ export function PromotionDialog({ open, onOpenChange, promotion, categories, pla
     if (!form.code.trim()) nextErrors.code = "Vui lòng nhập mã khuyến mãi";
     else if (form.code.length > 50) nextErrors.code = "Mã tối đa 50 ký tự";
     if (!form.name.trim()) nextErrors.name = "Vui lòng nhập tên chương trình";
+    else if (form.name.length > 200) nextErrors.name = "Tên tối đa 200 ký tự";
+    if (form.description.length > 1000) nextErrors.description = "Mô tả tối đa 1000 ký tự";
     if (form.discountValue <= 0) nextErrors.discountValue = "Giá trị giảm phải lớn hơn 0";
     if (!form.startDate || !form.endDate) {
       nextErrors.dateRange = "Vui lòng chọn đầy đủ ngày bắt đầu và kết thúc";
@@ -259,13 +262,19 @@ export function PromotionDialog({ open, onOpenChange, promotion, categories, pla
                 id="promotion-description"
                 value={form.description}
                 onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
+                aria-invalid={!!errors.description}
               />
+              <FieldError errors={errors.description ? [{ message: errors.description }] : undefined} />
             </Field>
 
             <div className="grid grid-cols-2 gap-3">
               <Field>
                 <Label htmlFor="promotion-discount-type">Loại giảm giá</Label>
                 <Select
+                  items={[
+                    { value: String(DiscountType.Percentage), label: "Giảm theo %" },
+                    { value: String(DiscountType.FixedAmount), label: "Giảm số tiền cố định" },
+                  ]}
                   value={String(form.discountType)}
                   onValueChange={(value) =>
                     setForm((prev) => ({ ...prev, discountType: Number(value) as DiscountType }))
@@ -399,6 +408,10 @@ export function PromotionDialog({ open, onOpenChange, promotion, categories, pla
                     className="grid grid-cols-1 gap-2 rounded-2xl border border-zinc-200/60 bg-zinc-50/50 p-3 sm:grid-cols-[1fr_1fr_auto] sm:items-center"
                   >
                     <Select
+                      items={Object.entries(SCOPE_TYPE_LABELS).map(([key, label]) => ({
+                        value: String(ScopeType[key as keyof typeof ScopeType]),
+                        label,
+                      }))}
                       value={String(scope.scopeType)}
                       onValueChange={(value) => updateScope(index, { scopeType: Number(value) as ScopeType })}
                     >
@@ -416,6 +429,7 @@ export function PromotionDialog({ open, onOpenChange, promotion, categories, pla
 
                     {scope.scopeType === ScopeType.Category && (
                       <Select
+                        items={categories.map((category) => ({ value: String(category.id), label: category.name }))}
                         value={scope.serviceCategoryId ? String(scope.serviceCategoryId) : ""}
                         onValueChange={(value) => updateScope(index, { serviceCategoryId: Number(value) })}
                       >
@@ -434,6 +448,7 @@ export function PromotionDialog({ open, onOpenChange, promotion, categories, pla
 
                     {scope.scopeType === ScopeType.Plan && (
                       <Select
+                        items={plans.map((plan) => ({ value: String(plan.id), label: plan.name }))}
                         value={scope.servicePlanId ? String(scope.servicePlanId) : ""}
                         onValueChange={(value) => updateScope(index, { servicePlanId: Number(value) })}
                       >

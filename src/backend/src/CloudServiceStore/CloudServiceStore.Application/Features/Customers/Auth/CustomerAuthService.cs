@@ -18,12 +18,21 @@ public class CustomerAuthService : ICustomerAuthService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenService _jwtTokenService;
+    private readonly IEmailService _emailService;
+    private readonly IAppSettings _appSettings;
 
-    public CustomerAuthService(IUnitOfWork unitOfWork, IPasswordHasher passwordHasher, IJwtTokenService jwtTokenService)
+    public CustomerAuthService(
+        IUnitOfWork unitOfWork,
+        IPasswordHasher passwordHasher,
+        IJwtTokenService jwtTokenService,
+        IEmailService emailService,
+        IAppSettings appSettings)
     {
         _unitOfWork = unitOfWork;
         _passwordHasher = passwordHasher;
         _jwtTokenService = jwtTokenService;
+        _emailService = emailService;
+        _appSettings = appSettings;
     }
 
     public async Task<CustomerAuthResponse> RegisterAsync(CustomerRegisterRequest request, CancellationToken cancellationToken = default)
@@ -158,6 +167,113 @@ public class CustomerAuthService : ICustomerAuthService
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task RequestEmailChangeAsync(Guid customerId, RequestEmailChangeDto dto, CancellationToken cancellationToken = default)
+    {
+        var repository = _unitOfWork.Repository<Customer, Guid>();
+        var customer = await repository.GetByIdAsync(customerId, cancellationToken)
+            ?? throw new UnauthorizedAccessException("Người dùng không tồn tại.");
+
+        var emailExists = await repository.Query()
+            .AnyAsync(c => c.Id != customerId && c.Email == dto.NewEmail, cancellationToken);
+        if (emailExists)
+        {
+            throw new ConflictException("Email đã được sử dụng.");
+        }
+
+        var token = _jwtTokenService.GenerateRefreshToken();
+        customer.PendingEmail = dto.NewEmail;
+        customer.EmailVerificationToken = token;
+        customer.EmailVerificationExpiry = DateTime.UtcNow.AddHours(24);
+        customer.UpdatedAt = DateTime.UtcNow;
+
+        repository.Update(customer);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Route KHÔNG đặt trong app/khach-hang/** - route đó bị proxy.ts (middleware) chặn yêu cầu đăng
+        // nhập, nhưng link xác thực có hạn 24h trong khi access token JWT chỉ sống 30 phút
+        // (Jwt:AccessTokenExpiryMinutes) - khách hoàn toàn có thể click link sau khi token hết hạn,
+        // hoặc từ 1 thiết bị/trình duyệt khác (vd bấm link ngay trong email trên điện thoại).
+        var confirmUrl = $"{_appSettings.PublicBaseUrl}/xac-thuc-email?token={token}";
+        await _emailService.SendAsync(
+            dto.NewEmail,
+            "Xác thực email mới - Cloudverse",
+            $"Nhấn vào link sau để xác thực email mới của bạn: {confirmUrl}",
+            cancellationToken);
+    }
+
+    public async Task ConfirmEmailChangeAsync(string token, CancellationToken cancellationToken = default)
+    {
+        var repository = _unitOfWork.Repository<Customer, Guid>();
+        var now = DateTime.UtcNow;
+        var customer = await repository.Query()
+            .FirstOrDefaultAsync(
+                c => c.EmailVerificationToken == token && c.EmailVerificationExpiry.HasValue && c.EmailVerificationExpiry.Value > now,
+                cancellationToken)
+            ?? throw new UnauthorizedAccessException("Link xác thực không hợp lệ hoặc đã hết hạn.");
+
+        customer.Email = customer.PendingEmail ?? customer.Email;
+        customer.PendingEmail = null;
+        customer.IsEmailVerified = true;
+        customer.EmailVerificationToken = null;
+        customer.EmailVerificationExpiry = null;
+        customer.UpdatedAt = now;
+
+        repository.Update(customer);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken cancellationToken = default)
+    {
+        var repository = _unitOfWork.Repository<Customer, Guid>();
+        var customer = await repository.Query()
+            .FirstOrDefaultAsync(c => c.IsActive && c.Email == request.Email, cancellationToken);
+
+        // Không tồn tại thì im lặng bỏ qua (không throw) - tránh lộ thông tin email nào đã đăng ký,
+        // đúng thông lệ bảo mật chuẩn cho luồng "quên mật khẩu".
+        if (customer is null)
+        {
+            return;
+        }
+
+        var token = _jwtTokenService.GenerateRefreshToken();
+        customer.PasswordResetToken = token;
+        // Ngắn hơn EmailVerificationExpiry (24h) vì đặt lại mật khẩu nhạy cảm hơn xác thực email.
+        customer.PasswordResetExpiry = DateTime.UtcNow.AddHours(1);
+        customer.UpdatedAt = DateTime.UtcNow;
+
+        repository.Update(customer);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        var resetUrl = $"{_appSettings.PublicBaseUrl}/dat-lai-mat-khau?token={token}";
+        await _emailService.SendAsync(
+            customer.Email,
+            "Đặt lại mật khẩu - Cloudverse",
+            $"Nhấn vào link sau để đặt lại mật khẩu (hết hạn sau 1 giờ): {resetUrl}",
+            cancellationToken);
+    }
+
+    public async Task ResetPasswordAsync(ResetPasswordRequest request, CancellationToken cancellationToken = default)
+    {
+        var repository = _unitOfWork.Repository<Customer, Guid>();
+        var now = DateTime.UtcNow;
+        var customer = await repository.Query()
+            .FirstOrDefaultAsync(
+                c => c.PasswordResetToken == request.Token && c.PasswordResetExpiry.HasValue && c.PasswordResetExpiry.Value > now,
+                cancellationToken)
+            ?? throw new UnauthorizedAccessException("Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.");
+
+        customer.PasswordHash = _passwordHasher.Hash(request.NewPassword);
+        customer.PasswordResetToken = null;
+        customer.PasswordResetExpiry = null;
+        // Buộc đăng nhập lại ở mọi thiết bị sau khi đặt lại mật khẩu - mirror ChangePasswordAsync.
+        customer.RefreshToken = null;
+        customer.RefreshTokenExpiryTime = null;
+        customer.UpdatedAt = now;
+
+        repository.Update(customer);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
     private static CustomerProfileDto ToProfileDto(Customer customer) => new()
     {
         Id = customer.Id,
@@ -167,7 +283,9 @@ public class CustomerAuthService : ICustomerAuthService
         CustomerType = customer.CustomerType.ToString(),
         CompanyName = customer.CompanyName,
         TaxCode = customer.TaxCode,
-        CreatedAt = customer.CreatedAt
+        IsEmailVerified = customer.IsEmailVerified,
+        CreatedAt = customer.CreatedAt,
+        UpdatedAt = customer.UpdatedAt
     };
 
     // Chỉ mutate field trên entity đang được EF Core track (Added ở RegisterAsync, Unchanged ở

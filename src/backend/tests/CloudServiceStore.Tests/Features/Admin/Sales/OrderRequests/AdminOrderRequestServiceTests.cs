@@ -3,9 +3,11 @@ using CloudServiceStore.Application.Common.Interfaces;
 using CloudServiceStore.Application.Common.Services;
 using CloudServiceStore.Application.Features.Admin.Sales.OrderRequests;
 using CloudServiceStore.Application.Features.Admin.Sales.OrderRequests.Dtos;
+using CloudServiceStore.Application.Features.Sales.OrderRequests;
 using CloudServiceStore.Domain.Entities.Sales;
 using CloudServiceStore.Domain.Enums;
 using CloudServiceStore.Infrastructure.Persistence;
+using CloudServiceStore.Infrastructure.Services;
 using CloudServiceStore.Tests.TestHelpers;
 using Moq;
 
@@ -25,11 +27,11 @@ public class AdminOrderRequestServiceTests
             CustomerName = "Test Customer",
             CustomerEmail = "test@example.com",
             CustomerPhone = "0900000000",
-            Quantity = 1,
             TotalPrice = 100000m,
             Status = status,
             AssignedToUserId = assignedToUserId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            Items = { new OrderRequestItem { Quantity = 1, UnitPrice = 100000m, LineTotal = 100000m } }
         };
         context.OrderRequests.Add(order);
         await context.SaveChangesAsync();
@@ -38,8 +40,10 @@ public class AdminOrderRequestServiceTests
 
     private static AdminOrderRequestService CreateSut(AppDbContext context, Mock<IOrderStatusObserver> observerMock)
     {
+        var unitOfWork = TestDbContextFactory.CreateUnitOfWork(context);
         var notifier = new OrderStatusNotifier([observerMock.Object]);
-        return new AdminOrderRequestService(TestDbContextFactory.CreateUnitOfWork(context), notifier);
+        var transitionService = new OrderRequestStatusTransitionService(unitOfWork, notifier, new FakeProvisioningGenerator());
+        return new AdminOrderRequestService(unitOfWork, transitionService);
     }
 
     [Fact]
@@ -94,5 +98,39 @@ public class AdminOrderRequestServiceTests
 
         var persisted = context.OrderRequests.Single(o => o.Id == order.Id);
         Assert.Equal(existingAssignee, persisted.AssignedToUserId);
+    }
+
+    [Fact]
+    public async Task UpdateStatusAsync_OrderAlreadyCompleted_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var order = await SeedOrderRequestAsync(context, status: OrderRequestStatus.Completed);
+        var sut = CreateSut(context, new Mock<IOrderStatusObserver>());
+
+        await Assert.ThrowsAsync<ValidationException>(() =>
+            sut.UpdateStatusAsync(order.Id, new UpdateOrderRequestStatusDto { NewStatus = OrderRequestStatus.New }, Guid.NewGuid()));
+    }
+
+    [Fact]
+    public async Task UpdateStatusAsync_OrderAlreadyCancelled_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var order = await SeedOrderRequestAsync(context, status: OrderRequestStatus.Cancelled);
+        var sut = CreateSut(context, new Mock<IOrderStatusObserver>());
+
+        await Assert.ThrowsAsync<ValidationException>(() =>
+            sut.UpdateStatusAsync(order.Id, new UpdateOrderRequestStatusDto { NewStatus = OrderRequestStatus.Confirmed }, Guid.NewGuid()));
+    }
+
+    [Fact]
+    public async Task UpdateStatusAsync_SameTerminalStatus_Succeeds()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var order = await SeedOrderRequestAsync(context, status: OrderRequestStatus.Completed);
+        var sut = CreateSut(context, new Mock<IOrderStatusObserver>());
+
+        var result = await sut.UpdateStatusAsync(order.Id, new UpdateOrderRequestStatusDto { NewStatus = OrderRequestStatus.Completed }, Guid.NewGuid());
+
+        Assert.Equal(nameof(OrderRequestStatus.Completed), result.Status);
     }
 }

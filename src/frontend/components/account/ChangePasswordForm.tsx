@@ -3,9 +3,11 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Field, FieldError, FieldGroup } from "@/components/ui/field";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { notifyCustomerSessionChanged } from "@/lib/auth/customerSessionClient";
 
@@ -78,48 +80,75 @@ export function ChangePasswordForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="flex max-w-lg flex-col gap-6">
-      <FieldGroup>
-        <Field>
-          <Label htmlFor="change-current-password">Mật khẩu hiện tại</Label>
-          <PasswordInput
-            id="change-current-password"
-            value={currentPassword}
-            onChange={setCurrentPassword}
-            autoComplete="current-password"
-            aria-invalid={!!errors.currentPassword}
-          />
-          <FieldError errors={errors.currentPassword ? [{ message: errors.currentPassword }] : undefined} />
-        </Field>
+    <Card className="shadow-none border-border/50 overflow-hidden bg-card">
+      <CardHeader className="border-b border-border/40 bg-muted/10 pb-5">
+        <CardTitle className="text-xl font-bold">Đổi mật khẩu</CardTitle>
+        <CardDescription>
+          Đảm bảo tài khoản của bạn đang sử dụng mật khẩu dài và an toàn
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="pt-6">
+        <form onSubmit={handleSubmit} noValidate className="flex flex-col">
+          <div className="mb-8">
+            <h3 className="text-[16px] font-semibold text-foreground">Bảo mật tài khoản</h3>
+            <p className="text-[13px] text-muted-foreground mt-1 mb-5">Đổi mật khẩu định kỳ giúp tăng cường bảo mật cho tài khoản của bạn.</p>
 
-        <Field>
-          <Label htmlFor="change-new-password">Mật khẩu mới</Label>
-          <PasswordInput
-            id="change-new-password"
-            value={newPassword}
-            onChange={setNewPassword}
-            autoComplete="new-password"
-            aria-invalid={!!errors.newPassword}
-          />
-          <FieldError errors={errors.newPassword ? [{ message: errors.newPassword }] : undefined} />
-        </Field>
+            <FieldGroup className="max-w-xl space-y-5">
+              <Field>
+                <Label htmlFor="change-current-password" className="text-[14px] font-medium">Mật khẩu hiện tại</Label>
+                <PasswordInput
+                  id="change-current-password"
+                  value={currentPassword}
+                  onChange={setCurrentPassword}
+                  autoComplete="current-password"
+                  aria-invalid={!!errors.currentPassword}
+                  className="rounded-[8px] border-border/60 focus-visible:ring-indigo-500/10 focus-visible:border-indigo-500 transition-all shadow-sm bg-background"
+                />
+                <FieldError errors={errors.currentPassword ? [{ message: errors.currentPassword }] : undefined} />
+              </Field>
 
-        <Field>
-          <Label htmlFor="change-confirm-password">Xác nhận mật khẩu mới</Label>
-          <PasswordInput
-            id="change-confirm-password"
-            value={confirmPassword}
-            onChange={setConfirmPassword}
-            autoComplete="new-password"
-            aria-invalid={!!errors.confirmPassword}
-          />
-          <FieldError errors={errors.confirmPassword ? [{ message: errors.confirmPassword }] : undefined} />
-        </Field>
-      </FieldGroup>
+              <Field>
+                <Label htmlFor="change-new-password" className="text-[14px] font-medium">Mật khẩu mới</Label>
+                <PasswordInput
+                  id="change-new-password"
+                  value={newPassword}
+                  onChange={setNewPassword}
+                  autoComplete="new-password"
+                  aria-invalid={!!errors.newPassword}
+                  className="rounded-[8px] border-border/60 focus-visible:ring-indigo-500/10 focus-visible:border-indigo-500 transition-all shadow-sm bg-background"
+                />
+                <FieldError errors={errors.newPassword ? [{ message: errors.newPassword }] : undefined} />
+              </Field>
 
-      <Button type="submit" disabled={isSubmitting} className="h-11 w-fit px-8 text-base font-semibold">
-        {isSubmitting ? "Đang xử lý..." : "Đổi mật khẩu"}
-      </Button>
-    </form>
+              <Field>
+                <Label htmlFor="change-confirm-password" className="text-[14px] font-medium">Xác nhận mật khẩu mới</Label>
+                <PasswordInput
+                  id="change-confirm-password"
+                  value={confirmPassword}
+                  onChange={setConfirmPassword}
+                  autoComplete="new-password"
+                  aria-invalid={!!errors.confirmPassword}
+                  className="rounded-[8px] border-border/60 focus-visible:ring-indigo-500/10 focus-visible:border-indigo-500 transition-all shadow-sm bg-background"
+                />
+                <FieldError errors={errors.confirmPassword ? [{ message: errors.confirmPassword }] : undefined} />
+              </Field>
+            </FieldGroup>
+          </div>
+
+          <div className="border-t border-border/40 pt-6 mt-2 flex justify-end">
+            <Button 
+              type="submit" 
+              disabled={isSubmitting || (!currentPassword && !newPassword && !confirmPassword)} 
+              className={cn(
+                "h-11 px-8 rounded-[8px] font-semibold transition-all w-full sm:w-auto",
+                (currentPassword || newPassword || confirmPassword) ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm" : "bg-muted text-muted-foreground shadow-none"
+              )}
+            >
+              {isSubmitting ? "Đang xử lý..." : "Lưu thay đổi"}
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
