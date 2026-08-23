@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
 import { 
   Server, Database, Shield, Globe, Cloud, Box, Cpu, 
@@ -22,6 +23,30 @@ export function CloudDataFlowBackground() {
   const prefersReducedMotion = useReducedMotion();
   const [lanes, setLanes] = useState<Lane[]>([]);
   const [isClient, setIsClient] = useState(false);
+  const pathname = usePathname();
+
+  const shouldHide = () => {
+    if (!pathname) return false;
+    
+    // 1. Dashboard khách hàng / Admin
+    if (pathname.startsWith('/khach-hang') || pathname.startsWith('/admin')) return true;
+    
+    // 2. Chi tiết tin tức
+    if (pathname.startsWith('/tin-tuc/') && pathname !== '/tin-tuc') return true;
+    
+    // 3. Các trang cần sự tập trung (Bảng giá, Liên hệ, Đăng nhập...) hoặc các trang tĩnh ở Footer
+    const hiddenExactPaths = [
+      '/bang-gia',
+      '/lien-he',
+      '/login',
+      '/register',
+      '/quen-mat-khau',
+      '/gioi-thieu',
+      '/doi-tac'
+    ];
+    
+    return hiddenExactPaths.includes(pathname);
+  };
 
   useEffect(() => {
     setIsClient(true);
@@ -47,7 +72,7 @@ export function CloudDataFlowBackground() {
     setLanes(newLanes);
   }, []);
 
-  if (!isClient) return <div className="fixed inset-0 -z-20 bg-background" />;
+  if (!isClient || shouldHide()) return <div className="fixed inset-0 -z-20 bg-background" />;
 
   return (
     <div className="fixed inset-0 -z-20 overflow-hidden bg-background transition-colors duration-700">

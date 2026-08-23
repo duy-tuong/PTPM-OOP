@@ -15,13 +15,6 @@ export function PartnerHero() {
         }}
       />
       <div className="relative mx-auto max-w-7xl px-4 py-12 text-center sm:px-6 lg:px-8 lg:py-12">
-        <nav aria-label="Breadcrumb" className="mb-6 text-xs text-muted-foreground">
-          <Link href="/" className="hover:text-foreground">
-            Trang chủ
-          </Link>
-          {" / "}
-          <span className="text-foreground">Đối tác</span>
-        </nav>
 
         <h1 className="font-heading text-5xl font-bold text-foreground sm:text-6xl">Trở thành Đối tác</h1>
 
