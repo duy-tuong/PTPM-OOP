@@ -237,9 +237,7 @@
 /* Thẻ kính (glassmorphism) dùng chung xuyên suốt Trang chủ - nền translucent + blur + viền/glow theo
    var(--primary), tự đổi màu theo theme (sky-blue trước đây, cyan ở pivot 2) vì dùng color-mix. */
 .glass-card {
-  background-color: color-mix(in oklch, var(--card) 90%, transparent);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  background-color: var(--card);
   border: 1px solid var(--border);
   box-shadow: 0 8px 40px color-mix(in oklch, var(--foreground) 5%, transparent);
 }
