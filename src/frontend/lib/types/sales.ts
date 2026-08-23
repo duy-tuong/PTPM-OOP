@@ -98,6 +98,11 @@ export interface OrderRequestItemDto {
   quantity: number;
   unitPrice: number;
   lineTotal: number;
+  // Thông tin bàn giao mô phỏng (Tier 3 - "cấp phát tự động") - chỉ có giá trị sau khi đơn Completed.
+  provisionedIpAddress?: string | null;
+  provisionedRootPassword?: string | null;
+  provisionedNameservers?: string | null;
+  provisionedAt?: string | null;
 }
 
 // Khớp Application/Features/Sales/OrderRequests/Dtos/MyOrderRequestDto.cs - giỏ hàng nhiều dòng
@@ -109,6 +114,30 @@ export interface MyOrderRequestDto {
   totalPrice: number;
   status: string;
   createdAt: string;
+}
+
+// Khớp Application/Features/Sales/OrderRequests/Dtos/CreateRenewalOrderRequestDto.cs
+export interface CreateRenewalOrderRequestDto {
+  orderRequestItemId: number;
+  periodMonths?: number;
+  years?: number;
+}
+
+// Khớp Application/Features/Sales/OrderRequests/Dtos/MyServiceItemDto.cs - "Dịch vụ của tôi" (Tier 4,
+// GET /order-requests/mine/services) - khác MyOrderRequestDto: đây là dịch vụ ĐANG SỐNG theo từng
+// dòng, không gộp theo đơn, có ExpiresAt để hiển thị hạn dùng + nút gia hạn.
+export interface MyServiceItemDto {
+  itemId: number;
+  orderCode: string;
+  orderStatus: string;
+  servicePlanName?: string | null;
+  domainName?: string | null;
+  tldName?: string | null;
+  periodMonths?: number | null;
+  expiresAt?: string | null;
+  provisionedIpAddress?: string | null;
+  provisionedRootPassword?: string | null;
+  provisionedNameservers?: string | null;
 }
 
 // Khớp Application/Features/Sales/ConsultationRequests/Dtos/MyConsultationRequestDto.cs

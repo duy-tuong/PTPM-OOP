@@ -4,6 +4,7 @@ using CloudServiceStore.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CloudServiceStore.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260823032611_AddOrderProvisioningFields")]
+    partial class AddOrderProvisioningFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1627,9 +1630,6 @@ namespace CloudServiceStore.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<DateTime?>("ExpiresAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<decimal>("LineTotal")
                         .HasColumnType("decimal(18,2)");
 
@@ -1657,12 +1657,6 @@ namespace CloudServiceStore.Infrastructure.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("RenewalReminderSentAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("RenewsFromItemId")
-                        .HasColumnType("int");
-
                     b.Property<int?>("ServicePlanId")
                         .HasColumnType("int");
 
@@ -1675,8 +1669,6 @@ namespace CloudServiceStore.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("OrderRequestId");
-
-                    b.HasIndex("RenewsFromItemId");
 
                     b.HasIndex("ServicePlanId");
 
@@ -2046,11 +2038,6 @@ namespace CloudServiceStore.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CloudServiceStore.Domain.Entities.Sales.OrderRequestItem", "RenewsFromItem")
-                        .WithMany()
-                        .HasForeignKey("RenewsFromItemId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("CloudServiceStore.Domain.Entities.Catalog.ServicePlan", "ServicePlan")
                         .WithMany()
                         .HasForeignKey("ServicePlanId")
@@ -2062,8 +2049,6 @@ namespace CloudServiceStore.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("OrderRequest");
-
-                    b.Navigation("RenewsFromItem");
 
                     b.Navigation("ServicePlan");
 

@@ -68,7 +68,7 @@ export function OrderRequestForm({
           <Label htmlFor="order-plan">Gói dịch vụ</Label>
           <Select
             items={plans.map((plan) => ({ value: String(plan.id), label: `${plan.categoryName} - ${plan.name}` }))}
-            value={servicePlanId ? String(servicePlanId) : undefined}
+            value={servicePlanId ? String(servicePlanId) : null}
             onValueChange={handlePlanChange}
           >
             <SelectTrigger id="order-plan" className="w-full">
@@ -93,7 +93,7 @@ export function OrderRequestForm({
                 value: String(price.periodMonths),
                 label: `${price.periodMonths} tháng - ${formatCurrency(price.promotionalPrice ?? price.price)}`,
               }))}
-              value={periodMonths ? String(periodMonths) : undefined}
+              value={periodMonths ? String(periodMonths) : null}
               onValueChange={(value) => setPeriodMonths(value ? Number(value) : null)}
             >
               <SelectTrigger id="order-period" className="w-full">

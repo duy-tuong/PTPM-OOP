@@ -8,6 +8,7 @@ const LINKS = [
   { href: "/khach-hang", label: "Hồ sơ" },
   { href: "/khach-hang/doi-mat-khau", label: "Đổi mật khẩu" },
   { href: "/khach-hang/don-hang", label: "Đơn hàng của tôi" },
+  { href: "/khach-hang/dich-vu", label: "Dịch vụ của tôi" },
   { href: "/khach-hang/yeu-cau-tu-van", label: "Yêu cầu tư vấn của tôi" },
 ];
 

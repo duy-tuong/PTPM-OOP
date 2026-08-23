@@ -1,9 +1,12 @@
 using CloudServiceStore.Application.Common.Exceptions;
 using CloudServiceStore.Application.Common.Interfaces;
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Sales.OrderRequests;
 using CloudServiceStore.Application.Features.Sales.OrderRequests.Dtos;
 using CloudServiceStore.Domain.Entities.Catalog;
+using CloudServiceStore.Domain.Entities.Identity;
 using CloudServiceStore.Domain.Entities.Marketing;
+using CloudServiceStore.Domain.Entities.Sales;
 using CloudServiceStore.Domain.Enums;
 using CloudServiceStore.Infrastructure.Persistence;
 using CloudServiceStore.Tests.TestHelpers;
@@ -98,6 +101,49 @@ public class OrderRequestServiceTests
         context.TldPricings.Add(tldPricing);
         await context.SaveChangesAsync();
         return tldPricing;
+    }
+
+    // Role riêng ID tự chọn (khác HasData Id 1-3) - cùng lý do các seed helper khác trong file này
+    // không phụ thuộc HasData: test không nên phụ thuộc việc InMemory provider có tự nạp seed data hay không.
+    private static async Task<Customer> SeedCustomerAsync(AppDbContext context, int roleId, string email = "renewal-customer@example.com")
+    {
+        context.AppRoles.Add(new AppRole { Id = roleId, Name = $"Test Role {roleId}", Description = "Test" });
+        var customer = new Customer
+        {
+            Id = Guid.NewGuid(),
+            RoleId = roleId,
+            Email = email,
+            PasswordHash = "hash",
+            FullName = "Renewal Customer",
+            Phone = "0900000099",
+            CustomerType = CustomerType.Individual
+        };
+        context.Customers.Add(customer);
+        await context.SaveChangesAsync();
+        return customer;
+    }
+
+    // Kịch bản gia hạn: 1 khách hàng thật + 1 item ServicePlan "đang sống" (đơn riêng, đã Completed).
+    private static async Task<(Customer Customer, OrderRequestItem OriginalItem)> SeedRenewalOriginalAsync(
+        AppDbContext context, ServicePlan plan, int roleId = 901)
+    {
+        var customer = await SeedCustomerAsync(context, roleId);
+        var originalOrder = new OrderRequest
+        {
+            OrderCode = "ORD-ORIGINAL-TEST",
+            CustomerId = customer.Id,
+            CustomerType = CustomerType.Individual,
+            CustomerName = customer.FullName,
+            CustomerEmail = customer.Email,
+            CustomerPhone = customer.Phone!,
+            TotalPrice = 100000m,
+            Status = OrderRequestStatus.Completed,
+            CreatedAt = DateTime.UtcNow,
+            Items = { new OrderRequestItem { ServicePlanId = plan.Id, PeriodMonths = 1, Quantity = 1, UnitPrice = 100000m, LineTotal = 100000m } }
+        };
+        context.OrderRequests.Add(originalOrder);
+        await context.SaveChangesAsync();
+        return (customer, originalOrder.Items.Single());
     }
 
     private static CreateOrderRequestDto BuildDomainDto(int tldPricingId, string domainName, int quantity) => new()
@@ -532,5 +578,224 @@ public class OrderRequestServiceTests
         var sut = CreateSut(context);
 
         await Assert.ThrowsAsync<NotFoundException>(() => sut.GetByCodeAsync("ORD-DOES-NOT-EXIST"));
+    }
+
+    [Fact]
+    public async Task CreateRenewalAsync_ItemNotFound_ThrowsNotFoundException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var sut = CreateSut(context);
+
+        await Assert.ThrowsAsync<NotFoundException>(() =>
+            sut.CreateRenewalAsync(new CreateRenewalOrderRequestDto { OrderRequestItemId = 9999 }, Guid.NewGuid()));
+    }
+
+    [Fact]
+    public async Task CreateRenewalAsync_ItemBelongsToDifferentCustomer_ThrowsNotFoundException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var (_, originalItem) = await SeedRenewalOriginalAsync(context, plan, roleId: 901);
+        var otherCustomer = await SeedCustomerAsync(context, roleId: 902, email: "other@example.com");
+        var sut = CreateSut(context);
+
+        await Assert.ThrowsAsync<NotFoundException>(() =>
+            sut.CreateRenewalAsync(new CreateRenewalOrderRequestDto { OrderRequestItemId = originalItem.Id }, otherCustomer.Id));
+    }
+
+    [Fact]
+    public async Task CreateRenewalAsync_ServicePlanItem_CreatesOrderWithRenewsFromItemIdAndSourceRenewal()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var (customer, originalItem) = await SeedRenewalOriginalAsync(context, plan);
+        var sut = CreateSut(context);
+
+        var result = await sut.CreateRenewalAsync(new CreateRenewalOrderRequestDto { OrderRequestItemId = originalItem.Id, PeriodMonths = 1 }, customer.Id);
+
+        var savedOrder = context.OrderRequests.Single(o => o.Id == result.Id);
+        var savedItem = Assert.Single(savedOrder.Items);
+        Assert.Equal(originalItem.Id, savedItem.RenewsFromItemId);
+        Assert.Equal("renewal", savedOrder.Source);
+    }
+
+    [Fact]
+    public async Task CreateRenewalAsync_TldItem_UsesRenewPriceNotRegisterPrice()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var tldPricing = await SeedTldPricingAsync(context); // RegisterPrice=250000, RenewPrice=300000
+        var customer = await SeedCustomerAsync(context, roleId: 901);
+        var originalOrder = new OrderRequest
+        {
+            OrderCode = "ORD-ORIGINAL-TLD",
+            CustomerId = customer.Id,
+            CustomerType = CustomerType.Individual,
+            CustomerName = customer.FullName,
+            CustomerEmail = customer.Email,
+            CustomerPhone = customer.Phone!,
+            TotalPrice = 250000m,
+            Status = OrderRequestStatus.Completed,
+            CreatedAt = DateTime.UtcNow,
+            Items = { new OrderRequestItem { TldPricingId = tldPricing.Id, DomainName = "myshop", Quantity = 1, UnitPrice = 250000m, LineTotal = 250000m } }
+        };
+        context.OrderRequests.Add(originalOrder);
+        await context.SaveChangesAsync();
+        var originalItem = originalOrder.Items.Single();
+        var sut = CreateSut(context);
+
+        var result = await sut.CreateRenewalAsync(new CreateRenewalOrderRequestDto { OrderRequestItemId = originalItem.Id, Years = 1 }, customer.Id);
+
+        Assert.Equal(300000m, result.TotalPrice);
+    }
+
+    [Fact]
+    public async Task CreateRenewalAsync_NoPeriodSpecified_DefaultsToOriginalPeriod()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var (customer, originalItem) = await SeedRenewalOriginalAsync(context, plan); // original PeriodMonths = 1 -> giá 100000
+
+        var sut = CreateSut(context);
+
+        var result = await sut.CreateRenewalAsync(new CreateRenewalOrderRequestDto { OrderRequestItemId = originalItem.Id }, customer.Id);
+
+        Assert.Equal(100000m, result.TotalPrice);
+    }
+
+    [Fact]
+    public async Task CreateRenewalAsync_CopiesCustomerInfoFromProfile()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var (customer, originalItem) = await SeedRenewalOriginalAsync(context, plan);
+        var sut = CreateSut(context);
+
+        var result = await sut.CreateRenewalAsync(new CreateRenewalOrderRequestDto { OrderRequestItemId = originalItem.Id }, customer.Id);
+
+        var savedOrder = context.OrderRequests.Single(o => o.Id == result.Id);
+        Assert.Equal(customer.FullName, savedOrder.CustomerName);
+        Assert.Equal(customer.Email, savedOrder.CustomerEmail);
+        Assert.Equal(customer.Phone, savedOrder.CustomerPhone);
+    }
+
+    [Fact]
+    public async Task CreateRenewalAsync_RenewalItemItself_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var (customer, originalItem) = await SeedRenewalOriginalAsync(context, plan);
+        var renewalReceiptOrder = new OrderRequest
+        {
+            OrderCode = "ORD-RENEWAL-RECEIPT",
+            CustomerId = customer.Id,
+            CustomerType = CustomerType.Individual,
+            CustomerName = customer.FullName,
+            CustomerEmail = customer.Email,
+            CustomerPhone = customer.Phone!,
+            TotalPrice = 100000m,
+            Status = OrderRequestStatus.Completed,
+            CreatedAt = DateTime.UtcNow,
+            Items = { new OrderRequestItem { ServicePlanId = plan.Id, PeriodMonths = 1, Quantity = 1, UnitPrice = 100000m, LineTotal = 100000m, RenewsFromItemId = originalItem.Id } }
+        };
+        context.OrderRequests.Add(renewalReceiptOrder);
+        await context.SaveChangesAsync();
+        var receiptItem = renewalReceiptOrder.Items.Single();
+        var sut = CreateSut(context);
+
+        await Assert.ThrowsAsync<ValidationException>(() =>
+            sut.CreateRenewalAsync(new CreateRenewalOrderRequestDto { OrderRequestItemId = receiptItem.Id }, customer.Id));
+    }
+
+    [Fact]
+    public async Task GetMyServicesAsync_ExcludesOtherCustomersAndRenewalReceiptItems()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var (customer, originalItem) = await SeedRenewalOriginalAsync(context, plan);
+        var (_, otherCustomerItem) = await SeedRenewalOriginalAsync(context, plan, roleId: 902);
+
+        // Biên lai gia hạn của chính customer - KHÔNG được xuất hiện trong "Dịch vụ của tôi".
+        var renewalReceiptOrder = new OrderRequest
+        {
+            OrderCode = "ORD-RENEWAL-RECEIPT-SVC",
+            CustomerId = customer.Id,
+            CustomerType = CustomerType.Individual,
+            CustomerName = customer.FullName,
+            CustomerEmail = customer.Email,
+            CustomerPhone = customer.Phone!,
+            TotalPrice = 100000m,
+            Status = OrderRequestStatus.Completed,
+            CreatedAt = DateTime.UtcNow,
+            Items = { new OrderRequestItem { ServicePlanId = plan.Id, PeriodMonths = 1, Quantity = 1, UnitPrice = 100000m, LineTotal = 100000m, RenewsFromItemId = originalItem.Id } }
+        };
+        context.OrderRequests.Add(renewalReceiptOrder);
+        await context.SaveChangesAsync();
+
+        var sut = CreateSut(context);
+
+        var result = await sut.GetMyServicesAsync(customer.Id, new PaginationParams());
+
+        var item = Assert.Single(result.Items);
+        Assert.Equal(originalItem.Id, item.ItemId);
+        Assert.DoesNotContain(result.Items, i => i.ItemId == otherCustomerItem.Id);
+    }
+
+    [Fact]
+    public async Task GetMyServicesAsync_OrdersByExpiresAtAscendingWithNullsLast()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var customer = await SeedCustomerAsync(context, roleId: 901);
+
+        var soonOrder = new OrderRequest
+        {
+            OrderCode = "ORD-SOON",
+            CustomerId = customer.Id,
+            CustomerType = CustomerType.Individual,
+            CustomerName = customer.FullName,
+            CustomerEmail = customer.Email,
+            CustomerPhone = customer.Phone!,
+            TotalPrice = 100000m,
+            Status = OrderRequestStatus.Completed,
+            CreatedAt = DateTime.UtcNow,
+            Items = { new OrderRequestItem { ServicePlanId = plan.Id, PeriodMonths = 1, Quantity = 1, UnitPrice = 100000m, LineTotal = 100000m, ExpiresAt = DateTime.UtcNow.AddDays(5) } }
+        };
+        var laterOrder = new OrderRequest
+        {
+            OrderCode = "ORD-LATER",
+            CustomerId = customer.Id,
+            CustomerType = CustomerType.Individual,
+            CustomerName = customer.FullName,
+            CustomerEmail = customer.Email,
+            CustomerPhone = customer.Phone!,
+            TotalPrice = 100000m,
+            Status = OrderRequestStatus.Completed,
+            CreatedAt = DateTime.UtcNow,
+            Items = { new OrderRequestItem { ServicePlanId = plan.Id, PeriodMonths = 1, Quantity = 1, UnitPrice = 100000m, LineTotal = 100000m, ExpiresAt = DateTime.UtcNow.AddDays(30) } }
+        };
+        var notCompletedOrder = new OrderRequest
+        {
+            OrderCode = "ORD-NOT-COMPLETED",
+            CustomerId = customer.Id,
+            CustomerType = CustomerType.Individual,
+            CustomerName = customer.FullName,
+            CustomerEmail = customer.Email,
+            CustomerPhone = customer.Phone!,
+            TotalPrice = 100000m,
+            Status = OrderRequestStatus.New,
+            CreatedAt = DateTime.UtcNow,
+            Items = { new OrderRequestItem { ServicePlanId = plan.Id, PeriodMonths = 1, Quantity = 1, UnitPrice = 100000m, LineTotal = 100000m } }
+        };
+        context.OrderRequests.AddRange(laterOrder, notCompletedOrder, soonOrder);
+        await context.SaveChangesAsync();
+
+        var sut = CreateSut(context);
+
+        var result = await sut.GetMyServicesAsync(customer.Id, new PaginationParams());
+
+        Assert.Equal(3, result.Items.Count);
+        Assert.Equal("ORD-SOON", result.Items[0].OrderCode);
+        Assert.Equal("ORD-LATER", result.Items[1].OrderCode);
+        Assert.Equal("ORD-NOT-COMPLETED", result.Items[2].OrderCode);
     }
 }
