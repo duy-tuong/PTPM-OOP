@@ -8,6 +8,7 @@ import { StatusBadge } from "@/components/admin/StatusBadge";
 import { ConfirmDeleteButton } from "@/components/admin/ConfirmDeleteButton";
 import { TestimonialDialog } from "@/components/admin/testimonials/TestimonialDialog";
 import { deleteTestimonialAction } from "@/app/admin/testimonials/actions";
+import { FallbackImage } from "@/components/shared/FallbackImage";
 import { cn } from "@/lib/utils";
 import type { AdminTestimonialDto } from "@/lib/types/admin";
 
@@ -32,12 +33,12 @@ export function TestimonialsManager({ testimonials }: { testimonials: AdminTesti
       header: "Người đánh giá",
       cell: (row) => (
         <div className="flex items-center gap-3">
-          {row.avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={row.avatarUrl} alt="" className="size-8 rounded-full border border-zinc-200 object-cover" />
-          ) : (
-            <div className="size-8 rounded-full bg-zinc-100" />
-          )}
+          <FallbackImage
+            src={row.avatarUrl}
+            alt={row.displayName}
+            className="size-8 rounded-full border border-zinc-200 object-cover"
+            fallbackClassName="flex size-8 items-center justify-center rounded-full bg-zinc-100 text-xs font-semibold text-zinc-600"
+          />
           <div className="flex flex-col">
             <span className="font-medium text-zinc-900">{row.displayName}</span>
             {row.companyName && <span className="text-xs text-zinc-500">{row.companyName}</span>}

@@ -6,6 +6,7 @@ import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { uploadImageAction } from "@/app/admin/uploads/actions";
+import { resolveImageUrl } from "@/lib/utils";
 
 interface ImageUploadFieldProps {
   id: string;
@@ -76,7 +77,7 @@ export function ImageUploadField({ id, value, onChange, placeholder, ariaInvalid
       </div>
       {value && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={value} alt="Xem trước" className="size-16 rounded-lg border border-zinc-200 object-cover" />
+        <img src={resolveImageUrl(value)} alt="Xem trước" className="size-16 rounded-lg border border-zinc-200 object-cover" />
       )}
     </div>
   );

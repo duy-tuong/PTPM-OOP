@@ -8,6 +8,7 @@ import { StatusBadge } from "@/components/admin/StatusBadge";
 import { ConfirmDeleteButton } from "@/components/admin/ConfirmDeleteButton";
 import { PartnerDialog } from "@/components/admin/partners/PartnerDialog";
 import { deletePartnerAction } from "@/app/admin/partners/actions";
+import { FallbackImage } from "@/components/shared/FallbackImage";
 import type { AdminPartnerDto } from "@/lib/types/admin";
 
 // unpaged-list-in-Dialog - mirror ServiceCategoriesManager.tsx (Phase 6.7).
@@ -31,8 +32,12 @@ export function PartnersManager({ partners }: { partners: AdminPartnerDto[] }) {
       header: "Đối tác",
       cell: (row) => (
         <div className="flex items-center gap-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={row.logoUrl} alt="" className="size-8 rounded-lg border border-zinc-200 object-contain p-1" />
+          <FallbackImage
+            src={row.logoUrl}
+            alt={row.name}
+            className="size-8 rounded-lg border border-zinc-200 object-contain p-1"
+            fallbackClassName="flex size-8 items-center justify-center rounded-lg bg-zinc-100 text-xs font-semibold text-zinc-600"
+          />
           <div className="flex flex-col">
             <span className="font-medium text-zinc-900">{row.name}</span>
             {row.websiteUrl && <span className="text-xs text-zinc-500">{row.websiteUrl}</span>}
