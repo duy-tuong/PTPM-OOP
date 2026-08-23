@@ -20,4 +20,10 @@ public class OrderLookupDto
     public string BankName { get; init; } = string.Empty;
     public string BankAccountNumber { get; init; } = string.Empty;
     public string BankAccountHolder { get; init; } = string.Empty;
+
+    // Chỉ có giá trị khi đơn còn ở trạng thái trước Paid (New/Contacted/Confirmed) - sinh lười lúc
+    // GetByCodeAsync được gọi, xem OrderRequestService. PayOsQrCodeImage là ảnh PNG (data URI) render
+    // sẵn từ payload QR thô của PayOS, frontend dùng thẳng làm <img src="...">.
+    public string? PayOsCheckoutUrl { get; init; }
+    public string? PayOsQrCodeImage { get; init; }
 }

@@ -22,12 +22,21 @@ public class OrderRequestService : IOrderRequestService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IEmailService _emailService;
     private readonly IAppSettings _appSettings;
+    private readonly IPaymentGatewayService _paymentGatewayService;
+    private readonly IQrCodeFactory _qrCodeFactory;
 
-    public OrderRequestService(IUnitOfWork unitOfWork, IEmailService emailService, IAppSettings appSettings)
+    public OrderRequestService(
+        IUnitOfWork unitOfWork,
+        IEmailService emailService,
+        IAppSettings appSettings,
+        IPaymentGatewayService paymentGatewayService,
+        IQrCodeFactory qrCodeFactory)
     {
         _unitOfWork = unitOfWork;
         _emailService = emailService;
         _appSettings = appSettings;
+        _paymentGatewayService = paymentGatewayService;
+        _qrCodeFactory = qrCodeFactory;
     }
 
     public async Task<OrderRequestDto> CreateAsync(CreateOrderRequestDto dto, Guid? customerId = null, CancellationToken cancellationToken = default)
@@ -212,11 +221,36 @@ public class OrderRequestService : IOrderRequestService
 
     public async Task<OrderLookupDto> GetByCodeAsync(string orderCode, CancellationToken cancellationToken = default)
     {
-        var order = await _unitOfWork.Repository<OrderRequest, int>().Query()
+        var repository = _unitOfWork.Repository<OrderRequest, int>();
+        var order = await repository.Query()
             .Include(o => o.Items).ThenInclude(i => i.ServicePlan)
             .Include(o => o.Items).ThenInclude(i => i.TldPricing)
             .FirstOrDefaultAsync(o => o.OrderCode == orderCode, cancellationToken)
             ?? throw new NotFoundException(nameof(OrderRequest), orderCode);
+
+        string? qrCodeImage = null;
+        if (IsBeforePaid(order.Status))
+        {
+            // Sinh lười (lazy) - chỉ gọi PayOS lúc thật sự cần (lần đầu vào trang, hoặc link cũ đã hết
+            // hạn), không gọi lại mỗi lần load trang /thanh-toan trong lúc link còn hiệu lực. LƯU Ý quan
+            // trọng (bug thật đã gặp khi live-test): PayOsLinkExpiresAt == null nghĩa là "chưa biết hạn",
+            // KHÔNG được coi là "đã hết hạn" - PayOS từ chối tạo link thứ 2 cho cùng OrderCode ("Đơn
+            // thanh toán đã tồn tại"), nên chỉ được gọi lại CreatePaymentLinkAsync khi thật sự CÓ mốc hết
+            // hạn và mốc đó đã qua.
+            if (order.PayOsCheckoutUrl is null
+                || (order.PayOsLinkExpiresAt is not null && order.PayOsLinkExpiresAt <= DateTime.UtcNow))
+            {
+                var link = await _paymentGatewayService.CreatePaymentLinkAsync(order, cancellationToken);
+                order.PayOsCheckoutUrl = link.CheckoutUrl;
+                order.PayOsQrCode = link.QrCode;
+                order.PayOsPaymentLinkId = link.PaymentLinkId;
+                order.PayOsLinkExpiresAt = link.ExpiresAt;
+                repository.Update(order);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+            }
+
+            qrCodeImage = order.PayOsQrCode is not null ? _qrCodeFactory.GenerateFromContent(order.PayOsQrCode) : null;
+        }
 
         return new OrderLookupDto
         {
@@ -233,9 +267,14 @@ public class OrderRequestService : IOrderRequestService
             }).ToList(),
             BankName = _appSettings.BankName,
             BankAccountNumber = _appSettings.BankAccountNumber,
-            BankAccountHolder = _appSettings.BankAccountHolder
+            BankAccountHolder = _appSettings.BankAccountHolder,
+            PayOsCheckoutUrl = order.PayOsCheckoutUrl,
+            PayOsQrCodeImage = qrCodeImage
         };
     }
+
+    private static bool IsBeforePaid(OrderRequestStatus status) =>
+        status is OrderRequestStatus.New or OrderRequestStatus.Contacted or OrderRequestStatus.Confirmed;
 
     public async Task<OrderRequestDto> CreateRenewalAsync(CreateRenewalOrderRequestDto dto, Guid customerId, CancellationToken cancellationToken = default)
     {

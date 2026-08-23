@@ -25,6 +25,14 @@ export function getOrderByCode(orderCode: string) {
   return apiFetch<OrderLookupDto>(getApiUrl(), `/order-requests/by-code/${orderCode}`, "GET", { cache: "no-store" });
 }
 
+// Browser-only (dùng getPublicApiUrl) - bản Client Component của getOrderByCode ở trên, dùng cho
+// PaymentStatusPanel.tsx poll trạng thái đơn mỗi vài giây trong lúc chờ webhook PayOS. Cùng endpoint
+// anonymous, không cần token (không có CustomerId nào để đính kèm - khác submitConsultationRequest,
+// endpoint này chưa từng và sẽ không bao giờ gắn với 1 khách hàng cụ thể, xem comment OrderLookupDto.cs).
+export function getOrderByCodePublic(orderCode: string) {
+  return apiFetch<OrderLookupDto>(getPublicApiUrl(), `/order-requests/by-code/${orderCode}`, "GET", { cache: "no-store" });
+}
+
 // Khác submitOrderRequest: gia hạn không có luồng ẩn danh, token luôn bắt buộc (đúng
 // [Authorize(Roles="Customer")] phía backend) - gọi từ app/api/order-requests/renewals/route.ts.
 export function submitRenewalOrderRequest(dto: CreateRenewalOrderRequestDto, token: string) {

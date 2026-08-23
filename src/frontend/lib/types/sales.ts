@@ -49,6 +49,10 @@ export interface OrderLookupDto {
   bankName: string;
   bankAccountNumber: string;
   bankAccountHolder: string;
+  // Chỉ có giá trị khi đơn còn ở trạng thái trước Paid (New/Contacted/Confirmed) - xem
+  // OrderRequestService.GetByCodeAsync (backend sinh lười lúc gọi endpoint này).
+  payOsCheckoutUrl?: string | null;
+  payOsQrCodeImage?: string | null;
 }
 
 // Khớp Application/Features/Sales/ConsultationRequests/Dtos/*.cs

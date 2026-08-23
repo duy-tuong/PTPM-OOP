@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Resend;
 
 namespace CloudServiceStore.Infrastructure;
 
@@ -40,8 +41,26 @@ public static class DependencyInjection
         services.AddSingleton<ISiteSettingsCache, SiteSettingsCache>();
         services.AddSingleton<IQrCodeFactory, QrCodeFactory>();
         services.AddSingleton<IFileStorageService, LocalFileStorageService>();
-        services.AddSingleton<IEmailService, LoggingEmailService>();
+
+        // Resend chỉ được dùng khi có ResendApiKey thật (máy dev/CI không cấu hình thì giữ nguyên hành
+        // vi giả lập cũ, không throw lúc khởi động). IEmailService đăng ký Scoped (không phải Singleton
+        // như trước) vì ResendEmailService giữ IResend - 1 typed HttpClient - việc "giam" 1 typed client
+        // vào Singleton là anti-pattern đã biết (rò rỉ kết nối/DNS không xoay vòng qua vòng đời app dài
+        // hạn); mọi call site hiện tại (Application services, RenewalReminderBackgroundService qua
+        // IServiceScopeFactory per tick) đều đã Scoped-safe, xem RenewalReminderBackgroundService.cs.
+        var resendApiKey = configuration["App:ResendApiKey"];
+        if (!string.IsNullOrWhiteSpace(resendApiKey))
+        {
+            services.AddResend(resendApiKey);
+            services.AddScoped<IEmailService, ResendEmailService>();
+        }
+        else
+        {
+            services.AddScoped<IEmailService, LoggingEmailService>();
+        }
+
         services.AddSingleton<IAppSettings, AppSettings>();
+        services.AddSingleton<IPaymentGatewayService, PayOsPaymentGatewayService>();
         services.AddScoped<IOrderStatusObserver, AuditLogOrderObserver>();
         services.AddScoped<IOrderStatusObserver, EmailOrderObserver>();
         services.AddScoped<IOrderRequestExportService, OrderRequestExportService>();
