@@ -1,12 +1,15 @@
 import type { PaginationParams } from "./common";
-import type { PlanFeatureDto, PlanPriceDto } from "./catalog";
+import type { PlanFeatureDto, PlanPriceDto, PlanAddonDto, ServicePlanCustomConfigFields } from "./catalog";
 import type { OrderRequestItemDto } from "./sales";
 import type {
+  AddonBillingType,
+  AddonType,
   AffiliateApplicationStatus,
   ConsultationStatus,
   DiscountType,
   OrderRequestStatus,
   ScopeType,
+  ServicePlanPackageType,
   ServicePlanStatus,
 } from "./enums";
 
@@ -35,7 +38,7 @@ export type UpdateServiceCategoryDto = CreateServiceCategoryDto;
 
 // ---- Admin Catalog: Service Plans ----
 // Khớp Application/Features/Admin/Catalog/ServicePlans/Dtos/*.cs
-export interface AdminServicePlanDto {
+export interface AdminServicePlanDto extends ServicePlanCustomConfigFields {
   id: number;
   categoryId: number;
   name: string;
@@ -50,10 +53,15 @@ export interface AdminServicePlanDto {
   // Price Versioning & Grandfathering - Admin gia hạn cùng chu kỳ có được giữ giá cũ hay luôn tính
   // giá sống hiện hành.
   allowGrandfatheredRenewal: boolean;
+  // Đổi gói (Phần 6) - có cho khách HẠ CẤP xuống gói này hay không (nâng cấp luôn được phép nếu Active).
+  allowDowngrade: boolean;
+  regionId?: string | null;
+  regionName?: string | null;
   displayOrder: number;
   qrCodeUrl?: string | null;
   features: PlanFeatureDto[];
   prices: PlanPriceDto[];
+  addons: PlanAddonDto[];
 }
 
 export interface PlanFeatureInputDto {
@@ -73,6 +81,13 @@ export interface PlanPriceInputDto {
   currency: string;
   isDefault: boolean;
   isActive: boolean;
+  // Chỉ có ý nghĩa khi ServicePlan.packageType = Custom - % giảm giá theo chu kỳ này (price bị bỏ qua).
+  discountPercent?: number;
+}
+
+export interface PlanAddonInputDto {
+  addonId: number;
+  maxQuantity: number;
 }
 
 export interface CreateServicePlanDto {
@@ -87,12 +102,57 @@ export interface CreateServicePlanDto {
   // số nguyên khớp CloudServiceStore.Domain.Enums.ServicePlanStatus (xem ghi chú đầu file này).
   status: ServicePlanStatus;
   allowGrandfatheredRenewal: boolean;
+  allowDowngrade: boolean;
+  regionId?: string;
+  // enum thật (không phải string), cùng lý do với status - xem ghi chú đầu file. Fixed = giá cố định
+  // (dùng khối Prices bên dưới); Custom = kéo thanh trượt, dùng khối Min/Max/Step/PricePerUnit,
+  // Prices[].price bị bỏ qua (chỉ discountPercent có ý nghĩa).
+  packageType: ServicePlanPackageType;
+  minVcpu?: number;
+  maxVcpu?: number;
+  stepVcpu?: number;
+  minRamMb?: number;
+  maxRamMb?: number;
+  stepRamMb?: number;
+  minDiskGb?: number;
+  maxDiskGb?: number;
+  stepDiskGb?: number;
+  pricePerVcpuPerMonth?: number;
+  pricePerRamGbPerMonth?: number;
+  pricePerDiskGbPerMonth?: number;
   displayOrder: number;
   features: PlanFeatureInputDto[];
   prices: PlanPriceInputDto[];
+  addons: PlanAddonInputDto[];
 }
 
 export type UpdateServicePlanDto = CreateServicePlanDto;
+
+// ---- Admin Catalog: Addons ----
+// Khớp Application/Features/Admin/Catalog/Addons/Dtos/*.cs
+export interface AdminAddonDto {
+  id: number;
+  name: string;
+  sku: string;
+  // string (không phải enum) - khớp convention response DTO khác trong dự án.
+  type: string;
+  billingType: string;
+  unitName?: string | null;
+  pricePerMonth: number;
+  isActive: boolean;
+}
+
+export interface CreateAddonDto {
+  name: string;
+  sku: string;
+  type: AddonType;
+  billingType: AddonBillingType;
+  unitName?: string;
+  pricePerMonth: number;
+  isActive: boolean;
+}
+
+export type UpdateAddonDto = CreateAddonDto;
 
 // ---- Admin Marketing: Promotions ----
 // Khớp Application/Features/Admin/Marketing/Promotions/Dtos/*.cs
@@ -249,6 +309,7 @@ export interface AdminServicePlanQueryParams extends PaginationParams {
   categorySlug?: string;
   isFeatured?: boolean;
   status?: ServicePlanStatus;
+  regionId?: string;
 }
 
 export interface AdminNewsArticleQueryParams extends PaginationParams {

@@ -1,5 +1,11 @@
 import type { CustomerType } from "./enums";
 
+// Khớp Application/Features/Sales/OrderRequests/Dtos/AddonSelectionDto.cs
+export interface AddonSelectionDto {
+  addonId: number;
+  quantity: number;
+}
+
 // Khớp Application/Features/Sales/OrderRequests/Dtos/CreateOrderRequestItemDto.cs
 export interface CreateOrderRequestItemDto {
   servicePlanId?: number;
@@ -7,6 +13,12 @@ export interface CreateOrderRequestItemDto {
   domainName?: string;
   periodMonths?: number;
   quantity: number;
+  addons?: AddonSelectionDto[];
+  // Bắt buộc khi servicePlanId trỏ tới gói Custom (packageType === "Custom") - xem
+  // OrderRequestService.BuildServicePlanItemAsync (backend).
+  chosenVcpu?: number;
+  chosenRamMb?: number;
+  chosenDiskGb?: number;
 }
 
 // Khớp Application/Features/Sales/OrderRequests/Dtos/CreateOrderRequestDto.cs - giỏ hàng nhiều dòng
@@ -33,11 +45,28 @@ export interface OrderRequestDto {
 
 // Khớp Application/Features/Sales/OrderRequests/Dtos/OrderLookupDto.cs - dùng cho trang public
 // /thanh-toan/[orderCode], KHÔNG chứa PII khách hàng (endpoint tra cứu không xác thực).
+// Khớp Application/Features/Sales/OrderRequests/Dtos/OrderItemAddonDto.cs
+export interface OrderItemAddonDto {
+  addonId: number;
+  addonName: string;
+  quantity: number;
+  unitPrice: number;
+  lineTotal: number;
+}
+
 export interface OrderLookupItemDto {
   productName: string;
   quantity: number;
   unitPrice: number;
   lineTotal: number;
+  chosenVcpu?: number | null;
+  chosenRamMb?: number | null;
+  chosenDiskGb?: number | null;
+  // "New" | "Renewal" | "PlanChange" - xem ghi chú OrderRequestItemDto.ItemKind (backend). Đặc biệt
+  // quan trọng ở trang /thanh-toan: đơn "PlanChange" chỉ thu đúng phần PHỤ THU proration, không phải
+  // giá đầy đủ của productName.
+  itemKind: string;
+  addons: OrderItemAddonDto[];
 }
 
 export interface OrderLookupDto {
@@ -102,11 +131,17 @@ export interface OrderRequestItemDto {
   quantity: number;
   unitPrice: number;
   lineTotal: number;
+  chosenVcpu?: number | null;
+  chosenRamMb?: number | null;
+  chosenDiskGb?: number | null;
+  // "New" | "Renewal" | "PlanChange" - xem ORDER_ITEM_KIND_LABELS ở lib/utils/orderItems.ts.
+  itemKind: string;
   // Thông tin bàn giao mô phỏng (Tier 3 - "cấp phát tự động") - chỉ có giá trị sau khi đơn Completed.
   provisionedIpAddress?: string | null;
   provisionedRootPassword?: string | null;
   provisionedNameservers?: string | null;
   provisionedAt?: string | null;
+  addons: OrderItemAddonDto[];
 }
 
 // Khớp Application/Features/Sales/OrderRequests/Dtos/MyOrderRequestDto.cs - giỏ hàng nhiều dòng
@@ -134,7 +169,12 @@ export interface MyServiceItemDto {
   itemId: number;
   orderCode: string;
   orderStatus: string;
+  servicePlanId?: number | null;
   servicePlanName?: string | null;
+  // Chỉ có ý nghĩa khi servicePlanId != null - dùng để ẩn nút "Đổi gói" khi Custom, và fetch danh sách
+  // gói cùng danh mục làm gói đích (xem PlanChangeDialog.tsx).
+  servicePlanCategorySlug?: string | null;
+  servicePlanPackageType?: string | null;
   domainName?: string | null;
   tldName?: string | null;
   periodMonths?: number | null;
@@ -142,6 +182,27 @@ export interface MyServiceItemDto {
   provisionedIpAddress?: string | null;
   provisionedRootPassword?: string | null;
   provisionedNameservers?: string | null;
+}
+
+// Khớp Application/Features/Sales/OrderRequests/Dtos/RequestPlanChangeDto.cs
+export interface RequestPlanChangeDto {
+  targetPlanId: number;
+}
+
+// Khớp Application/Features/Sales/OrderRequests/Dtos/PlanChangePreviewDto.cs
+export interface PlanChangePreviewDto {
+  targetPlanName: string;
+  direction: string; // "Upgrade" | "Downgrade"
+  amountDue: number;
+  daysRemaining: number;
+  requiresPayment: boolean;
+}
+
+// Khớp Application/Features/Sales/OrderRequests/Dtos/PlanChangeResultDto.cs
+export interface PlanChangeResultDto {
+  requiresPayment: boolean;
+  orderCode?: string | null;
+  amountDue: number;
 }
 
 // Khớp Application/Features/Sales/ConsultationRequests/Dtos/MyConsultationRequestDto.cs

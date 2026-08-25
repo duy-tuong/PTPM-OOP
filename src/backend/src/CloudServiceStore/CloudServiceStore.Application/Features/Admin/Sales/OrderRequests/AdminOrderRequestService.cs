@@ -26,6 +26,7 @@ public class AdminOrderRequestService : IAdminOrderRequestService
         var baseQuery = repository.Query()
             .Include(o => o.Items).ThenInclude(i => i.ServicePlan)
             .Include(o => o.Items).ThenInclude(i => i.TldPricing)
+            .Include(o => o.Items).ThenInclude(i => i.Addons).ThenInclude(a => a.Addon)
             .Include(o => o.AssignedToUser)
             .Where(o => query.Status == null || o.Status == query.Status)
             .OrderByDescending(o => o.CreatedAt);

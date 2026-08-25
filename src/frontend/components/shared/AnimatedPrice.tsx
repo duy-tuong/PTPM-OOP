@@ -8,7 +8,7 @@ import { formatCurrency } from "@/lib/utils";
 // dependency sẵn có, không cần thư viện mới). motion.span nhận thẳng MotionValue<string> làm children -
 // Framer Motion tự cập nhật text DOM trực tiếp, không cần re-render React mỗi frame.
 export function AnimatedPrice({ value, className }: { value: number; className?: string }) {
-  const spring = useSpring(value, { stiffness: 100, damping: 20 });
+  const spring = useSpring(0, { stiffness: 50, damping: 20 });
   const display = useTransform(spring, (v) => formatCurrency(Math.round(v)));
 
   useEffect(() => {

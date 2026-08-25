@@ -30,6 +30,9 @@ public class AppDbContext : DbContext
     public DbSet<PlanFeature> PlanFeatures => Set<PlanFeature>();
     public DbSet<PlanPrice> PlanPrices => Set<PlanPrice>();
     public DbSet<TldPricing> TldPricings => Set<TldPricing>();
+    public DbSet<Region> Regions => Set<Region>();
+    public DbSet<Addon> Addons => Set<Addon>();
+    public DbSet<ServicePlanAddon> ServicePlanAddons => Set<ServicePlanAddon>();
 
     // Marketing
     public DbSet<Promotion> Promotions => Set<Promotion>();
@@ -38,6 +41,7 @@ public class AppDbContext : DbContext
     // Sales
     public DbSet<OrderRequest> OrderRequests => Set<OrderRequest>();
     public DbSet<OrderRequestItem> OrderRequestItems => Set<OrderRequestItem>();
+    public DbSet<OrderRequestItemAddon> OrderRequestItemAddons => Set<OrderRequestItemAddon>();
     public DbSet<ConsultationRequest> ConsultationRequests => Set<ConsultationRequest>();
     public DbSet<AffiliateApplication> AffiliateApplications => Set<AffiliateApplication>();
 

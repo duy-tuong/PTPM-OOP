@@ -4,6 +4,7 @@ import { getMyServices } from "@/lib/api/customer";
 import { ApiError } from "@/lib/api/http";
 import { OrderStatusBadge } from "@/components/admin/OrderStatusBadge";
 import { RenewServiceDialog } from "@/components/account/RenewServiceDialog";
+import { PlanChangeDialog } from "@/components/account/PlanChangeDialog";
 import {
   Pagination,
   PaginationContent,
@@ -99,7 +100,14 @@ export default async function MyServicesPage({
                         <OrderStatusBadge status={item.orderStatus} />
                       </td>
                       <td className="px-6 py-4 text-muted-foreground">{item.expiresAt ? formatDate(item.expiresAt) : "-"}</td>
-                      <td className="px-6 py-4 text-right">{item.expiresAt && <RenewServiceDialog item={item} />}</td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          {item.expiresAt && item.servicePlanId && item.servicePlanPackageType === "Fixed" && (
+                            <PlanChangeDialog item={item} />
+                          )}
+                          {item.expiresAt && <RenewServiceDialog item={item} />}
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

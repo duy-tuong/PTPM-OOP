@@ -104,7 +104,7 @@ export function Navbar() {
   return (
     <header
       className={cn(
-        "fixed inset-x-0 top-4 z-40 mx-auto w-[calc(100%-2rem)] max-w-6xl rounded-full transition-all duration-300",
+        "fixed inset-x-0 top-4 z-40 mx-auto w-[calc(100%-2rem)] max-w-6xl rounded-[24px] transition-all duration-300",
         hidden ? "-translate-y-24 opacity-0" : "translate-y-0 opacity-100",
         scrolled 
           ? "bg-background/80 backdrop-blur-md border border-border/50 shadow-sm" 

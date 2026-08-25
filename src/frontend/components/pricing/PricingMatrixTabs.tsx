@@ -8,8 +8,9 @@ import { AnimatedPrice } from "@/components/shared/AnimatedPrice";
 import { PlanConfiguratorSlider, priceFor } from "@/components/pricing/PlanConfiguratorSlider";
 import { DomainPricingTable } from "@/components/pricing/DomainPricingTable";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import type { ServiceCategoryDto, ServicePlanListItemDto, TldPricingDto } from "@/lib/types/catalog";
+import type { ServiceCategoryDto, ServicePlanListItemDto, TldPricingDto, RegionDto } from "@/lib/types/catalog";
 
 const ANNUAL_PERIOD_MONTHS = 12;
 const MONTHLY_PERIOD_MONTHS = 1;
@@ -24,13 +25,16 @@ export function PricingMatrixTabs({
   categories,
   plans,
   tldPricing,
+  regions,
 }: {
   categories: ServiceCategoryDto[];
   plans: ServicePlanListItemDto[];
   tldPricing: TldPricingDto[];
+  regions: RegionDto[];
 }) {
   const [activeSlug, setActiveSlug] = useState(categories[0]?.slug ?? "");
   const [isAnnual, setIsAnnual] = useState(false);
+  const [regionFilter, setRegionFilter] = useState<string | null>(null);
 
   const plansByCategory = useMemo(() => {
     const map = new Map<string, ServicePlanListItemDto[]>();
@@ -42,8 +46,18 @@ export function PricingMatrixTabs({
     return map;
   }, [plans]);
 
-  const activePlans = useMemo(() => plansByCategory.get(activeSlug) ?? [], [plansByCategory, activeSlug]);
+  const categoryPlans = useMemo(() => plansByCategory.get(activeSlug) ?? [], [plansByCategory, activeSlug]);
+  // Lọc theo Region CHỈ trong phạm vi danh mục đang chọn - Region là trang trí (xem Region.cs), lọc
+  // cục bộ phía client (toàn bộ plans đã fetch 1 lần, không cần round-trip mạng lại khi đổi filter).
+  const activePlans = useMemo(
+    () => (regionFilter ? categoryPlans.filter((plan) => plan.regionName === regionFilter) : categoryPlans),
+    [categoryPlans, regionFilter],
+  );
   const period = isAnnual ? ANNUAL_PERIOD_MONTHS : MONTHLY_PERIOD_MONTHS;
+  const regionsInCategory = useMemo(
+    () => regions.filter((region) => categoryPlans.some((plan) => plan.regionName === region.name)),
+    [regions, categoryPlans],
+  );
 
   const hasAnnualPricing = activePlans.some((plan) => plan.prices?.some((p) => p.periodMonths === ANNUAL_PERIOD_MONTHS));
   const maxDiscountPercent = useMemo(() => {
@@ -69,7 +83,10 @@ export function PricingMatrixTabs({
           <button
             key={category.slug}
             type="button"
-            onClick={() => setActiveSlug(category.slug)}
+            onClick={() => {
+              setActiveSlug(category.slug);
+              setRegionFilter(null);
+            }}
             className={cn(
               "rounded-full px-4 py-2 text-sm font-medium transition-colors",
               activeSlug === category.slug
@@ -82,12 +99,38 @@ export function PricingMatrixTabs({
         ))}
       </nav>
 
-      {activeSlug !== DOMAIN_SLUG && hasAnnualPricing && (
-        <BillingPeriodToggle
-          isAnnual={isAnnual}
-          onToggle={() => setIsAnnual((prev) => !prev)}
-          discountPercent={maxDiscountPercent}
-        />
+      {activeSlug !== DOMAIN_SLUG && (hasAnnualPricing || regionsInCategory.length > 0) && (
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          {hasAnnualPricing && (
+            <BillingPeriodToggle
+              isAnnual={isAnnual}
+              onToggle={() => setIsAnnual((prev) => !prev)}
+              discountPercent={maxDiscountPercent}
+            />
+          )}
+          {regionsInCategory.length > 0 && (
+            <Select
+              items={[
+                { value: "all-regions", label: "Mọi khu vực" },
+                ...regionsInCategory.map((region) => ({ value: region.name, label: `📍 ${region.name} (${region.city})` })),
+              ]}
+              value={regionFilter ?? "all-regions"}
+              onValueChange={(value) => setRegionFilter(!value || value === "all-regions" ? null : value)}
+            >
+              <SelectTrigger className="w-[220px] rounded-full">
+                <SelectValue placeholder="Mọi khu vực" />
+              </SelectTrigger>
+              <SelectContent alignItemWithTrigger={false}>
+                <SelectItem value="all-regions">Mọi khu vực</SelectItem>
+                {regionsInCategory.map((region) => (
+                  <SelectItem key={region.id} value={region.name}>
+                    📍 {region.name} ({region.city})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
       )}
 
       {activeSlug === DOMAIN_SLUG ? (
@@ -96,6 +139,8 @@ export function PricingMatrixTabs({
         <PlanConfiguratorSlider key={activeSlug} plans={activePlans} period={period} />
       ) : activePlans.length === 1 ? (
         <SinglePlanCard plan={activePlans[0]} period={period} />
+      ) : regionFilter ? (
+        <p className="py-12 text-center text-muted-foreground">Không có gói dịch vụ nào ở khu vực này.</p>
       ) : (
         <p className="py-12 text-center text-muted-foreground">Chưa có gói dịch vụ nào cho danh mục này.</p>
       )}
@@ -116,6 +161,11 @@ function SinglePlanCard({ plan, period }: { plan: ServicePlanListItemDto; period
       <Link href={`/bang-gia/${plan.slug}`} className="w-fit text-sm text-muted-foreground hover:text-primary">
         {plan.name}
       </Link>
+      {plan.regionName && (
+        <span className="mt-1 inline-block w-fit rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+          📍 {plan.regionName}
+        </span>
+      )}
       <div className="my-2 text-4xl font-bold">
         <AnimatedPrice value={priceFor(plan, period)} />
       </div>

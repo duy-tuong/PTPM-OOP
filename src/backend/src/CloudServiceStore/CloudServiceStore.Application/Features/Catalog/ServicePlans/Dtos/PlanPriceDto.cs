@@ -7,4 +7,6 @@ public class PlanPriceDto
     public decimal? PromotionalPrice { get; init; }
     public string Currency { get; init; } = "VND";
     public bool IsDefault { get; init; }
+    // Chỉ có ý nghĩa khi ServicePlan.PackageType = Custom - xem PlanPrice.cs.
+    public decimal? DiscountPercent { get; init; }
 }

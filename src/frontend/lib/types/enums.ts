@@ -49,6 +49,24 @@ export enum ServicePlanStatus {
   Deprecated = 5,
 }
 
+export enum AddonType {
+  Ip = 1,
+  Disk = 2,
+  Bandwidth = 3,
+  License = 4,
+  ManagedService = 5,
+}
+
+export enum AddonBillingType {
+  FlatFee = 1,
+  PerUnit = 2,
+}
+
+export enum ServicePlanPackageType {
+  Fixed = 1,
+  Custom = 2,
+}
+
 export const CUSTOMER_TYPE_LABELS: Record<string, string> = {
   Individual: "Cá nhân",
   Business: "Doanh nghiệp",
@@ -104,4 +122,22 @@ export const SERVICE_PLAN_STATUS_DESCRIPTIONS: Record<string, string> = {
   OutOfStock: "Ẩn khỏi mua mới (Admin tự bật khi hết hạ tầng), khách cũ vẫn gia hạn được.",
   Archived: "Ngừng hẳn - chặn cả mua mới lẫn gia hạn.",
   Deprecated: "Ẩn khỏi khách mới, nhưng khách đã mua vẫn gia hạn được với giá cũ.",
+};
+
+export const ADDON_TYPE_LABELS: Record<string, string> = {
+  Ip: "IP tĩnh",
+  Disk: "Ổ đĩa bổ sung",
+  Bandwidth: "Băng thông",
+  License: "Bản quyền phần mềm",
+  ManagedService: "Dịch vụ quản trị",
+};
+
+export const ADDON_BILLING_TYPE_LABELS: Record<string, string> = {
+  FlatFee: "Giá cố định",
+  PerUnit: "Theo đơn vị",
+};
+
+export const SERVICE_PLAN_PACKAGE_TYPE_LABELS: Record<string, string> = {
+  Fixed: "Gói cố định",
+  Custom: "Gói tuỳ biến (kéo thanh trượt)",
 };

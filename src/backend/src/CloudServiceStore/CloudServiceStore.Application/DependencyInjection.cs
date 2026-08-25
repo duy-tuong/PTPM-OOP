@@ -19,6 +19,8 @@ using CloudServiceStore.Application.Features.Admin.Sales.ConsultationRequests;
 using CloudServiceStore.Application.Features.Admin.Sales.OrderRequests;
 using CloudServiceStore.Application.Features.Admin.System.SiteSettings;
 using CloudServiceStore.Application.Features.Auth;
+using CloudServiceStore.Application.Features.Admin.Catalog.Addons;
+using CloudServiceStore.Application.Features.Catalog.Regions;
 using CloudServiceStore.Application.Features.Catalog.ServiceCategories;
 using CloudServiceStore.Application.Features.Catalog.ServicePlans;
 using CloudServiceStore.Application.Features.Catalog.TldPricings;
@@ -50,6 +52,7 @@ public static class DependencyInjection
 
         services.AddScoped<IServiceCategoryService, ServiceCategoryService>();
         services.AddScoped<IServicePlanService, ServicePlanService>();
+        services.AddScoped<IRegionService, RegionService>();
         services.AddScoped<ITldPricingService, TldPricingService>();
         services.AddScoped<IPromotionService, PromotionService>();
         services.AddScoped<INewsCategoryService, NewsCategoryService>();
@@ -61,11 +64,13 @@ public static class DependencyInjection
         services.AddScoped<IContentPageService, ContentPageService>();
 
         services.AddScoped<IOrderRequestService, OrderRequestService>();
+        services.AddScoped<IPlanChangeService, PlanChangeService>();
         services.AddScoped<IConsultationRequestService, ConsultationRequestService>();
         services.AddScoped<IAffiliateApplicationService, AffiliateApplicationService>();
 
         services.AddScoped<IAdminServiceCategoryService, AdminServiceCategoryService>();
         services.AddScoped<IAdminServicePlanService, AdminServicePlanService>();
+        services.AddScoped<IAdminAddonService, AdminAddonService>();
         services.AddScoped<IAdminTldPricingService, AdminTldPricingService>();
         services.AddScoped<IAdminPromotionService, AdminPromotionService>();
 

@@ -9,6 +9,9 @@ import type {
   ConsultationRequestDto,
   CreateAffiliateApplicationDto,
   AffiliateApplicationDto,
+  RequestPlanChangeDto,
+  PlanChangePreviewDto,
+  PlanChangeResultDto,
 } from "@/lib/types/sales";
 
 // Server-only (dùng getApiUrl) - gọi từ app/api/order-requests/route.ts, KHÔNG import trực tiếp từ
@@ -49,4 +52,14 @@ export function submitConsultationRequest(dto: CreateConsultationRequestDto, tok
 
 export function submitAffiliateApplication(dto: CreateAffiliateApplicationDto) {
   return apiFetch<AffiliateApplicationDto>(getPublicApiUrl(), "/affiliate-applications", "POST", { body: dto });
+}
+
+// Đổi gói (Phần 6) - luôn đòi hỏi đăng nhập (khớp [Authorize(Roles="Customer")] phía backend), gọi từ
+// app/api/order-requests/items/[itemId]/change-plan/{preview,}/route.ts.
+export function previewPlanChange(itemId: number, dto: RequestPlanChangeDto, token: string) {
+  return apiFetch<PlanChangePreviewDto>(getApiUrl(), `/order-requests/items/${itemId}/change-plan/preview`, "POST", { body: dto, token });
+}
+
+export function submitPlanChange(itemId: number, dto: RequestPlanChangeDto, token: string) {
+  return apiFetch<PlanChangeResultDto>(getApiUrl(), `/order-requests/items/${itemId}/change-plan`, "POST", { body: dto, token });
 }

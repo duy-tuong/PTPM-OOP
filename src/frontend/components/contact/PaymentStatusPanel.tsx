@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { OrderStatusBadge } from "@/components/admin/OrderStatusBadge";
 import { formatCurrency } from "@/lib/utils";
 import { getOrderByCodePublic } from "@/lib/api/sales";
+import { ORDER_ITEM_KIND_LABELS } from "@/lib/utils/orderItems";
 import type { OrderLookupDto } from "@/lib/types/sales";
 
 // Đơn còn ở 1 trong 3 trạng thái này = chưa thanh toán, còn cần hiện QR/nút PayOS + tiếp tục poll.
@@ -59,11 +60,36 @@ export function PaymentStatusPanel({
       <div className="rounded-xl border border-border bg-muted/40 p-4">
         <ul className="flex flex-col gap-2 text-sm">
           {order.items.map((item, index) => (
-            <li key={index} className="flex items-center justify-between gap-3">
-              <span className="text-foreground">
-                {item.productName} x{item.quantity}
-              </span>
-              <span className="font-medium text-foreground">{formatCurrency(item.lineTotal)}</span>
+            <li key={index} className="flex flex-col gap-1">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-foreground">
+                  {ORDER_ITEM_KIND_LABELS[item.itemKind] && (
+                    <span className="mr-1.5 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold tracking-wide text-primary uppercase">
+                      {ORDER_ITEM_KIND_LABELS[item.itemKind]}
+                    </span>
+                  )}
+                  {item.productName} x{item.quantity}
+                </span>
+                <span className="font-medium text-foreground">{formatCurrency(item.lineTotal)}</span>
+              </div>
+              {item.itemKind === "PlanChange" && (
+                <p className="pl-0 text-xs text-muted-foreground">
+                  Số tiền trên là phần phụ thu do đổi gói (không phải giá đầy đủ của {item.productName}).
+                </p>
+              )}
+              {item.chosenVcpu != null && item.chosenRamMb != null && item.chosenDiskGb != null && (
+                <p className="pl-0 text-xs text-muted-foreground">
+                  {item.chosenVcpu} vCPU - {(item.chosenRamMb / 1024).toFixed(item.chosenRamMb % 1024 === 0 ? 0 : 1)} GB RAM - {item.chosenDiskGb} GB Disk
+                </p>
+              )}
+              {item.addons.map((addon) => (
+                <div key={addon.addonId} className="flex items-center justify-between gap-3 pl-4 text-xs text-muted-foreground">
+                  <span>
+                    + {addon.addonName} x{addon.quantity}
+                  </span>
+                  <span>{formatCurrency(addon.lineTotal)}</span>
+                </div>
+              ))}
             </li>
           ))}
         </ul>

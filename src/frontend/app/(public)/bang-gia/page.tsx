@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getServiceCategories, getServicePlans, getTldPricing } from "@/lib/api/catalog";
+import { getServiceCategories, getServicePlans, getTldPricing, getRegions } from "@/lib/api/catalog";
 import { safeFetch, emptyPagedResult } from "@/lib/api/safe";
 import { PricingMatrixTabs } from "@/components/pricing/PricingMatrixTabs";
 
@@ -9,10 +9,11 @@ export const metadata: Metadata = {
 };
 
 export default async function PricingPage() {
-  const [categories, plansResult, tldResult] = await Promise.all([
+  const [categories, plansResult, tldResult, regions] = await Promise.all([
     safeFetch(() => getServiceCategories({ revalidate: 3600 }), []),
     safeFetch(() => getServicePlans({ pageSize: 100 }, { revalidate: 900 }), emptyPagedResult(100)),
     safeFetch(() => getTldPricing({ pageSize: 100 }, { revalidate: 3600 }), emptyPagedResult(100)),
+    safeFetch(() => getRegions({ revalidate: 3600 }), []),
   ]);
   const sortedCategories = [...categories].sort((a, b) => a.displayOrder - b.displayOrder);
 
@@ -23,7 +24,12 @@ export default async function PricingPage() {
       </div>
 
       {sortedCategories.length > 0 ? (
-        <PricingMatrixTabs categories={sortedCategories} plans={plansResult.items} tldPricing={tldResult.items} />
+        <PricingMatrixTabs
+          categories={sortedCategories}
+          plans={plansResult.items}
+          tldPricing={tldResult.items}
+          regions={regions}
+        />
       ) : (
         <p className="text-center text-muted-foreground">Chưa có danh mục dịch vụ nào.</p>
       )}

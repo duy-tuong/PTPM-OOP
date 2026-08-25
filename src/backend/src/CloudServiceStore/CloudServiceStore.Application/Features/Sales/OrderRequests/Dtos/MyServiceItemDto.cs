@@ -8,7 +8,12 @@ public class MyServiceItemDto
     public int ItemId { get; init; }
     public string OrderCode { get; init; } = string.Empty;
     public string OrderStatus { get; init; } = string.Empty;
+    public int? ServicePlanId { get; init; }
     public string? ServicePlanName { get; init; }
+    // Chỉ có ý nghĩa khi ServicePlanId != null - client dùng để: (1) ẩn nút "Đổi gói" khi Custom (Phần
+    // 6 chỉ hỗ trợ đổi giữa 2 gói Fixed), (2) fetch danh sách gói cùng danh mục làm gói đích.
+    public string? ServicePlanCategorySlug { get; init; }
+    public string? ServicePlanPackageType { get; init; }
     public string? DomainName { get; init; }
     public string? TldName { get; init; }
     public int? PeriodMonths { get; init; }

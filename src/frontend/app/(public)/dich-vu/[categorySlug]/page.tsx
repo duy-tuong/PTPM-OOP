@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getServiceCategoryBySlug, getServicePlans } from "@/lib/api/catalog";
+import { getServiceCategoryBySlug, getServicePlans, getRegions } from "@/lib/api/catalog";
 import { getFaqs } from "@/lib/api/content";
 import { safeFetch, emptyPagedResult } from "@/lib/api/safe";
 import { ApiError } from "@/lib/api/http";
 import { PlanPricingGrid } from "@/components/home/PlanPricingGrid";
+import { RegionFilterBar } from "@/components/pricing/RegionFilterBar";
 import { FaqColumn } from "@/components/home/FaqColumn";
 import { ServiceCategoryHero } from "@/components/services/ServiceCategoryHero";
 import { ServiceCoreFeatures } from "@/components/services/ServiceCoreFeatures";
@@ -41,15 +42,22 @@ export async function generateMetadata({
 
 export default async function ServiceCategoryDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ categorySlug: string }>;
+  searchParams: Promise<{ regionId?: string }>;
 }) {
   const { categorySlug } = await params;
+  const { regionId } = await searchParams;
   const category = await loadCategory(categorySlug);
 
-  const [plansResult, faqs] = await Promise.all([
-    safeFetch(() => getServicePlans({ categorySlug, pageSize: 50 }, { revalidate: 900 }), emptyPagedResult(50)),
+  const [plansResult, faqs, regions] = await Promise.all([
+    safeFetch(
+      () => getServicePlans({ categorySlug, regionId: regionId || undefined, pageSize: 50 }, { revalidate: 900 }),
+      emptyPagedResult(50),
+    ),
     safeFetch(() => getFaqs(category.id, { revalidate: 3600 }), []),
+    safeFetch(() => getRegions({ revalidate: 3600 }), []),
   ]);
   const plans = plansResult.items;
   const cheapestPrice = Math.min(...plans.map((plan) => plan.startingPrice ?? Infinity));
@@ -59,12 +67,21 @@ export default async function ServiceCategoryDetailPage({
       <ServiceCategoryHero category={category} />
       <ServiceCoreFeatures plans={plans} />
 
-      {plans.length > 0 ? (
+      {plans.length > 0 || regionId ? (
         <section id="pricing" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
           <h2 className="mb-8 text-center font-heading text-3xl font-bold sm:text-4xl">
             Bảng Giá {category.name}
           </h2>
-          <PlanPricingGrid plans={plans} />
+          {regions.length > 0 && (
+            <div className="mb-8 flex justify-center">
+              <RegionFilterBar regions={regions} currentRegionId={regionId} />
+            </div>
+          )}
+          {plans.length > 0 ? (
+            <PlanPricingGrid plans={plans} />
+          ) : (
+            <p className="text-center text-muted-foreground">Không có gói dịch vụ nào ở khu vực này.</p>
+          )}
         </section>
       ) : (
         <p className="mx-auto max-w-7xl px-4 py-16 text-center text-muted-foreground sm:px-6 lg:px-8">

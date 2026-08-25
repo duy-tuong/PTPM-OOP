@@ -1,6 +1,7 @@
 using CloudServiceStore.Application.Common.Exceptions;
 using CloudServiceStore.Application.Common.Interfaces;
 using CloudServiceStore.Application.Common.Models;
+using CloudServiceStore.Application.Common.Utils;
 using CloudServiceStore.Application.Features.Catalog.ServicePlans.Dtos;
 using CloudServiceStore.Domain.Entities.Catalog;
 using CloudServiceStore.Domain.Enums;
@@ -25,9 +26,12 @@ public class ServicePlanService : IServicePlanService
             .Include(p => p.Category)
             .Include(p => p.Prices)
             .Include(p => p.Features)
+            .Include(p => p.Region)
+            .Include(p => p.PlanAddons).ThenInclude(pa => pa.Addon)
             .Where(p => p.Status == ServicePlanStatus.Active
                 && (query.CategorySlug == null || p.Category.Slug == query.CategorySlug)
-                && (query.IsFeatured == null || p.IsFeatured == query.IsFeatured))
+                && (query.IsFeatured == null || p.IsFeatured == query.IsFeatured)
+                && (query.RegionId == null || p.RegionId == query.RegionId))
             .OrderBy(p => p.DisplayOrder);
 
         var totalCount = await baseQuery.CountAsync(cancellationToken);
@@ -48,6 +52,8 @@ public class ServicePlanService : IServicePlanService
             .Include(p => p.Category)
             .Include(p => p.Features)
             .Include(p => p.Prices)
+            .Include(p => p.Region)
+            .Include(p => p.PlanAddons).ThenInclude(pa => pa.Addon)
             .FirstOrDefaultAsync(p => p.Slug == slug && p.Status == ServicePlanStatus.Active, cancellationToken);
 
         if (entity is null)
@@ -72,9 +78,21 @@ public class ServicePlanService : IServicePlanService
             QrCodeUrl = plan.QrCodeUrl,
             CategoryName = plan.Category.Name,
             CategorySlug = plan.Category.Slug,
-            StartingPrice = activePrices.Count == 0
-                ? null
-                : activePrices.Min(x => x.PromotionalPrice ?? x.Price),
+            RegionName = plan.Region?.Name,
+            StartingPrice = ComputeStartingPrice(plan, activePrices),
+            PackageType = plan.PackageType.ToString(),
+            MinVcpu = plan.MinVcpu,
+            MaxVcpu = plan.MaxVcpu,
+            StepVcpu = plan.StepVcpu,
+            MinRamMb = plan.MinRamMb,
+            MaxRamMb = plan.MaxRamMb,
+            StepRamMb = plan.StepRamMb,
+            MinDiskGb = plan.MinDiskGb,
+            MaxDiskGb = plan.MaxDiskGb,
+            StepDiskGb = plan.StepDiskGb,
+            PricePerVcpuPerMonth = plan.PricePerVcpuPerMonth,
+            PricePerRamGbPerMonth = plan.PricePerRamGbPerMonth,
+            PricePerDiskGbPerMonth = plan.PricePerDiskGbPerMonth,
             Features = plan.Features
                 .OrderBy(f => f.DisplayOrder)
                 .Select(f => new PlanFeatureDto
@@ -94,10 +112,36 @@ public class ServicePlanService : IServicePlanService
                     Price = p.Price,
                     PromotionalPrice = p.PromotionalPrice,
                     Currency = p.Currency,
-                    IsDefault = p.IsDefault
+                    IsDefault = p.IsDefault,
+                    DiscountPercent = p.DiscountPercent
                 })
-                .ToList()
+                .ToList(),
+            Addons = MapAddons(plan)
         };
+    }
+
+    // Fixed: giá thấp nhất trong các chu kỳ đang bán (như cũ). Custom: giá ở cấu hình TỐI THIỂU
+    // (Min vCPU/RAM/Disk) rẻ nhất trong các chu kỳ - dùng ĐÚNG 1 công thức với lúc tính giá bán thật
+    // (CustomPlanPricing), tránh hiển thị 1 giá nhưng lúc mua tính ra giá khác.
+    private static decimal? ComputeStartingPrice(ServicePlan plan, List<PlanPrice> activePrices)
+    {
+        if (activePrices.Count == 0)
+        {
+            return null;
+        }
+
+        if (plan.PackageType != ServicePlanPackageType.Custom)
+        {
+            return activePrices.Min(x => x.PromotionalPrice ?? x.Price);
+        }
+
+        if (plan.MinVcpu is null || plan.MinRamMb is null || plan.MinDiskGb is null)
+        {
+            return null;
+        }
+
+        return activePrices.Min(p => CustomPlanPricing.ComputeUnitPrice(
+            plan, plan.MinVcpu.Value, plan.MinRamMb.Value, plan.MinDiskGb.Value, p.PeriodMonths, p.DiscountPercent));
     }
 
     private static ServicePlanDetailDto MapToDetailDto(ServicePlan plan)
@@ -113,6 +157,20 @@ public class ServicePlanService : IServicePlanService
             QrCodeUrl = plan.QrCodeUrl,
             CategoryName = plan.Category.Name,
             CategorySlug = plan.Category.Slug,
+            RegionName = plan.Region?.Name,
+            PackageType = plan.PackageType.ToString(),
+            MinVcpu = plan.MinVcpu,
+            MaxVcpu = plan.MaxVcpu,
+            StepVcpu = plan.StepVcpu,
+            MinRamMb = plan.MinRamMb,
+            MaxRamMb = plan.MaxRamMb,
+            StepRamMb = plan.StepRamMb,
+            MinDiskGb = plan.MinDiskGb,
+            MaxDiskGb = plan.MaxDiskGb,
+            StepDiskGb = plan.StepDiskGb,
+            PricePerVcpuPerMonth = plan.PricePerVcpuPerMonth,
+            PricePerRamGbPerMonth = plan.PricePerRamGbPerMonth,
+            PricePerDiskGbPerMonth = plan.PricePerDiskGbPerMonth,
             Features = plan.Features
                 .OrderBy(f => f.DisplayOrder)
                 .Select(f => new PlanFeatureDto
@@ -133,9 +191,28 @@ public class ServicePlanService : IServicePlanService
                     Price = p.Price,
                     PromotionalPrice = p.PromotionalPrice,
                     Currency = p.Currency,
-                    IsDefault = p.IsDefault
+                    IsDefault = p.IsDefault,
+                    DiscountPercent = p.DiscountPercent
                 })
-                .ToList()
+                .ToList(),
+            Addons = MapAddons(plan)
         };
     }
+
+    // Chỉ trả addon còn IsActive - khách không thấy addon Admin đã ngừng bán (khác Admin form, Admin
+    // cần thấy cả addon đã tắt để biết vì sao 1 gói cũ vẫn còn gắn addon đó).
+    private static List<PlanAddonDto> MapAddons(ServicePlan plan) =>
+        plan.PlanAddons
+            .Where(pa => pa.Addon.IsActive)
+            .Select(pa => new PlanAddonDto
+            {
+                AddonId = pa.AddonId,
+                AddonName = pa.Addon.Name,
+                Type = pa.Addon.Type.ToString(),
+                BillingType = pa.Addon.BillingType.ToString(),
+                UnitName = pa.Addon.UnitName,
+                PricePerMonth = pa.Addon.PricePerMonth,
+                MaxQuantity = pa.MaxQuantity
+            })
+            .ToList();
 }

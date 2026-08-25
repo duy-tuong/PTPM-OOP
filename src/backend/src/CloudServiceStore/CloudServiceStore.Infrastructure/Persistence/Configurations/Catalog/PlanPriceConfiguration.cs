@@ -13,6 +13,7 @@ public class PlanPriceConfiguration : IEntityTypeConfiguration<PlanPrice>
 
         builder.Property(x => x.Price).HasColumnType("decimal(18,2)");
         builder.Property(x => x.PromotionalPrice).HasColumnType("decimal(18,2)");
+        builder.Property(x => x.DiscountPercent).HasColumnType("decimal(5,2)");
         builder.Property(x => x.Currency).HasMaxLength(3).IsRequired();
         builder.Property(x => x.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
         builder.Property(x => x.EffectiveFrom).HasDefaultValueSql("GETUTCDATE()");

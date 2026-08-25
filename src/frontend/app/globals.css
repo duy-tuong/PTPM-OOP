@@ -94,37 +94,40 @@
    hex thật trong bản Stitch dán vào (không suy đoán): nền #0B0F19, accent cyan #00F0FF, tím #6B46C1
    dùng cho gradient chữ. Gắn class "dark" ở app/(public)/layout.tsx để scope riêng cho public site. */
 .dark {
-  --background: #070b14;
+  --background: #020617;
   --foreground: #f8fafc;
-  --card: #0f172a;
+  --card: #111827;
   --card-foreground: #f8fafc;
-  --popover: #0f172a;
+  --popover: #111827;
   --popover-foreground: #f8fafc;
-  --primary: #6366f1;
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
   --primary-foreground: #ffffff;
-  --secondary: #111827;
+  --secondary: #1e293b;
   --secondary-foreground: #f8fafc;
-  --muted: #111827;
+  --muted: #1e293b;
   --muted-foreground: #94a3b8;
-  --accent: #111827;
+  --accent: #1e293b;
   --accent-foreground: #f8fafc;
-  --accent-purple: #6b46c1;
+  --accent-purple: #818cf8;
   --destructive: oklch(0.704 0.191 22.216);
   --border: #1e293b;
   --input: #1e293b;
-  --ring: #6366f1;
-  --chart-1: #6366f1;
+  --ring: #3b82f6;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --chart-1: #3b82f6;
   --chart-3: oklch(0.87 0 0);
   --chart-4: oklch(0.556 0 0);
   --chart-5: oklch(0.439 0 0);
-  --sidebar: #131826;
+  --sidebar: #020617;
   --sidebar-foreground: #f1f5f9;
-  --sidebar-primary: #00f0ff;
-  --sidebar-primary-foreground: #0b0f19;
-  --sidebar-accent: #1b2233;
+  --sidebar-primary: #22d3ee;
+  --sidebar-primary-foreground: #020617;
+  --sidebar-accent: #1e293b;
   --sidebar-accent-foreground: #f1f5f9;
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: #00f0ff;
+  --sidebar-border: #1e293b;
+  --sidebar-ring: #22d3ee;
 }
 
 /* Theme sáng "Cloudverse" cho public site (light mode, khác :root trung tính của Admin) - cùng "họ"
@@ -140,7 +143,8 @@
   --card-foreground: #0f172a;
   --popover: #ffffff;
   --popover-foreground: #0f172a;
-  --primary: #6366f1;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
   --primary-foreground: #ffffff;
   --secondary: #f1f5f9;
   --secondary-foreground: #0f172a;
@@ -148,24 +152,26 @@
   --muted-foreground: #64748b;
   --accent: #f1f5f9;
   --accent-foreground: #0f172a;
-  --accent-purple: #6b46c1;
+  --accent-purple: #6366f1;
   --destructive: oklch(0.577 0.245 27.325);
   --border: #e2e8f0;
   --input: #e2e8f0;
-  --ring: #4f46e5;
-  --chart-1: #4f46e5;
-  --chart-2: #6b46c1;
+  --ring: #2563eb;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --chart-1: #2563eb;
+  --chart-2: #6366f1;
   --chart-3: oklch(0.556 0 0);
   --chart-4: oklch(0.439 0 0);
   --chart-5: oklch(0.269 0 0);
   --sidebar: #ffffff;
-  --sidebar-foreground: #0b0f19;
-  --sidebar-primary: #4f46e5;
+  --sidebar-foreground: #0f172a;
+  --sidebar-primary: #2563eb;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #eef1f6;
-  --sidebar-accent-foreground: #0b0f19;
-  --sidebar-border: oklch(0 0 0 / 10%);
-  --sidebar-ring: #4f46e5;
+  --sidebar-accent: #f1f5f9;
+  --sidebar-accent-foreground: #0f172a;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #2563eb;
 }
 
 @layer base {

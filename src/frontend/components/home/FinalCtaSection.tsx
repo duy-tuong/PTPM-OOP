@@ -1,48 +1,49 @@
 import Link from "next/link";
-import { Reveal } from "@/components/shared/Reveal";
-import { RippleButton } from "@/components/shared/RippleButton";
+import { ScrollReveal } from "@/components/home/ScrollReveal";
 import { Button } from "@/components/ui/button";
-import { MouseGlow } from "@/components/home/effects/MouseGlow";
 
-// Section 8/9 của Trang chủ (pivot 2 - theme "Cloudverse"). Khớp lại đúng bản Stitch: KHÔNG bọc trong
-// glass-card (nội dung nằm trực tiếp trên nền, để lộ data mesh cố định phía sau qua NetworkField ở
-// page.tsx), glow tập trung phía trên (ellipse_at_top) thay vì tâm section. Giữ mouse-glow + RippleButton
-// của bản gốc. Bỏ form "nhập email" giả (không có backend endpoint newsletter) - link "đối tác tiếp
-// thị liên kết" trỏ thẳng /doi-tac (route thật đã có ở Phase 6.1), không phải trang không tồn tại.
 export function FinalCtaSection() {
   return (
-    <section className="relative overflow-hidden px-4 py-12 sm:px-6 lg:px-8">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,color-mix(in_oklch,var(--primary)_15%,transparent)_0%,transparent_60%)]"
-      />
-      <MouseGlow className="relative mx-auto max-w-5xl">
-        <Reveal className="relative z-10 flex flex-col items-center gap-8 text-center">
-          <h2 className="font-heading text-3xl font-bold text-balance sm:text-4xl lg:text-5xl lg:whitespace-nowrap">
-            Bạn đã sẵn sàng mở rộng quy mô hạ tầng chưa?
-          </h2>
-          <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <RippleButton
-              href="/lien-he"
-              className="h-12 px-8 text-base md:h-14 md:px-10 md:text-lg shadow-[0_0_20px_color-mix(in_oklch,var(--primary)_25%,transparent)]"
+    <section className="px-4 py-16 sm:px-6 lg:px-8 mb-12">
+      <ScrollReveal>
+        <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[32px] bg-[#0F172A] px-6 py-20 text-center shadow-2xl">
+          {/* Subtle B2B gradient overlay */}
+          <div 
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue-900/40 via-transparent to-cyan-900/30" 
+          />
+          
+          <div className="relative z-10 mx-auto max-w-3xl flex flex-col items-center gap-6">
+            <h2 className="font-heading text-4xl font-extrabold text-white sm:text-5xl md:text-6xl text-balance leading-tight">
+              Bạn đã sẵn sàng mở rộng <br className="hidden sm:block"/> hạ tầng của mình?
+            </h2>
+            <p className="text-lg text-slate-300 sm:text-xl">
+              Để Cloudverse đồng hành cùng bạn.
+            </p>
+            
+            <div className="mt-6 flex w-full flex-col items-center justify-center gap-4 sm:w-auto sm:flex-row">
+              <Button
+                nativeButton={false}
+                className="w-full h-14 rounded-xl bg-blue-600 px-10 text-lg font-bold text-white shadow-lg transition-all hover:-translate-y-0.5 hover:bg-blue-500 hover:shadow-xl sm:w-auto"
+                render={<Link href="/lien-he">Đặt dịch vụ</Link>}
+              />
+              <Button
+                variant="outline"
+                nativeButton={false}
+                className="w-full h-14 rounded-xl border-slate-600 bg-transparent px-10 text-lg font-bold text-white transition-all hover:bg-slate-800 hover:border-slate-400 sm:w-auto"
+                render={<Link href="/lien-he?intent=tu-van">Tư vấn miễn phí</Link>}
+              />
+            </div>
+            
+            <Link
+              href="/doi-tac"
+              className="mt-6 text-sm font-medium text-slate-400 transition-colors hover:text-white"
             >
-              Đặt dịch vụ
-            </RippleButton>
-            <Button
-              variant="outline"
-              nativeButton={false}
-              className="h-12 border-primary px-8 text-base text-primary hover:bg-primary/10 md:h-14 md:px-10 md:text-lg"
-              render={<Link href="/lien-he?intent=tu-van">Tư vấn miễn phí</Link>}
-            />
+              Trở thành đối tác tiếp thị liên kết →
+            </Link>
           </div>
-          <Link
-            href="/doi-tac"
-            className="text-xs text-muted-foreground/70 transition-colors hover:text-primary hover:underline"
-          >
-            Trở thành đối tác tiếp thị liên kết
-          </Link>
-        </Reveal>
-      </MouseGlow>
+        </div>
+      </ScrollReveal>
     </section>
   );
 }

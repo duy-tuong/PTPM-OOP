@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { getApiUrl } from "@/lib/api/config";
 import { getAdminServicePlanById } from "@/lib/api/admin/service-plans";
 import { getAdminServiceCategories } from "@/lib/api/admin/service-categories";
+import { getAdminAddons } from "@/lib/api/admin/addons";
+import { getRegions } from "@/lib/api/catalog";
 import { ADMIN_ACCESS_TOKEN_COOKIE } from "@/lib/auth/adminAuthCookies";
 import { ApiError } from "@/lib/api/http";
 import { ServicePlanForm } from "@/components/admin/service-plans/ServicePlanForm";
@@ -22,12 +24,14 @@ export default async function AdminEditServicePlanPage({ params }: AdminEditServ
   const token = cookieStore.get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
   const baseUrl = getApiUrl();
 
-  const [plan, categories] = await Promise.all([
+  const [plan, categories, regions, addons] = await Promise.all([
     getAdminServicePlanById(baseUrl, Number(id), token).catch((error) => {
       if (error instanceof ApiError && error.status === 404) return null;
       throw error;
     }),
     getAdminServiceCategories(baseUrl, token),
+    getRegions(),
+    getAdminAddons(baseUrl, token),
   ]);
 
   if (!plan) notFound();
@@ -39,7 +43,7 @@ export default async function AdminEditServicePlanPage({ params }: AdminEditServ
           <h1 className="font-heading text-2xl font-semibold tracking-tight text-zinc-900">Sửa gói dịch vụ</h1>
           <p className="mt-1 text-[14px] text-zinc-500">{plan.name}</p>
         </div>
-        <ServicePlanForm mode="edit" initialData={plan} categories={categories} />
+        <ServicePlanForm mode="edit" initialData={plan} categories={categories} regions={regions} availableAddons={addons} />
       </div>
     </div>
   );

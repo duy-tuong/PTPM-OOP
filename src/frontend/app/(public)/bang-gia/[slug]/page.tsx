@@ -8,6 +8,7 @@ import { PlanDetailHero } from "@/components/pricing/PlanDetailHero";
 import { PlanDetailContent } from "@/components/pricing/PlanDetailContent";
 import { PlanFloatingBuyBar } from "@/components/pricing/PlanFloatingBuyBar";
 import { FaqColumn } from "@/components/home/FaqColumn";
+import { computeCustomPlanUnitPrice } from "@/lib/pricing/customPlanPricing";
 import type { ServicePlanDetailDto } from "@/lib/types/catalog";
 
 // Fetch theo slug KHÔNG bọc safeFetch (khác các fetch phụ bên dưới) - xem comment lib/api/safe.ts:
@@ -47,7 +48,16 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ slu
   const faqs = category ? await safeFetch(() => getFaqs(category.id, { revalidate: 3600 }), []) : [];
 
   const defaultPrice = plan.prices.find((p) => p.isDefault) ?? plan.prices[0] ?? null;
-  const floatingPrice = defaultPrice ? (defaultPrice.promotionalPrice ?? defaultPrice.price) : null;
+  // Custom: "giá từ" ở cấu hình TỐI THIỂU - dùng ĐÚNG công thức với lúc tính giá bán thật (xem
+  // ServicePlanService.ComputeStartingPrice ở backend), tránh hiển thị 1 giá nhưng lúc mua tính khác.
+  const floatingPrice =
+    !defaultPrice
+      ? null
+      : plan.packageType === "Custom"
+        ? plan.minVcpu != null && plan.minRamMb != null && plan.minDiskGb != null
+          ? computeCustomPlanUnitPrice(plan, plan.minVcpu, plan.minRamMb, plan.minDiskGb, defaultPrice.periodMonths, defaultPrice.discountPercent)
+          : null
+        : (defaultPrice.promotionalPrice ?? defaultPrice.price);
 
   return (
     <>

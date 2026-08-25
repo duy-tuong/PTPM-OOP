@@ -10,10 +10,19 @@ export interface ServiceCategoryDto {
   displayOrder: number;
 }
 
+// Khớp Application/Features/Catalog/Regions/Dtos/RegionDto.cs
+export interface RegionDto {
+  id: string;
+  name: string;
+  city: string;
+  countryCode: string;
+}
+
 // Khớp Application/Features/Catalog/ServicePlans/Dtos/*.cs
 export interface ServicePlanQueryParams extends PaginationParams {
   categorySlug?: string;
   isFeatured?: boolean;
+  regionId?: string;
 }
 
 export interface PlanFeatureDto {
@@ -31,9 +40,41 @@ export interface PlanPriceDto {
   promotionalPrice?: number | null;
   currency: string;
   isDefault: boolean;
+  // Chỉ có ý nghĩa khi plan.packageType === "Custom" - % giảm giá theo chu kỳ này, price/promotionalPrice
+  // bị bỏ qua với gói Custom. Xem PlanPrice.DiscountPercent (backend).
+  discountPercent?: number | null;
 }
 
-export interface ServicePlanListItemDto {
+// Cấu hình gói Custom (kéo thanh trượt vCPU/RAM/Disk) - chỉ có giá trị khi packageType === "Custom".
+export interface ServicePlanCustomConfigFields {
+  packageType: string;
+  minVcpu?: number | null;
+  maxVcpu?: number | null;
+  stepVcpu?: number | null;
+  minRamMb?: number | null;
+  maxRamMb?: number | null;
+  stepRamMb?: number | null;
+  minDiskGb?: number | null;
+  maxDiskGb?: number | null;
+  stepDiskGb?: number | null;
+  pricePerVcpuPerMonth?: number | null;
+  pricePerRamGbPerMonth?: number | null;
+  pricePerDiskGbPerMonth?: number | null;
+}
+
+// Khớp Application/Features/Catalog/ServicePlans/Dtos/PlanAddonDto.cs - dùng chung cho cả response
+// Admin (AdminServicePlanDto) và public (ServicePlanListItemDto/ServicePlanDetailDto).
+export interface PlanAddonDto {
+  addonId: number;
+  addonName: string;
+  type: string;
+  billingType: string;
+  unitName?: string | null;
+  pricePerMonth: number;
+  maxQuantity: number;
+}
+
+export interface ServicePlanListItemDto extends ServicePlanCustomConfigFields {
   id: number;
   name: string;
   slug: string;
@@ -42,12 +83,14 @@ export interface ServicePlanListItemDto {
   qrCodeUrl?: string | null;
   categoryName: string;
   categorySlug: string;
+  regionName?: string | null;
   startingPrice?: number | null;
   features: PlanFeatureDto[];
   prices: PlanPriceDto[];
+  addons: PlanAddonDto[];
 }
 
-export interface ServicePlanDetailDto {
+export interface ServicePlanDetailDto extends ServicePlanCustomConfigFields {
   id: number;
   name: string;
   slug: string;
@@ -57,8 +100,10 @@ export interface ServicePlanDetailDto {
   qrCodeUrl?: string | null;
   categoryName: string;
   categorySlug: string;
+  regionName?: string | null;
   features: PlanFeatureDto[];
   prices: PlanPriceDto[];
+  addons: PlanAddonDto[];
 }
 
 // Khớp Application/Features/Catalog/TldPricings/Dtos/*.cs

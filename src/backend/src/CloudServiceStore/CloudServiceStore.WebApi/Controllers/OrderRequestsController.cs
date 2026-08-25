@@ -16,10 +16,12 @@ namespace CloudServiceStore.WebApi.Controllers;
 public class OrderRequestsController : ControllerBase
 {
     private readonly IOrderRequestService _service;
+    private readonly IPlanChangeService _planChangeService;
 
-    public OrderRequestsController(IOrderRequestService service)
+    public OrderRequestsController(IOrderRequestService service, IPlanChangeService planChangeService)
     {
         _service = service;
+        _planChangeService = planChangeService;
     }
 
     [HttpPost]
@@ -70,5 +72,25 @@ public class OrderRequestsController : ControllerBase
         var sub = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
         var customerId = Guid.Parse(sub!);
         return Ok(await _service.GetMyServicesAsync(customerId, query, cancellationToken));
+    }
+
+    // Đổi gói (Phần 6) - Preview trả AmountDue để khách xác nhận trước khi thực sự đổi, không ghi gì
+    // xuống DB.
+    [HttpPost("items/{itemId}/change-plan/preview")]
+    [Authorize(Roles = "Customer")]
+    public async Task<ActionResult<PlanChangePreviewDto>> PreviewChangePlan(int itemId, RequestPlanChangeDto dto, CancellationToken cancellationToken)
+    {
+        var sub = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        var customerId = Guid.Parse(sub!);
+        return Ok(await _planChangeService.PreviewChangeAsync(itemId, dto.TargetPlanId, customerId, cancellationToken));
+    }
+
+    [HttpPost("items/{itemId}/change-plan")]
+    [Authorize(Roles = "Customer")]
+    public async Task<ActionResult<PlanChangeResultDto>> ChangePlan(int itemId, RequestPlanChangeDto dto, CancellationToken cancellationToken)
+    {
+        var sub = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        var customerId = Guid.Parse(sub!);
+        return Ok(await _planChangeService.RequestChangeAsync(itemId, dto.TargetPlanId, customerId, cancellationToken));
     }
 }

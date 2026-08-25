@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { AnimatedCheck } from "@/components/pricing/AnimatedCheck";
+import { PlanDetailCustomPricing } from "@/components/pricing/PlanDetailCustomPricing";
 import { formatCurrency } from "@/lib/utils";
 import type { ServicePlanDetailDto } from "@/lib/types/catalog";
 
@@ -35,36 +36,42 @@ export function PlanDetailContent({ plan }: { plan: ServicePlanDetailDto }) {
         <div className="glass-card h-fit rounded-2xl p-8">
           <h2 className="font-heading mb-6 text-2xl font-bold">Bảng Giá</h2>
 
-          {plan.prices.length > 0 ? (
-            <ul className="flex flex-col gap-3">
-              {plan.prices.map((price) => (
-                <li
-                  key={price.periodMonths}
-                  className="flex items-center justify-between rounded-xl border border-border px-4 py-3"
-                >
-                  <span className="text-sm text-muted-foreground">
-                    {price.periodMonths} tháng
-                    {price.isDefault && (
-                      <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold tracking-wide text-primary uppercase">
-                        Phổ biến
-                      </span>
-                    )}
-                  </span>
-                  <span className="font-bold text-foreground">
-                    {formatCurrency(price.promotionalPrice ?? price.price)}
-                  </span>
-                </li>
-              ))}
-            </ul>
+          {plan.packageType === "Custom" ? (
+            <PlanDetailCustomPricing plan={plan} />
           ) : (
-            <p className="text-sm text-muted-foreground">Chưa có thông tin giá cho gói này.</p>
-          )}
+            <>
+              {plan.prices.length > 0 ? (
+                <ul className="flex flex-col gap-3">
+                  {plan.prices.map((price) => (
+                    <li
+                      key={price.periodMonths}
+                      className="flex items-center justify-between rounded-xl border border-border px-4 py-3"
+                    >
+                      <span className="text-sm text-muted-foreground">
+                        {price.periodMonths} tháng
+                        {price.isDefault && (
+                          <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold tracking-wide text-primary uppercase">
+                            Phổ biến
+                          </span>
+                        )}
+                      </span>
+                      <span className="font-bold text-foreground">
+                        {formatCurrency(price.promotionalPrice ?? price.price)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">Chưa có thông tin giá cho gói này.</p>
+              )}
 
-          <Button
-            className="mt-8 w-full"
-            nativeButton={false}
-            render={<Link href={`/lien-he?planId=${plan.id}`}>Đặt dịch vụ</Link>}
-          />
+              <Button
+                className="mt-8 w-full"
+                nativeButton={false}
+                render={<Link href={`/lien-he?planId=${plan.id}`}>Đặt dịch vụ</Link>}
+              />
+            </>
+          )}
         </div>
       </div>
     </section>

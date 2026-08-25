@@ -4,12 +4,15 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ServicePlanStatus, SERVICE_PLAN_STATUS_LABELS } from "@/lib/types/enums";
 import type { AdminServiceCategoryDto } from "@/lib/types/admin";
+import type { RegionDto } from "@/lib/types/catalog";
 
 interface ServicePlansFilterBarProps {
   categories: AdminServiceCategoryDto[];
+  regions: RegionDto[];
   currentCategorySlug?: string;
   currentIsFeatured?: string;
   currentStatus?: string;
+  currentRegionId?: string;
 }
 
 const STATUS_FILTER_OPTIONS = Object.entries(ServicePlanStatus)
@@ -20,9 +23,11 @@ const STATUS_FILTER_OPTIONS = Object.entries(ServicePlanStatus)
 // state ở URL để back-button/refresh hoạt động đúng, không dùng client state riêng.
 export function ServicePlansFilterBar({
   categories,
+  regions,
   currentCategorySlug,
   currentIsFeatured,
   currentStatus,
+  currentRegionId,
 }: ServicePlansFilterBarProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -93,6 +98,27 @@ export function ServicePlansFilterBar({
           {STATUS_FILTER_OPTIONS.map((option) => (
             <SelectItem key={option.value} value={option.value}>
               {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select
+        items={[
+          { value: "all-regions", label: "Mọi khu vực" },
+          ...regions.map((region) => ({ value: region.id, label: `${region.name} (${region.city})` })),
+        ]}
+        value={currentRegionId ?? "all-regions"}
+        onValueChange={(value) => updateParam("regionId", value === "all-regions" ? null : value)}
+      >
+        <SelectTrigger className="w-[200px] rounded-full bg-white border-zinc-200/60 shadow-none ring-1 ring-zinc-950/5 hover:bg-zinc-50">
+          <SelectValue placeholder="Mọi khu vực" />
+        </SelectTrigger>
+        <SelectContent alignItemWithTrigger={false}>
+          <SelectItem value="all-regions">Mọi khu vực</SelectItem>
+          {regions.map((region) => (
+            <SelectItem key={region.id} value={region.id}>
+              {region.name} ({region.city})
             </SelectItem>
           ))}
         </SelectContent>

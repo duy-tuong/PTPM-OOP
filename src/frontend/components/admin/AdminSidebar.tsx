@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Package,
+  PackagePlus,
   FolderTree,
   ShoppingCart,
   MessageSquare,
@@ -49,6 +50,7 @@ const NAV_GROUPS: { section?: string; items: NavItem[] }[] = [
     items: [
       { href: "/admin/service-plans", label: "Dịch vụ", icon: Package, adminOnly: true },
       { href: "/admin/service-categories", label: "Danh mục dịch vụ", icon: FolderTree, adminOnly: true },
+      { href: "/admin/addons", label: "Tiện ích mua kèm", icon: PackagePlus, adminOnly: true },
       { href: "/admin/tld-pricing", label: "Bảng giá tên miền", icon: Globe, adminOnly: true },
       { href: "/admin/promotions", label: "Khuyến mãi", icon: Tag, adminOnly: true },
     ],

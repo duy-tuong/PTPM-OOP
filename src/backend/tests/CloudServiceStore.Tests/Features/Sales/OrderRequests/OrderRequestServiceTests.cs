@@ -60,6 +60,65 @@ public class OrderRequestServiceTests
         return plan;
     }
 
+    // Gắn 1 Addon tương thích với plan (ServicePlanAddon) - dùng cho các test addon trong đơn hàng.
+    private static async Task<Addon> SeedAddonForPlanAsync(AppDbContext context, ServicePlan plan, int maxQuantity = 2, bool isActive = true, int addonId = 551)
+    {
+        var addon = new Addon
+        {
+            Id = addonId,
+            Name = "Extra IP",
+            Sku = $"ADDON-TEST-{addonId}",
+            Type = AddonType.Ip,
+            BillingType = AddonBillingType.PerUnit,
+            UnitName = "IP",
+            PricePerMonth = 30000m,
+            IsActive = isActive,
+        };
+        context.Addons.Add(addon);
+        context.ServicePlanAddons.Add(new ServicePlanAddon { PlanId = plan.Id, AddonId = addon.Id, MaxQuantity = maxQuantity });
+        await context.SaveChangesAsync();
+        return addon;
+    }
+
+    // Gói Custom: vCPU [1,8] step 1, RAM [1024,8192]MB step 1024, Disk [20,100]GB step 10.
+    // Đơn giá: 50000/vCPU, 20000/GB RAM, 5000/GB Disk mỗi tháng - dùng chung công thức
+    // CustomPlanPricing.ComputeUnitPrice ở các test tính giá bên dưới.
+    private static async Task<ServicePlan> SeedCustomPlanAsync(AppDbContext context)
+    {
+        var category = new ServiceCategory { Id = 511, Name = "Test Category Custom", Slug = "test-category-custom", DisplayOrder = 1, IsActive = true };
+        var plan = new ServicePlan
+        {
+            Id = 511,
+            CategoryId = category.Id,
+            Category = category,
+            Name = "Custom Test Plan",
+            Slug = "custom-test-plan",
+            Status = ServicePlanStatus.Active,
+            PackageType = ServicePlanPackageType.Custom,
+            MinVcpu = 1,
+            MaxVcpu = 8,
+            StepVcpu = 1,
+            MinRamMb = 1024,
+            MaxRamMb = 8192,
+            StepRamMb = 1024,
+            MinDiskGb = 20,
+            MaxDiskGb = 100,
+            StepDiskGb = 10,
+            PricePerVcpuPerMonth = 50000m,
+            PricePerRamGbPerMonth = 20000m,
+            PricePerDiskGbPerMonth = 5000m,
+        };
+
+        context.ServiceCategories.Add(category);
+        context.ServicePlans.Add(plan);
+        context.PlanPrices.AddRange(
+            new PlanPrice { Id = 511, PlanId = plan.Id, PeriodMonths = 1, Price = 0m, DiscountPercent = 0m, IsDefault = true, IsActive = true },
+            new PlanPrice { Id = 512, PlanId = plan.Id, PeriodMonths = 12, Price = 0m, DiscountPercent = 10m, IsDefault = false, IsActive = true }
+        );
+        await context.SaveChangesAsync();
+        return plan;
+    }
+
     private static async Task<Promotion> SeedPromotionAsync(
         AppDbContext context,
         DiscountType discountType,
@@ -290,6 +349,42 @@ public class OrderRequestServiceTests
         var sut = CreateSut(context);
 
         await Assert.ThrowsAsync<ValidationException>(() => sut.CreateAsync(BuildDomainDto(tldPricing.Id, "myshop", quantity: 1)));
+    }
+
+    // Cùng chính sách "Deprecated vẫn cho gia hạn" đang áp dụng cho ServicePlan (xem
+    // BuildServicePlanItemAsync) - TldPricing.IsActive=false chỉ chặn ĐĂNG KÝ MỚI, không chặn khách cũ
+    // gia hạn tên miền đang sở hữu.
+    [Fact]
+    public async Task CreateRenewalAsync_TldPricingInactive_StillSucceeds()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var tldPricing = await SeedTldPricingAsync(context); // isActive=true lúc mua ban đầu
+        var customer = await SeedCustomerAsync(context, roleId: 918);
+        var originalOrder = new OrderRequest
+        {
+            OrderCode = "ORD-ORIGINAL-TLD-INACTIVE",
+            CustomerId = customer.Id,
+            CustomerType = CustomerType.Individual,
+            CustomerName = customer.FullName,
+            CustomerEmail = customer.Email,
+            CustomerPhone = customer.Phone!,
+            TotalPrice = 250000m,
+            Status = OrderRequestStatus.Completed,
+            CreatedAt = DateTime.UtcNow,
+            Items = { new OrderRequestItem { TldPricingId = tldPricing.Id, DomainName = "myshop", Quantity = 1, UnitPrice = 250000m, LineTotal = 250000m } }
+        };
+        context.OrderRequests.Add(originalOrder);
+        await context.SaveChangesAsync();
+        var originalItem = originalOrder.Items.Single();
+
+        // Admin ngừng bán TLD này SAU khi khách đã mua - khách cũ vẫn phải gia hạn được.
+        tldPricing.IsActive = false;
+        await context.SaveChangesAsync();
+        var sut = CreateSut(context);
+
+        var result = await sut.CreateRenewalAsync(new CreateRenewalOrderRequestDto { OrderRequestItemId = originalItem.Id, Years = 1 }, customer.Id);
+
+        Assert.Equal(300000m, result.TotalPrice); // RenewPrice, không bị chặn
     }
 
     [Fact]
@@ -976,6 +1071,264 @@ public class OrderRequestServiceTests
         var result = await sut.CreateRenewalAsync(new CreateRenewalOrderRequestDto { OrderRequestItemId = originalItem.Id, PeriodMonths = 1 }, customer.Id);
 
         Assert.Equal(150000m, result.TotalPrice);
+    }
+
+    [Fact]
+    public async Task CreateAsync_WithValidAddon_AddsAddonCostToTotalPrice()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context); // PeriodMonths=1 -> 100000
+        var addon = await SeedAddonForPlanAsync(context, plan, maxQuantity: 5); // 30000/tháng
+        var sut = CreateSut(context);
+        var dto = new CreateOrderRequestDto
+        {
+            CustomerType = CustomerType.Individual,
+            CustomerName = "Test Customer",
+            CustomerEmail = "test@example.com",
+            CustomerPhone = "0900000000",
+            Items =
+            {
+                new CreateOrderRequestItemDto
+                {
+                    ServicePlanId = plan.Id,
+                    PeriodMonths = 1,
+                    Quantity = 1,
+                    Addons = { new AddonSelectionDto { AddonId = addon.Id, Quantity = 2 } }
+                }
+            }
+        };
+
+        var result = await sut.CreateAsync(dto);
+
+        // 100000 (plan) + 30000 * 2 (2 IP phụ, 1 tháng) = 160000
+        Assert.Equal(160000m, result.TotalPrice);
+        var savedItem = context.OrderRequests.Single(o => o.Id == result.Id).Items.Single();
+        var savedAddon = Assert.Single(savedItem.Addons);
+        Assert.Equal(60000m, savedAddon.LineTotal);
+    }
+
+    [Fact]
+    public async Task CreateAsync_AddonNotCompatibleWithPlan_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        // Addon tồn tại nhưng KHÔNG gắn ServicePlanAddon cho plan này.
+        context.Addons.Add(new Addon { Id = 552, Name = "Unlinked Addon", Sku = "ADDON-UNLINKED", Type = AddonType.Disk, BillingType = AddonBillingType.PerUnit, PricePerMonth = 2000m, IsActive = true });
+        await context.SaveChangesAsync();
+        var sut = CreateSut(context);
+        var dto = new CreateOrderRequestDto
+        {
+            CustomerType = CustomerType.Individual,
+            CustomerName = "Test Customer",
+            CustomerEmail = "test@example.com",
+            CustomerPhone = "0900000000",
+            Items = { new CreateOrderRequestItemDto { ServicePlanId = plan.Id, PeriodMonths = 1, Quantity = 1, Addons = { new AddonSelectionDto { AddonId = 552, Quantity = 1 } } } }
+        };
+
+        await Assert.ThrowsAsync<ValidationException>(() => sut.CreateAsync(dto));
+    }
+
+    [Fact]
+    public async Task CreateAsync_AddonQuantityExceedsMaxQuantity_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var addon = await SeedAddonForPlanAsync(context, plan, maxQuantity: 2);
+        var sut = CreateSut(context);
+        var dto = new CreateOrderRequestDto
+        {
+            CustomerType = CustomerType.Individual,
+            CustomerName = "Test Customer",
+            CustomerEmail = "test@example.com",
+            CustomerPhone = "0900000000",
+            Items = { new CreateOrderRequestItemDto { ServicePlanId = plan.Id, PeriodMonths = 1, Quantity = 1, Addons = { new AddonSelectionDto { AddonId = addon.Id, Quantity = 3 } } } }
+        };
+
+        await Assert.ThrowsAsync<ValidationException>(() => sut.CreateAsync(dto));
+    }
+
+    [Fact]
+    public async Task CreateAsync_InactiveAddon_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var addon = await SeedAddonForPlanAsync(context, plan, isActive: false);
+        var sut = CreateSut(context);
+        var dto = new CreateOrderRequestDto
+        {
+            CustomerType = CustomerType.Individual,
+            CustomerName = "Test Customer",
+            CustomerEmail = "test@example.com",
+            CustomerPhone = "0900000000",
+            Items = { new CreateOrderRequestItemDto { ServicePlanId = plan.Id, PeriodMonths = 1, Quantity = 1, Addons = { new AddonSelectionDto { AddonId = addon.Id, Quantity = 1 } } } }
+        };
+
+        await Assert.ThrowsAsync<ValidationException>(() => sut.CreateAsync(dto));
+    }
+
+    [Fact]
+    public async Task CreateRenewalAsync_CopiesAddonSelectionsAtCurrentPrice()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var addon = await SeedAddonForPlanAsync(context, plan, maxQuantity: 5);
+        var customer = await SeedCustomerAsync(context, roleId: 901);
+        var sut = CreateSut(context);
+        var created = await sut.CreateAsync(new CreateOrderRequestDto
+        {
+            CustomerType = CustomerType.Individual,
+            CustomerName = "Test Customer",
+            CustomerEmail = "test@example.com",
+            CustomerPhone = "0900000000",
+            Items = { new CreateOrderRequestItemDto { ServicePlanId = plan.Id, PeriodMonths = 1, Quantity = 1, Addons = { new AddonSelectionDto { AddonId = addon.Id, Quantity = 2 } } } }
+        }, customer.Id);
+        var originalItem = context.OrderRequests.Single(o => o.Id == created.Id).Items.Single();
+
+        // Admin tăng giá addon SAU khi khách đã mua - gia hạn phải dùng giá addon MỚI (không
+        // grandfathering cho addon, khác PlanPrice).
+        addon.PricePerMonth = 50000m;
+        await context.SaveChangesAsync();
+
+        var result = await sut.CreateRenewalAsync(new CreateRenewalOrderRequestDto { OrderRequestItemId = originalItem.Id, PeriodMonths = 1 }, customer.Id);
+
+        // 100000 (plan) + 50000 * 2 (giá addon mới) = 200000
+        Assert.Equal(200000m, result.TotalPrice);
+    }
+
+    // Gói Custom (PackageType=Custom): giá tính từ đơn giá vCPU/RAM/Disk x cấu hình khách chọn,
+    // KHÔNG dùng PlanPrice.Price/PromotionalPrice - xem OrderRequestService.BuildServicePlanItemAsync
+    // + CustomPlanPricing.ComputeUnitPrice.
+    [Fact]
+    public async Task CreateAsync_CustomPlanValidSelection_ComputesPriceFromFormula()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedCustomPlanAsync(context);
+        var sut = CreateSut(context);
+        var dto = new CreateOrderRequestDto
+        {
+            CustomerType = CustomerType.Individual,
+            CustomerName = "Test Customer",
+            CustomerEmail = "test@example.com",
+            CustomerPhone = "0900000000",
+            Items = { new CreateOrderRequestItemDto { ServicePlanId = plan.Id, PeriodMonths = 1, Quantity = 1, ChosenVcpu = 2, ChosenRamMb = 2048, ChosenDiskGb = 50 } }
+        };
+
+        var result = await sut.CreateAsync(dto);
+
+        // 2*50000 + 2*20000 + 50*5000 = 390000, DiscountPercent=0, PeriodMonths=1
+        Assert.Equal(390000m, result.TotalPrice);
+        var savedItem = context.OrderRequests.Single(o => o.Id == result.Id).Items.Single();
+        Assert.Equal(2, savedItem.ChosenVcpu);
+        Assert.Equal(2048, savedItem.ChosenRamMb);
+        Assert.Equal(50, savedItem.ChosenDiskGb);
+    }
+
+    [Fact]
+    public async Task CreateAsync_CustomPlanAppliesCycleDiscountPercent()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedCustomPlanAsync(context);
+        var sut = CreateSut(context);
+        var dto = new CreateOrderRequestDto
+        {
+            CustomerType = CustomerType.Individual,
+            CustomerName = "Test Customer",
+            CustomerEmail = "test@example.com",
+            CustomerPhone = "0900000000",
+            Items = { new CreateOrderRequestItemDto { ServicePlanId = plan.Id, PeriodMonths = 12, Quantity = 1, ChosenVcpu = 2, ChosenRamMb = 2048, ChosenDiskGb = 50 } }
+        };
+
+        var result = await sut.CreateAsync(dto);
+
+        // monthlyBase=390000, 12 tháng, giảm 10%: 390000*12*0.9 = 4212000
+        Assert.Equal(4212000m, result.TotalPrice);
+    }
+
+    [Fact]
+    public async Task CreateAsync_CustomPlanChosenVcpuOutOfRange_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedCustomPlanAsync(context);
+        var sut = CreateSut(context);
+        var dto = new CreateOrderRequestDto
+        {
+            CustomerType = CustomerType.Individual,
+            CustomerName = "Test Customer",
+            CustomerEmail = "test@example.com",
+            CustomerPhone = "0900000000",
+            Items = { new CreateOrderRequestItemDto { ServicePlanId = plan.Id, PeriodMonths = 1, Quantity = 1, ChosenVcpu = 20, ChosenRamMb = 2048, ChosenDiskGb = 50 } }
+        };
+
+        await Assert.ThrowsAsync<ValidationException>(() => sut.CreateAsync(dto));
+    }
+
+    [Fact]
+    public async Task CreateAsync_CustomPlanChosenRamNotMultipleOfStep_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedCustomPlanAsync(context);
+        var sut = CreateSut(context);
+        var dto = new CreateOrderRequestDto
+        {
+            CustomerType = CustomerType.Individual,
+            CustomerName = "Test Customer",
+            CustomerEmail = "test@example.com",
+            CustomerPhone = "0900000000",
+            Items = { new CreateOrderRequestItemDto { ServicePlanId = plan.Id, PeriodMonths = 1, Quantity = 1, ChosenVcpu = 2, ChosenRamMb = 1500, ChosenDiskGb = 50 } }
+        };
+
+        await Assert.ThrowsAsync<ValidationException>(() => sut.CreateAsync(dto));
+    }
+
+    [Fact]
+    public async Task CreateAsync_CustomPlanMissingChosenConfig_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedCustomPlanAsync(context);
+        var sut = CreateSut(context);
+        var dto = new CreateOrderRequestDto
+        {
+            CustomerType = CustomerType.Individual,
+            CustomerName = "Test Customer",
+            CustomerEmail = "test@example.com",
+            CustomerPhone = "0900000000",
+            Items = { new CreateOrderRequestItemDto { ServicePlanId = plan.Id, PeriodMonths = 1, Quantity = 1 } }
+        };
+
+        await Assert.ThrowsAsync<ValidationException>(() => sut.CreateAsync(dto));
+    }
+
+    [Fact]
+    public async Task CreateRenewalAsync_CustomPlanPreservesChosenConfigAtCurrentUnitPrices()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedCustomPlanAsync(context);
+        var customer = await SeedCustomerAsync(context, roleId: 902);
+        var sut = CreateSut(context);
+        var created = await sut.CreateAsync(new CreateOrderRequestDto
+        {
+            CustomerType = CustomerType.Individual,
+            CustomerName = "Test Customer",
+            CustomerEmail = "test@example.com",
+            CustomerPhone = "0900000000",
+            Items = { new CreateOrderRequestItemDto { ServicePlanId = plan.Id, PeriodMonths = 1, Quantity = 1, ChosenVcpu = 2, ChosenRamMb = 2048, ChosenDiskGb = 50 } }
+        }, customer.Id);
+        var originalItem = context.OrderRequests.Single(o => o.Id == created.Id).Items.Single();
+
+        // Admin tăng đơn giá vCPU SAU khi khách đã mua - gia hạn phải dùng đơn giá MỚI nhưng GIỮ
+        // NGUYÊN cấu hình đã chọn (2 vCPU/2048MB/50GB) - xem giới hạn Grandfathering cho Custom trong
+        // OrderRequestService.CreateRenewalAsync.
+        plan.PricePerVcpuPerMonth = 100000m;
+        await context.SaveChangesAsync();
+
+        var result = await sut.CreateRenewalAsync(new CreateRenewalOrderRequestDto { OrderRequestItemId = originalItem.Id, PeriodMonths = 1 }, customer.Id);
+
+        // 2*100000 + 2*20000 + 50*5000 = 490000
+        Assert.Equal(490000m, result.TotalPrice);
+        var renewedItem = context.OrderRequests.Single(o => o.Id == result.Id).Items.Single();
+        Assert.Equal(2, renewedItem.ChosenVcpu);
+        Assert.Equal(2048, renewedItem.ChosenRamMb);
+        Assert.Equal(50, renewedItem.ChosenDiskGb);
     }
 
     [Fact]

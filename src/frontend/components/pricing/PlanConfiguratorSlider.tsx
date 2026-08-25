@@ -5,12 +5,23 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { AnimatedCheck } from "@/components/pricing/AnimatedCheck";
 import { AnimatedPrice } from "@/components/shared/AnimatedPrice";
+import { computeCustomPlanUnitPrice } from "@/lib/pricing/customPlanPricing";
 import type { ServicePlanListItemDto } from "@/lib/types/catalog";
 
 const MONTHLY_PERIOD_MONTHS = 1;
 
+// Fixed: price.price/promotionalPrice như cũ. Custom: price.price luôn = 0 (bị bỏ qua với gói Custom,
+// xem PlanPrice.DiscountPercent ở backend) - phải tính theo cấu hình TỐI THIỂU (Min vCPU/RAM/Disk),
+// dùng ĐÚNG công thức với lúc hiển thị "giá từ" trên trang chi tiết (ServicePlanService.ComputeStartingPrice)
+// để tránh hiện "0đ" (bug đã gặp) hoặc hiển thị 1 giá nhưng lúc mua tính ra giá khác.
 export function priceFor(plan: ServicePlanListItemDto, period: number): number {
   const price = plan.prices?.find((p) => p.periodMonths === period) ?? plan.prices?.find((p) => p.periodMonths === MONTHLY_PERIOD_MONTHS);
+
+  if (plan.packageType === "Custom") {
+    if (plan.minVcpu == null || plan.minRamMb == null || plan.minDiskGb == null) return plan.startingPrice ?? 0;
+    return computeCustomPlanUnitPrice(plan, plan.minVcpu, plan.minRamMb, plan.minDiskGb, price?.periodMonths ?? MONTHLY_PERIOD_MONTHS, price?.discountPercent);
+  }
+
   return price ? (price.promotionalPrice ?? price.price) : (plan.startingPrice ?? 0);
 }
 
@@ -32,6 +43,11 @@ export function PlanConfiguratorSlider({ plans, period }: { plans: ServicePlanLi
           <Link href={`/bang-gia/${plan.slug}`} className="mt-1 block w-fit text-2xl font-bold text-foreground hover:text-primary">
             {plan.name}
           </Link>
+          {plan.regionName && (
+            <span className="mt-1 inline-block rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+              📍 {plan.regionName}
+            </span>
+          )}
         </div>
         <input
           type="range"

@@ -5,6 +5,7 @@ import { Plus } from "lucide-react";
 import { getApiUrl } from "@/lib/api/config";
 import { getAdminServicePlans } from "@/lib/api/admin/service-plans";
 import { getAdminServiceCategories } from "@/lib/api/admin/service-categories";
+import { getRegions } from "@/lib/api/catalog";
 import { ADMIN_ACCESS_TOKEN_COOKIE } from "@/lib/auth/adminAuthCookies";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
 };
 
 interface AdminServicePlansPageProps {
-  searchParams: Promise<{ page?: string; categorySlug?: string; isFeatured?: string; status?: string }>;
+  searchParams: Promise<{ page?: string; categorySlug?: string; isFeatured?: string; status?: string; regionId?: string }>;
 }
 
 export default async function AdminServicePlansPage({ searchParams }: AdminServicePlansPageProps) {
@@ -35,7 +36,7 @@ export default async function AdminServicePlansPage({ searchParams }: AdminServi
   const token = cookieStore.get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
   const baseUrl = getApiUrl();
 
-  const [plans, categories] = await Promise.all([
+  const [plans, categories, regions] = await Promise.all([
     getAdminServicePlans(
       baseUrl,
       {
@@ -44,10 +45,12 @@ export default async function AdminServicePlansPage({ searchParams }: AdminServi
         categorySlug: params.categorySlug || undefined,
         isFeatured: params.isFeatured === "true" ? true : undefined,
         status: params.status ? (Number(params.status) as ServicePlanStatus) : undefined,
+        regionId: params.regionId || undefined,
       },
       token,
     ),
     getAdminServiceCategories(baseUrl, token),
+    getRegions({ revalidate: 3600 }),
   ]);
 
   const categoryNameById = new Map(categories.map((category) => [category.id, category.name]));
@@ -57,6 +60,7 @@ export default async function AdminServicePlansPage({ searchParams }: AdminServi
     if (params.categorySlug) search.set("categorySlug", params.categorySlug);
     if (params.isFeatured) search.set("isFeatured", params.isFeatured);
     if (params.status) search.set("status", params.status);
+    if (params.regionId) search.set("regionId", params.regionId);
     search.set("page", String(page));
     return `/admin/service-plans?${search.toString()}`;
   }
@@ -85,9 +89,11 @@ export default async function AdminServicePlansPage({ searchParams }: AdminServi
           <div className="border-b border-zinc-100 bg-zinc-50/30 p-4">
             <ServicePlansFilterBar
               categories={categories}
+              regions={regions}
               currentCategorySlug={params.categorySlug}
               currentIsFeatured={params.isFeatured}
               currentStatus={params.status}
+              currentRegionId={params.regionId}
             />
           </div>
           <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0">

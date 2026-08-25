@@ -77,7 +77,7 @@ public class OrderRequestService : IOrderRequestService
             }
 
             var (item, planId, categoryId) = itemDto.ServicePlanId is not null
-                ? await BuildServicePlanItemAsync(itemDto.ServicePlanId.Value, itemDto.PeriodMonths, itemDto.Quantity, isRenewal: false, grandfatheredPlanPriceId: null, cancellationToken)
+                ? await BuildServicePlanItemAsync(itemDto.ServicePlanId.Value, itemDto.PeriodMonths, itemDto.Quantity, isRenewal: false, grandfatheredPlanPriceId: null, itemDto.Addons, itemDto.ChosenVcpu, itemDto.ChosenRamMb, itemDto.ChosenDiskGb, cancellationToken)
                 : await BuildTldItemAsync(itemDto.TldPricingId!.Value, itemDto.DomainName, itemDto.Quantity, isRenewal: false, cancellationToken);
 
             items.Add(item);
@@ -85,7 +85,10 @@ public class OrderRequestService : IOrderRequestService
         }
 
         var grandSubtotal = items.Sum(i => i.LineTotal);
-        var totalPrice = grandSubtotal;
+        // Addon không tham gia khuyến mãi (giữ đơn giản, xem quyết định phạm vi ở Phần 4) - cộng thẳng
+        // vào tổng SAU khi tính discount trên grandSubtotal, không đi qua ComputeDiscount/MatchesScope.
+        var addonsTotal = items.Sum(i => i.Addons.Sum(a => a.LineTotal));
+        var totalPrice = grandSubtotal + addonsTotal;
 
         if (promotion is not null)
         {
@@ -107,7 +110,7 @@ public class OrderRequestService : IOrderRequestService
             }
 
             var discount = ComputeDiscount(promotion, matchedSubtotal);
-            totalPrice = Math.Max(0, grandSubtotal - discount);
+            totalPrice = Math.Max(0, grandSubtotal - discount) + addonsTotal;
         }
 
         var orderRequest = new OrderRequest
@@ -158,6 +161,7 @@ public class OrderRequestService : IOrderRequestService
         var baseQuery = repository.Query()
             .Include(o => o.Items).ThenInclude(i => i.ServicePlan)
             .Include(o => o.Items).ThenInclude(i => i.TldPricing)
+            .Include(o => o.Items).ThenInclude(i => i.Addons).ThenInclude(a => a.Addon)
             .Where(o => o.CustomerId == customerId)
             .OrderByDescending(o => o.CreatedAt);
 
@@ -189,9 +193,9 @@ public class OrderRequestService : IOrderRequestService
         // (đơn chưa Completed) đẩy xuống cuối.
         var baseQuery = repository.Query()
             .Include(i => i.OrderRequest)
-            .Include(i => i.ServicePlan)
+            .Include(i => i.ServicePlan).ThenInclude(p => p!.Category)
             .Include(i => i.TldPricing)
-            .Where(i => i.OrderRequest.CustomerId == customerId && i.RenewsFromItemId == null)
+            .Where(i => i.OrderRequest.CustomerId == customerId && i.RenewsFromItemId == null && i.ChangesFromItemId == null)
             .OrderBy(i => i.ExpiresAt == null)
             .ThenBy(i => i.ExpiresAt);
 
@@ -206,7 +210,10 @@ public class OrderRequestService : IOrderRequestService
             ItemId = i.Id,
             OrderCode = i.OrderRequest.OrderCode,
             OrderStatus = i.OrderRequest.Status.ToString(),
+            ServicePlanId = i.ServicePlanId,
             ServicePlanName = i.ServicePlan?.Name,
+            ServicePlanCategorySlug = i.ServicePlan?.Category.Slug,
+            ServicePlanPackageType = i.ServicePlan?.PackageType.ToString(),
             DomainName = i.DomainName,
             TldName = i.TldPricing?.Tld,
             PeriodMonths = i.PeriodMonths,
@@ -225,6 +232,7 @@ public class OrderRequestService : IOrderRequestService
         var order = await repository.Query()
             .Include(o => o.Items).ThenInclude(i => i.ServicePlan)
             .Include(o => o.Items).ThenInclude(i => i.TldPricing)
+            .Include(o => o.Items).ThenInclude(i => i.Addons).ThenInclude(a => a.Addon)
             .FirstOrDefaultAsync(o => o.OrderCode == orderCode, cancellationToken)
             ?? throw new NotFoundException(nameof(OrderRequest), orderCode);
 
@@ -263,7 +271,12 @@ public class OrderRequestService : IOrderRequestService
                 ProductName = i.ServicePlan?.Name ?? (i.TldPricing is not null ? $"{i.DomainName}{i.TldPricing.Tld}" : "Sản phẩm"),
                 Quantity = i.Quantity,
                 UnitPrice = i.UnitPrice,
-                LineTotal = i.LineTotal
+                LineTotal = i.LineTotal,
+                ChosenVcpu = i.ChosenVcpu,
+                ChosenRamMb = i.ChosenRamMb,
+                ChosenDiskGb = i.ChosenDiskGb,
+                ItemKind = i.ChangesFromItemId is not null ? "PlanChange" : i.RenewsFromItemId is not null ? "Renewal" : "New",
+                Addons = i.Addons.Select(OrderItemAddonDto.FromEntity).ToList()
             }).ToList(),
             BankName = _appSettings.BankName,
             BankAccountNumber = _appSettings.BankAccountNumber,
@@ -282,6 +295,7 @@ public class OrderRequestService : IOrderRequestService
         var original = await itemRepository.Query()
             .Include(i => i.OrderRequest)
             .Include(i => i.ServicePlan)
+            .Include(i => i.Addons)
             .FirstOrDefaultAsync(i => i.Id == dto.OrderRequestItemId, cancellationToken);
 
         // Dùng chung 404 cho cả "không tồn tại" lẫn "không phải chủ đơn" - đúng tinh thần tránh lộ
@@ -312,8 +326,14 @@ public class OrderRequestService : IOrderRequestService
                 ? original.PlanPriceId
                 : null;
 
+        // Addon gia hạn theo đúng lựa chọn cũ, tính lại theo đơn giá addon HIỆN HÀNH (không
+        // Grandfathering cho addon - quyết định phạm vi đã chốt, xem Addon.cs).
+        var renewedAddonSelections = original.Addons
+            .Select(a => new AddonSelectionDto { AddonId = a.AddonId, Quantity = a.Quantity })
+            .ToList();
+
         var (item, _, _) = original.ServicePlanId is not null
-            ? await BuildServicePlanItemAsync(original.ServicePlanId.Value, effectivePeriodMonths, original.Quantity, isRenewal: true, grandfatheredPlanPriceId, cancellationToken)
+            ? await BuildServicePlanItemAsync(original.ServicePlanId.Value, effectivePeriodMonths, original.Quantity, isRenewal: true, grandfatheredPlanPriceId, renewedAddonSelections, original.ChosenVcpu, original.ChosenRamMb, original.ChosenDiskGb, cancellationToken)
             : await BuildTldItemAsync(original.TldPricingId!.Value, original.DomainName, dto.Years ?? original.Quantity, isRenewal: true, cancellationToken);
 
         item.RenewsFromItemId = original.Id;
@@ -328,7 +348,7 @@ public class OrderRequestService : IOrderRequestService
             CustomerPhone = customer.Phone ?? string.Empty,
             CompanyName = customer.CompanyName,
             TaxCode = customer.TaxCode,
-            TotalPrice = item.LineTotal,
+            TotalPrice = item.LineTotal + item.Addons.Sum(a => a.LineTotal),
             Source = "renewal",
             CreatedAt = DateTime.UtcNow,
             Items = { item }
@@ -367,7 +387,9 @@ public class OrderRequestService : IOrderRequestService
     //    IsCurrent=false do Admin đổi giá sau đó. Caller (CreateRenewalAsync) chịu trách nhiệm quyết
     //    định có áp dụng Grandfathering hay không (đổi chu kỳ / plan tắt policy => truyền null).
     private async Task<(OrderRequestItem Item, int? PlanId, int? CategoryId)> BuildServicePlanItemAsync(
-        int servicePlanId, int? periodMonths, int quantity, bool isRenewal, int? grandfatheredPlanPriceId, CancellationToken cancellationToken)
+        int servicePlanId, int? periodMonths, int quantity, bool isRenewal, int? grandfatheredPlanPriceId,
+        List<AddonSelectionDto> addonSelections, int? chosenVcpu, int? chosenRamMb, int? chosenDiskGb,
+        CancellationToken cancellationToken)
     {
         var plan = await _unitOfWork.Repository<ServicePlan, int>().GetByIdAsync(servicePlanId, cancellationToken);
         if (plan is null)
@@ -406,7 +428,28 @@ public class OrderRequestService : IOrderRequestService
             throw new ValidationException("Gói dịch vụ chưa có giá cho kỳ hạn đã chọn.");
         }
 
-        var unitPrice = price.PromotionalPrice ?? price.Price;
+        // Custom: không dùng price.Price/PromotionalPrice (bị bỏ qua với PackageType=Custom, xem
+        // PlanPrice.DiscountPercent) - tính từ đơn giá vCPU/RAM/Disk của plan x cấu hình khách chọn,
+        // dùng ĐÚNG công thức với lúc hiển thị "giá từ" (ServicePlanService.ComputeStartingPrice) để
+        // tránh hiển thị 1 giá nhưng lúc mua tính ra giá khác.
+        decimal unitPrice;
+        int? itemChosenVcpu = null;
+        int? itemChosenRamMb = null;
+        int? itemChosenDiskGb = null;
+
+        if (plan.PackageType == ServicePlanPackageType.Custom)
+        {
+            ValidateCustomSelection(plan, chosenVcpu, chosenRamMb, chosenDiskGb);
+            itemChosenVcpu = chosenVcpu;
+            itemChosenRamMb = chosenRamMb;
+            itemChosenDiskGb = chosenDiskGb;
+            unitPrice = CustomPlanPricing.ComputeUnitPrice(plan, chosenVcpu!.Value, chosenRamMb!.Value, chosenDiskGb!.Value, price.PeriodMonths, price.DiscountPercent);
+        }
+        else
+        {
+            unitPrice = price.PromotionalPrice ?? price.Price;
+        }
+
         var item = new OrderRequestItem
         {
             ServicePlanId = plan.Id,
@@ -414,10 +457,90 @@ public class OrderRequestService : IOrderRequestService
             PeriodMonths = price.PeriodMonths,
             Quantity = quantity,
             UnitPrice = unitPrice,
-            LineTotal = unitPrice * quantity
+            LineTotal = unitPrice * quantity,
+            ChosenVcpu = itemChosenVcpu,
+            ChosenRamMb = itemChosenRamMb,
+            ChosenDiskGb = itemChosenDiskGb,
+            Addons = await BuildOrderItemAddonsAsync(plan.Id, price.PeriodMonths, addonSelections, cancellationToken)
         };
 
         return (item, plan.Id, plan.CategoryId);
+    }
+
+    private static void ValidateCustomSelection(ServicePlan plan, int? vcpu, int? ramMb, int? diskGb)
+    {
+        if (vcpu is null || ramMb is null || diskGb is null)
+        {
+            throw new ValidationException("Vui lòng chọn cấu hình vCPU/RAM/Disk cho gói tuỳ biến.");
+        }
+
+        ValidateCustomValue("vCPU", vcpu.Value, plan.MinVcpu, plan.MaxVcpu, plan.StepVcpu);
+        ValidateCustomValue("RAM", ramMb.Value, plan.MinRamMb, plan.MaxRamMb, plan.StepRamMb);
+        ValidateCustomValue("Disk", diskGb.Value, plan.MinDiskGb, plan.MaxDiskGb, plan.StepDiskGb);
+    }
+
+    private static void ValidateCustomValue(string label, int value, int? min, int? max, int? step)
+    {
+        if (min is null || max is null || step is null
+            || value < min.Value || value > max.Value || (value - min.Value) % step.Value != 0)
+        {
+            throw new ValidationException($"Giá trị {label} đã chọn không hợp lệ.");
+        }
+    }
+
+    // Validate + tính giá addon mua kèm 1 dòng ServicePlan - dùng chung cho mua mới (lựa chọn từ
+    // khách) và gia hạn (copy lại lựa chọn cũ, xem CreateRenewalAsync). Không grandfathering: luôn
+    // đọc Addon.PricePerMonth HIỆN HÀNH, kể cả khi gia hạn (quyết định phạm vi đã chốt).
+    private async Task<List<OrderRequestItemAddon>> BuildOrderItemAddonsAsync(
+        int servicePlanId, int periodMonths, List<AddonSelectionDto> selections, CancellationToken cancellationToken)
+    {
+        if (selections.Count == 0)
+        {
+            return new List<OrderRequestItemAddon>();
+        }
+
+        var addonIds = selections.Select(s => s.AddonId).Distinct().ToList();
+
+        // ServicePlanAddon là bảng nối composite key (PlanId, AddonId) - TKey generic của
+        // Repository<TEntity,TKey> chỉ thật sự dùng cho GetByIdAsync (xem Repository.cs), không ảnh
+        // hưởng .Query(), nên dùng tạm <int> làm TKey không có ý nghĩa gì ở đây.
+        var compatibleAddons = await _unitOfWork.Repository<ServicePlanAddon, int>().Query()
+            .Where(pa => pa.PlanId == servicePlanId && addonIds.Contains(pa.AddonId))
+            .ToDictionaryAsync(pa => pa.AddonId, cancellationToken);
+
+        var addons = await _unitOfWork.Repository<Addon, int>().Query()
+            .Where(a => addonIds.Contains(a.Id))
+            .ToDictionaryAsync(a => a.Id, cancellationToken);
+
+        var result = new List<OrderRequestItemAddon>();
+        foreach (var selection in selections)
+        {
+            if (!compatibleAddons.TryGetValue(selection.AddonId, out var planAddon))
+            {
+                throw new ValidationException($"Addon #{selection.AddonId} không thuộc gói dịch vụ này.");
+            }
+
+            if (!addons.TryGetValue(selection.AddonId, out var addon) || !addon.IsActive)
+            {
+                throw new ValidationException($"Addon #{selection.AddonId} hiện không khả dụng.");
+            }
+
+            if (selection.Quantity < 1 || selection.Quantity > planAddon.MaxQuantity)
+            {
+                throw new ValidationException($"Số lượng addon '{addon.Name}' vượt quá giới hạn cho phép ({planAddon.MaxQuantity}).");
+            }
+
+            var unitPrice = addon.PricePerMonth * periodMonths;
+            result.Add(new OrderRequestItemAddon
+            {
+                AddonId = addon.Id,
+                Quantity = selection.Quantity,
+                UnitPrice = unitPrice,
+                LineTotal = unitPrice * selection.Quantity
+            });
+        }
+
+        return result;
     }
 
     // isRenewal chọn RenewPrice (gia hạn) thay vì RegisterPrice (mua mới) - lần đầu tiên RenewPrice
@@ -431,7 +554,11 @@ public class OrderRequestService : IOrderRequestService
             throw new NotFoundException(nameof(TldPricing), tldPricingId);
         }
 
-        if (!tldPricing.IsActive)
+        // isRenewal: cùng chính sách khoan dung với BuildServicePlanItemAsync (Deprecated vẫn cho gia
+        // hạn) - TldPricing không có enum Status nhiều bậc như ServicePlan nên tái dùng thẳng
+        // IsActive=false làm "Deprecated": chặn đăng ký mới, KHÔNG chặn khách cũ gia hạn tên miền đang
+        // sở hữu (vd Admin ngừng bán .io do giá NIC tăng, khách đã mua .io vẫn phải gia hạn được).
+        if (!tldPricing.IsActive && !isRenewal)
         {
             throw new ValidationException("Tên miền này hiện không khả dụng để đặt mua.");
         }

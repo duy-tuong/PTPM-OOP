@@ -52,5 +52,13 @@ public class OrderRequestItemConfiguration : IEntityTypeConfiguration<OrderReque
             .WithMany()
             .HasForeignKey(x => x.RenewsFromItemId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(x => x.ChangesFromItemId);
+
+        // Self-referencing, Restrict - cùng lý do RenewsFromItemId ở trên.
+        builder.HasOne(x => x.ChangesFromItem)
+            .WithMany()
+            .HasForeignKey(x => x.ChangesFromItemId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

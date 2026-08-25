@@ -22,6 +22,10 @@ public class ServicePlanConfiguration : IEntityTypeConfiguration<ServicePlan>
         builder.Property(x => x.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
         // Lưu enum dạng chuỗi (khớp OrderRequestConfiguration.Status) - dễ đọc thẳng trong DB hơn số.
         builder.Property(x => x.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
+        builder.Property(x => x.PackageType).HasConversion<string>().HasMaxLength(20).IsRequired();
+        builder.Property(x => x.PricePerVcpuPerMonth).HasColumnType("decimal(18,2)");
+        builder.Property(x => x.PricePerRamGbPerMonth).HasColumnType("decimal(18,2)");
+        builder.Property(x => x.PricePerDiskGbPerMonth).HasColumnType("decimal(18,2)");
 
         builder.HasIndex(x => x.Slug).IsUnique();
         builder.HasIndex(x => x.Sku).IsUnique().HasFilter("[Sku] IS NOT NULL");
@@ -31,6 +35,13 @@ public class ServicePlanConfiguration : IEntityTypeConfiguration<ServicePlan>
             .WithMany(x => x.Plans)
             .HasForeignKey(x => x.CategoryId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // SetNull (không Restrict/Cascade) - Region chỉ trang trí, nếu sau này có UI xoá Region thì
+        // plan liên quan chỉ mất badge hiển thị chứ không nên bị chặn xoá hay xoá dây chuyền theo.
+        builder.HasOne(x => x.Region)
+            .WithMany()
+            .HasForeignKey(x => x.RegionId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasQueryFilter(x => !x.IsDeleted);
 
@@ -48,6 +59,8 @@ public class ServicePlanConfiguration : IEntityTypeConfiguration<ServicePlan>
                 IsFeatured = false,
                 Status = ServicePlanStatus.Active,
                 AllowGrandfatheredRenewal = true,
+                AllowDowngrade = true,
+                PackageType = ServicePlanPackageType.Fixed,
                 DisplayOrder = 1,
                 IsDeleted = false,
                 CreatedAt = seedCreatedAt
@@ -63,6 +76,8 @@ public class ServicePlanConfiguration : IEntityTypeConfiguration<ServicePlan>
                 IsFeatured = true,
                 Status = ServicePlanStatus.Active,
                 AllowGrandfatheredRenewal = true,
+                AllowDowngrade = true,
+                PackageType = ServicePlanPackageType.Fixed,
                 DisplayOrder = 2,
                 IsDeleted = false,
                 CreatedAt = seedCreatedAt

@@ -2,6 +2,7 @@ using CloudServiceStore.Application.Common.Exceptions;
 using CloudServiceStore.Application.Common.Interfaces;
 using CloudServiceStore.Application.Common.Services;
 using CloudServiceStore.Application.Features.Sales.OrderRequests;
+using CloudServiceStore.Domain.Entities.Catalog;
 using CloudServiceStore.Domain.Entities.Sales;
 using CloudServiceStore.Domain.Enums;
 using CloudServiceStore.Infrastructure.Persistence;
@@ -88,6 +89,63 @@ public class OrderRequestStatusTransitionServiceTests
         await context.SaveChangesAsync();
 
         return (originalItem, renewalOrder, renewalItem);
+    }
+
+    // Kịch bản đổi gói (Phần 6): 1 item GỐC "đang sống" (đã Completed, ExpiresAt trong tương lai, đang
+    // ở ServicePlan #1 seed sẵn "VPS SSD Starter") + 1 item "biên lai đổi gói" trong 1 đơn riêng khác
+    // (ChangesFromItemId trỏ về item gốc, ServicePlanId/PlanPriceId = gói ĐÍCH #2 "VPS SSD Business",
+    // UnitPrice = số tiền phụ thu proration - KHÔNG phải giá đầy đủ của gói #2), đơn đổi gói đang ở
+    // Provisioning - test tự chuyển đơn này sang Completed. PlanPrice đích seed riêng (Id=901, khác
+    // dữ liệu HasData 1-4) - không phụ thuộc InMemory provider có tự nạp seed data hay không.
+    private static async Task<(OrderRequestItem OriginalItem, OrderRequest ChangeOrder, OrderRequestItem ChangeItem)> SeedPlanChangeScenarioAsync(
+        AppDbContext context,
+        DateTime originalExpiresAt)
+    {
+        context.PlanPrices.Add(new PlanPrice { Id = 901, PlanId = 2, PeriodMonths = 1, Price = 299000m, IsDefault = true, IsActive = true, IsCurrent = true });
+        await context.SaveChangesAsync();
+
+        var originalItem = new OrderRequestItem { ServicePlanId = 1, PlanPriceId = 1, PeriodMonths = 1, Quantity = 1, UnitPrice = 99000m, LineTotal = 99000m, ExpiresAt = originalExpiresAt };
+        var originalOrder = new OrderRequest
+        {
+            OrderCode = "ORD-CHANGE-ORIGINAL-001",
+            CustomerType = CustomerType.Individual,
+            CustomerName = "Change Customer",
+            CustomerEmail = "change@example.com",
+            CustomerPhone = "0900000002",
+            TotalPrice = originalItem.LineTotal,
+            Status = OrderRequestStatus.Completed,
+            CreatedAt = DateTime.UtcNow,
+            Items = { originalItem }
+        };
+        context.OrderRequests.Add(originalOrder);
+        await context.SaveChangesAsync();
+
+        var changeItem = new OrderRequestItem
+        {
+            ServicePlanId = 2,
+            PlanPriceId = 901,
+            PeriodMonths = 1,
+            Quantity = 1,
+            UnitPrice = 65000m, // Số tiền phụ thu proration (KHÔNG phải 299000 - giá đầy đủ gói đích).
+            LineTotal = 65000m,
+            ChangesFromItemId = originalItem.Id
+        };
+        var changeOrder = new OrderRequest
+        {
+            OrderCode = "ORD-CHANGE-UPGRADE-001",
+            CustomerType = CustomerType.Individual,
+            CustomerName = "Change Customer",
+            CustomerEmail = "change@example.com",
+            CustomerPhone = "0900000002",
+            TotalPrice = changeItem.LineTotal,
+            Status = OrderRequestStatus.Provisioning,
+            CreatedAt = DateTime.UtcNow,
+            Items = { changeItem }
+        };
+        context.OrderRequests.Add(changeOrder);
+        await context.SaveChangesAsync();
+
+        return (originalItem, changeOrder, changeItem);
     }
 
     private static Mock<IFakeProvisioningGenerator> CreateFakeGeneratorMock()
@@ -357,6 +415,44 @@ public class OrderRequestStatusTransitionServiceTests
         Assert.Null(reloadedRenewalItem.ProvisionedIpAddress);
         Assert.Null(reloadedRenewalItem.ProvisionedRootPassword);
         Assert.NotNull(reloadedRenewalItem.ProvisionedAt);
+        fakeGeneratorMock.Verify(g => g.GenerateServerCredentials(), Times.Never);
+        fakeGeneratorMock.Verify(g => g.GenerateNameservers(), Times.Never);
+    }
+
+    [Fact]
+    public async Task TransitionAsync_ToCompleted_PlanChangeItem_AppliesTargetPlanToOriginalAndKeepsExpiresAt()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var originalExpiresAt = DateTime.UtcNow.AddDays(10);
+        var (originalItem, changeOrder, _) = await SeedPlanChangeScenarioAsync(context, originalExpiresAt);
+        var sut = CreateSut(context, new Mock<IOrderStatusObserver>());
+
+        await sut.TransitionAsync(changeOrder.Id, OrderRequestStatus.Completed, Guid.NewGuid());
+
+        var reloadedOriginal = context.OrderRequestItems.Single(i => i.Id == originalItem.Id);
+        Assert.Equal(2, reloadedOriginal.ServicePlanId);
+        Assert.Equal(901, reloadedOriginal.PlanPriceId);
+        // Giá ĐẦY ĐỦ của gói đích (PlanPrice #901 = 299000), KHÔNG phải UnitPrice của item đổi gói
+        // (65000 - đó là số tiền phụ thu proration).
+        Assert.Equal(299000m, reloadedOriginal.UnitPrice);
+        Assert.Equal(299000m, reloadedOriginal.LineTotal);
+        // Hạn dùng GIỮ NGUYÊN - đổi gói không dời hạn (khác gia hạn).
+        Assert.Equal(originalExpiresAt, reloadedOriginal.ExpiresAt);
+    }
+
+    [Fact]
+    public async Task TransitionAsync_ToCompleted_PlanChangeItem_DoesNotGenerateFreshCredentialsOrOwnExpiresAt()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var (_, changeOrder, changeItem) = await SeedPlanChangeScenarioAsync(context, DateTime.UtcNow.AddDays(10));
+        var fakeGeneratorMock = CreateFakeGeneratorMock();
+        var sut = CreateSut(context, new Mock<IOrderStatusObserver>(), fakeGeneratorMock);
+
+        await sut.TransitionAsync(changeOrder.Id, OrderRequestStatus.Completed, Guid.NewGuid());
+
+        var reloadedChangeItem = context.OrderRequestItems.Single(i => i.Id == changeItem.Id);
+        Assert.Null(reloadedChangeItem.ExpiresAt);
+        Assert.NotNull(reloadedChangeItem.ProvisionedAt);
         fakeGeneratorMock.Verify(g => g.GenerateServerCredentials(), Times.Never);
         fakeGeneratorMock.Verify(g => g.GenerateNameservers(), Times.Never);
     }
