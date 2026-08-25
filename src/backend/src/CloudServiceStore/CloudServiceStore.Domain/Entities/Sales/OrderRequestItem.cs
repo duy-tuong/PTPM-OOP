@@ -67,4 +67,34 @@ public class OrderRequestItem
 
     // Addon mua kèm dòng này (chỉ có ý nghĩa với item ServicePlan) - xem OrderRequestItemAddon.cs.
     public ICollection<OrderRequestItemAddon> Addons { get; set; } = new List<OrderRequestItemAddon>();
+
+    // Dunning Automation - chỉ có ý nghĩa trên item "đang sống" (RenewsFromItemId == null, mirror
+    // RenewalReminderSentAt), suy ra trạng thái vòng đời từ đúng 3 mốc này + ExpiresAt (không thêm enum
+    // Status riêng để tránh state machine trùng lặp) - xem DunningPolicy.ComputeLifecycleStatus.
+    // Reset về null khi gia hạn/đổi gói thành công (OrderRequestStatusTransitionService.
+    // ApplyCompletionEffectsAsync) - khách đã trả tiền thì khôi phục dịch vụ.
+    public DateTime? SuspendedAt { get; set; }
+    public DateTime? TerminationWarningSentAt { get; set; }
+    public DateTime? TerminatedAt { get; set; }
+
+    // Hệ điều hành đã chọn lúc mua (Đợt 3, Phần 11) - chỉ có ý nghĩa với item ServicePlan mua MỚI
+    // (null với TLD và với item "biên lai" gia hạn/đổi gói). OsImageName snapshot tại thời điểm mua vì
+    // Admin có thể đổi tên/xoá OsImage sau này. OsLicenseFee snapshot đúng số tiền phụ phí bản quyền
+    // Windows ĐÃ cộng vào UnitPrice lúc mua (không tính lại) - null nếu chọn OS Linux hoặc không chọn OS.
+    public int? OsImageId { get; set; }
+    public OsImage? OsImage { get; set; }
+    public string? OsImageName { get; set; }
+    public decimal? OsLicenseFee { get; set; }
+
+    // SSH Key & Metadata bàn giao (Đợt 3, Phần 12) - chỉ có ý nghĩa với item ServicePlan mua MỚI (null
+    // với TLD và với item "biên lai" gia hạn/đổi gói - gia hạn copy trực tiếp SshPublicKeySnapshot từ
+    // item gốc, không tra cứu lại theo Id, xem OrderRequestService.CreateRenewalAsync).
+    // SshPublicKeySnapshot: nội dung key ĐÃ dùng lúc mua, snapshot từ CustomerSshKey - khách xoá key
+    // khỏi tài khoản sau này không ảnh hưởng đơn đã tạo. null nghĩa là dùng mật khẩu root giả lập
+    // (xem IFakeProvisioningGenerator.GenerateServerCredentials).
+    public string? SshPublicKeySnapshot { get; set; }
+    public string? Hostname { get; set; }
+    // Chuỗi tự do phân tách dấu phẩy, chỉ mang tính hiển thị - không có bảng Tag riêng, không có logic
+    // nghiệp vụ nào phụ thuộc.
+    public string? Tags { get; set; }
 }

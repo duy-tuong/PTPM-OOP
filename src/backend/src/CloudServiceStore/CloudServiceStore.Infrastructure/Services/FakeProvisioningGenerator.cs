@@ -16,13 +16,15 @@ public class FakeProvisioningGenerator : IFakeProvisioningGenerator
     private const string PasswordCharset = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%^&*";
     private const int PasswordLength = 16;
 
-    public (string IpAddress, string RootPassword) GenerateServerCredentials()
+    public (string IpAddress, string? RootPassword) GenerateServerCredentials(bool hasSshKey)
     {
         var prefix = DocumentationRangePrefixes[RandomNumberGenerator.GetInt32(DocumentationRangePrefixes.Length)];
         // Octet cuối 2-254 (tránh .0 network và .255 broadcast trông giống địa chỉ đặc biệt).
         var hostOctet = RandomNumberGenerator.GetInt32(2, 255);
         var ipAddress = $"{prefix}{hostOctet}";
-        var rootPassword = RandomNumberGenerator.GetString(PasswordCharset, PasswordLength);
+        // hasSshKey=true - không sinh mật khẩu (khách đăng nhập bằng SSH key, xem OrderRequestItem.
+        // SshPublicKeySnapshot).
+        var rootPassword = hasSshKey ? null : RandomNumberGenerator.GetString(PasswordCharset, PasswordLength);
         return (ipAddress, rootPassword);
     }
 

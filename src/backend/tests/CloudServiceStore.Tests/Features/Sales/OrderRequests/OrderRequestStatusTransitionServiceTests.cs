@@ -151,7 +151,7 @@ public class OrderRequestStatusTransitionServiceTests
     private static Mock<IFakeProvisioningGenerator> CreateFakeGeneratorMock()
     {
         var mock = new Mock<IFakeProvisioningGenerator>();
-        mock.Setup(g => g.GenerateServerCredentials()).Returns(("203.0.113.10", "TestPassword12345"));
+        mock.Setup(g => g.GenerateServerCredentials(It.IsAny<bool>())).Returns(("203.0.113.10", "TestPassword12345"));
         mock.Setup(g => g.GenerateNameservers()).Returns("ns1.cloudverse.vn, ns2.cloudverse.vn");
         return mock;
     }
@@ -271,8 +271,37 @@ public class OrderRequestStatusTransitionServiceTests
         Assert.Equal("203.0.113.10", item.ProvisionedIpAddress);
         Assert.Equal("TestPassword12345", item.ProvisionedRootPassword);
         Assert.Null(item.ProvisionedNameservers);
-        fakeGeneratorMock.Verify(g => g.GenerateServerCredentials(), Times.Once);
+        fakeGeneratorMock.Verify(g => g.GenerateServerCredentials(It.IsAny<bool>()), Times.Once);
         fakeGeneratorMock.Verify(g => g.GenerateNameservers(), Times.Never);
+    }
+
+    // SSH Key (Đợt 3, Phần 12) - item có SshPublicKeySnapshot phải gọi generator với hasSshKey=true (bản
+    // thân việc trả RootPassword=null khi hasSshKey=true đã test riêng ở FakeProvisioningGeneratorTests -
+    // ở đây chỉ verify ĐÚNG tham số được truyền, không lặp lại test hành vi của generator).
+    [Fact]
+    public async Task TransitionAsync_ToCompleted_ServicePlanItemWithSshKey_CallsGeneratorWithHasSshKeyTrue()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var order = new OrderRequest
+        {
+            OrderCode = "ORD-TEST-SSHKEY",
+            CustomerType = CustomerType.Individual,
+            CustomerName = "Test Customer",
+            CustomerEmail = "test@example.com",
+            CustomerPhone = "0900000000",
+            TotalPrice = 100000m,
+            Status = OrderRequestStatus.Provisioning,
+            CreatedAt = DateTime.UtcNow,
+            Items = { new OrderRequestItem { ServicePlanId = 1, Quantity = 1, UnitPrice = 100000m, LineTotal = 100000m, SshPublicKeySnapshot = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBWc test@laptop" } }
+        };
+        context.OrderRequests.Add(order);
+        await context.SaveChangesAsync();
+        var fakeGeneratorMock = CreateFakeGeneratorMock();
+        var sut = CreateSut(context, new Mock<IOrderStatusObserver>(), fakeGeneratorMock);
+
+        await sut.TransitionAsync(order.Id, OrderRequestStatus.Completed, Guid.NewGuid());
+
+        fakeGeneratorMock.Verify(g => g.GenerateServerCredentials(true), Times.Once);
     }
 
     [Fact]
@@ -290,7 +319,7 @@ public class OrderRequestStatusTransitionServiceTests
         Assert.Null(item.ProvisionedIpAddress);
         Assert.Null(item.ProvisionedRootPassword);
         fakeGeneratorMock.Verify(g => g.GenerateNameservers(), Times.Once);
-        fakeGeneratorMock.Verify(g => g.GenerateServerCredentials(), Times.Never);
+        fakeGeneratorMock.Verify(g => g.GenerateServerCredentials(It.IsAny<bool>()), Times.Never);
     }
 
     [Fact]
@@ -415,8 +444,28 @@ public class OrderRequestStatusTransitionServiceTests
         Assert.Null(reloadedRenewalItem.ProvisionedIpAddress);
         Assert.Null(reloadedRenewalItem.ProvisionedRootPassword);
         Assert.NotNull(reloadedRenewalItem.ProvisionedAt);
-        fakeGeneratorMock.Verify(g => g.GenerateServerCredentials(), Times.Never);
+        fakeGeneratorMock.Verify(g => g.GenerateServerCredentials(It.IsAny<bool>()), Times.Never);
         fakeGeneratorMock.Verify(g => g.GenerateNameservers(), Times.Never);
+    }
+
+    // Dunning (Đợt 2, Phần 8) - khách vừa trả tiền gia hạn phải khôi phục dịch vụ nếu đang bị tạm
+    // khóa/đã nhận cảnh báo hủy.
+    [Fact]
+    public async Task TransitionAsync_ToCompleted_Renewal_ResetsSuspendedAndTerminationWarningOnOriginal()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var (originalItem, renewalOrder, _) = await SeedRenewalScenarioAsync(context, DateTime.UtcNow.AddDays(-10));
+        originalItem.SuspendedAt = DateTime.UtcNow.AddDays(-7);
+        originalItem.TerminationWarningSentAt = DateTime.UtcNow.AddDays(-3);
+        context.OrderRequestItems.Update(originalItem);
+        await context.SaveChangesAsync();
+        var sut = CreateSut(context, new Mock<IOrderStatusObserver>());
+
+        await sut.TransitionAsync(renewalOrder.Id, OrderRequestStatus.Completed, Guid.NewGuid());
+
+        var reloadedOriginal = context.OrderRequestItems.Single(i => i.Id == originalItem.Id);
+        Assert.Null(reloadedOriginal.SuspendedAt);
+        Assert.Null(reloadedOriginal.TerminationWarningSentAt);
     }
 
     [Fact]
@@ -440,6 +489,26 @@ public class OrderRequestStatusTransitionServiceTests
         Assert.Equal(originalExpiresAt, reloadedOriginal.ExpiresAt);
     }
 
+    // Dunning (Đợt 2, Phần 8) - khách vừa trả tiền phụ thu đổi gói phải khôi phục dịch vụ nếu đang bị
+    // tạm khóa/đã nhận cảnh báo hủy.
+    [Fact]
+    public async Task TransitionAsync_ToCompleted_PlanChangeItem_ResetsSuspendedAndTerminationWarningOnOriginal()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var (originalItem, changeOrder, _) = await SeedPlanChangeScenarioAsync(context, DateTime.UtcNow.AddDays(10));
+        originalItem.SuspendedAt = DateTime.UtcNow.AddDays(-7);
+        originalItem.TerminationWarningSentAt = DateTime.UtcNow.AddDays(-3);
+        context.OrderRequestItems.Update(originalItem);
+        await context.SaveChangesAsync();
+        var sut = CreateSut(context, new Mock<IOrderStatusObserver>());
+
+        await sut.TransitionAsync(changeOrder.Id, OrderRequestStatus.Completed, Guid.NewGuid());
+
+        var reloadedOriginal = context.OrderRequestItems.Single(i => i.Id == originalItem.Id);
+        Assert.Null(reloadedOriginal.SuspendedAt);
+        Assert.Null(reloadedOriginal.TerminationWarningSentAt);
+    }
+
     [Fact]
     public async Task TransitionAsync_ToCompleted_PlanChangeItem_DoesNotGenerateFreshCredentialsOrOwnExpiresAt()
     {
@@ -453,7 +522,7 @@ public class OrderRequestStatusTransitionServiceTests
         var reloadedChangeItem = context.OrderRequestItems.Single(i => i.Id == changeItem.Id);
         Assert.Null(reloadedChangeItem.ExpiresAt);
         Assert.NotNull(reloadedChangeItem.ProvisionedAt);
-        fakeGeneratorMock.Verify(g => g.GenerateServerCredentials(), Times.Never);
+        fakeGeneratorMock.Verify(g => g.GenerateServerCredentials(It.IsAny<bool>()), Times.Never);
         fakeGeneratorMock.Verify(g => g.GenerateNameservers(), Times.Never);
     }
 }

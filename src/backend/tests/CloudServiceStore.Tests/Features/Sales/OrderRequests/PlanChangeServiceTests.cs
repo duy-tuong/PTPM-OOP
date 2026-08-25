@@ -235,6 +235,21 @@ public class PlanChangeServiceTests
         await Assert.ThrowsAsync<ValidationException>(() => sut.PreviewChangeAsync(item.Id, target.Id, customer.Id));
     }
 
+    // Dunning (Đợt 2, Phần 8) - dịch vụ đã bị hủy hẳn (dữ liệu bàn giao đã bị xoá) không thể đổi gói.
+    [Fact]
+    public async Task PreviewChangeAsync_TerminatedItem_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var (original, target, originalPrice, _) = await SeedPlansAsync(context);
+        var (customer, item) = await SeedLiveItemAsync(context, original, originalPrice, ExpiresInDays(15), roleId: 917);
+        item.TerminatedAt = DateTime.UtcNow.AddDays(-1);
+        context.OrderRequestItems.Update(item);
+        await context.SaveChangesAsync();
+        var sut = CreateSut(context);
+
+        await Assert.ThrowsAsync<ValidationException>(() => sut.PreviewChangeAsync(item.Id, target.Id, customer.Id));
+    }
+
     [Fact]
     public async Task PreviewChangeAsync_NotYetProvisioned_ThrowsValidationException()
     {

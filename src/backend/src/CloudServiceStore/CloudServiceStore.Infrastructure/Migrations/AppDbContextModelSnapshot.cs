@@ -124,6 +124,128 @@ namespace CloudServiceStore.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("CloudServiceStore.Domain.Entities.Catalog.OsImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Family")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("WindowsLicenseFeePerMonth")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.ToTable("OsImages", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedAt = new DateTime(2026, 8, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DisplayOrder = 1,
+                            Family = "Linux",
+                            IsActive = true,
+                            Name = "Ubuntu 24.04 LTS",
+                            Slug = "ubuntu-24-04"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CreatedAt = new DateTime(2026, 8, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DisplayOrder = 2,
+                            Family = "Linux",
+                            IsActive = true,
+                            Name = "Ubuntu 22.04 LTS",
+                            Slug = "ubuntu-22-04"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CreatedAt = new DateTime(2026, 8, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DisplayOrder = 3,
+                            Family = "Linux",
+                            IsActive = true,
+                            Name = "Debian 12",
+                            Slug = "debian-12"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CreatedAt = new DateTime(2026, 8, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DisplayOrder = 4,
+                            Family = "Linux",
+                            IsActive = true,
+                            Name = "AlmaLinux 9",
+                            Slug = "almalinux-9"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            CreatedAt = new DateTime(2026, 8, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DisplayOrder = 5,
+                            Family = "Linux",
+                            IsActive = true,
+                            Name = "Rocky Linux 9",
+                            Slug = "rocky-linux-9"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            CreatedAt = new DateTime(2026, 8, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DisplayOrder = 6,
+                            Family = "Windows",
+                            IsActive = true,
+                            Name = "Windows Server 2022 Standard",
+                            Slug = "windows-server-2022",
+                            WindowsLicenseFeePerMonth = 350000m
+                        },
+                        new
+                        {
+                            Id = 7,
+                            CreatedAt = new DateTime(2026, 8, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DisplayOrder = 7,
+                            Family = "Windows",
+                            IsActive = true,
+                            Name = "Windows Server 2019 Standard",
+                            Slug = "windows-server-2019",
+                            WindowsLicenseFeePerMonth = 300000m
+                        });
+                });
+
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.Catalog.PlanFeature", b =>
                 {
                     b.Property<int>("Id")
@@ -711,6 +833,24 @@ namespace CloudServiceStore.Infrastructure.Migrations
                     b.HasIndex("AddonId");
 
                     b.ToTable("ServicePlanAddons", (string)null);
+                });
+
+            modelBuilder.Entity("CloudServiceStore.Domain.Entities.Catalog.ServicePlanOsImage", b =>
+                {
+                    b.Property<int>("PlanId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OsImageId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
+                    b.HasKey("PlanId", "OsImageId");
+
+                    b.HasIndex("OsImageId");
+
+                    b.ToTable("ServicePlanOsImages", (string)null);
                 });
 
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.Catalog.TldPricing", b =>
@@ -1435,6 +1575,17 @@ namespace CloudServiceStore.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("AssignedSalesRepUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("BillingAddress")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("BusinessLicenseNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("CompanyName")
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
@@ -1443,6 +1594,9 @@ namespace CloudServiceStore.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<decimal?>("CreditLimit")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("CustomerType")
                         .HasColumnType("int");
@@ -1475,6 +1629,10 @@ namespace CloudServiceStore.Infrastructure.Migrations
 
                     b.Property<bool>("IsEmailVerified")
                         .HasColumnType("bit");
+
+                    b.Property<string>("LegalRepresentativeName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -1515,12 +1673,47 @@ namespace CloudServiceStore.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AssignedSalesRepUserId");
+
                     b.HasIndex("Email")
                         .IsUnique();
 
                     b.HasIndex("RoleId");
 
                     b.ToTable("Customers", (string)null);
+                });
+
+            modelBuilder.Entity("CloudServiceStore.Domain.Entities.Identity.CustomerSshKey", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("PublicKey")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.ToTable("CustomerSshKeys", (string)null);
                 });
 
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.Marketing.Promotion", b =>
@@ -1540,6 +1733,11 @@ namespace CloudServiceStore.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int>("CustomerEligibility")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
@@ -1601,6 +1799,7 @@ namespace CloudServiceStore.Infrastructure.Migrations
                             Id = 1,
                             Code = "WELCOME2026",
                             CreatedAt = new DateTime(2026, 8, 10, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CustomerEligibility = 1,
                             Description = "Giảm giá cho khách hàng đăng ký mới trong năm 2026.",
                             DiscountType = 1,
                             DiscountValue = 10m,
@@ -1837,6 +2036,13 @@ namespace CloudServiceStore.Infrastructure.Migrations
                     b.Property<int>("CustomerType")
                         .HasColumnType("int");
 
+                    b.Property<string>("FlagReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsFlaggedForReview")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Note")
                         .HasColumnType("nvarchar(max)");
 
@@ -1931,11 +2137,25 @@ namespace CloudServiceStore.Infrastructure.Migrations
                     b.Property<DateTime?>("ExpiresAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Hostname")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<decimal>("LineTotal")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("OrderRequestId")
                         .HasColumnType("int");
+
+                    b.Property<int?>("OsImageId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OsImageName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal?>("OsLicenseFee")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int?>("PeriodMonths")
                         .HasColumnType("int");
@@ -1970,6 +2190,23 @@ namespace CloudServiceStore.Infrastructure.Migrations
                     b.Property<int?>("ServicePlanId")
                         .HasColumnType("int");
 
+                    b.Property<string>("SshPublicKeySnapshot")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime?>("SuspendedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Tags")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("TerminatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("TerminationWarningSentAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<int?>("TldPricingId")
                         .HasColumnType("int");
 
@@ -1981,6 +2218,8 @@ namespace CloudServiceStore.Infrastructure.Migrations
                     b.HasIndex("ChangesFromItemId");
 
                     b.HasIndex("OrderRequestId");
+
+                    b.HasIndex("OsImageId");
 
                     b.HasIndex("PlanPriceId");
 
@@ -2180,6 +2419,25 @@ namespace CloudServiceStore.Infrastructure.Migrations
                     b.Navigation("Plan");
                 });
 
+            modelBuilder.Entity("CloudServiceStore.Domain.Entities.Catalog.ServicePlanOsImage", b =>
+                {
+                    b.HasOne("CloudServiceStore.Domain.Entities.Catalog.OsImage", "OsImage")
+                        .WithMany("PlanOsImages")
+                        .HasForeignKey("OsImageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CloudServiceStore.Domain.Entities.Catalog.ServicePlan", "Plan")
+                        .WithMany("PlanOsImages")
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("OsImage");
+
+                    b.Navigation("Plan");
+                });
+
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.Catalog.TldPricing", b =>
                 {
                     b.HasOne("CloudServiceStore.Domain.Entities.Catalog.ServiceCategory", "ServiceCategory")
@@ -2305,13 +2563,31 @@ namespace CloudServiceStore.Infrastructure.Migrations
 
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.Identity.Customer", b =>
                 {
+                    b.HasOne("CloudServiceStore.Domain.Entities.Identity.AppUser", "AssignedSalesRepUser")
+                        .WithMany()
+                        .HasForeignKey("AssignedSalesRepUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("CloudServiceStore.Domain.Entities.Identity.AppRole", "Role")
                         .WithMany("Customers")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.Navigation("AssignedSalesRepUser");
+
                     b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("CloudServiceStore.Domain.Entities.Identity.CustomerSshKey", b =>
+                {
+                    b.HasOne("CloudServiceStore.Domain.Entities.Identity.Customer", "Customer")
+                        .WithMany("SshKeys")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
                 });
 
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.Marketing.PromotionScope", b =>
@@ -2417,6 +2693,11 @@ namespace CloudServiceStore.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("CloudServiceStore.Domain.Entities.Catalog.OsImage", "OsImage")
+                        .WithMany()
+                        .HasForeignKey("OsImageId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("CloudServiceStore.Domain.Entities.Catalog.PlanPrice", "PlanPrice")
                         .WithMany()
                         .HasForeignKey("PlanPriceId")
@@ -2440,6 +2721,8 @@ namespace CloudServiceStore.Infrastructure.Migrations
                     b.Navigation("ChangesFromItem");
 
                     b.Navigation("OrderRequest");
+
+                    b.Navigation("OsImage");
 
                     b.Navigation("PlanPrice");
 
@@ -2494,6 +2777,11 @@ namespace CloudServiceStore.Infrastructure.Migrations
                     b.Navigation("PlanAddons");
                 });
 
+            modelBuilder.Entity("CloudServiceStore.Domain.Entities.Catalog.OsImage", b =>
+                {
+                    b.Navigation("PlanOsImages");
+                });
+
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.Catalog.ServiceCategory", b =>
                 {
                     b.Navigation("Plans");
@@ -2504,6 +2792,8 @@ namespace CloudServiceStore.Infrastructure.Migrations
                     b.Navigation("Features");
 
                     b.Navigation("PlanAddons");
+
+                    b.Navigation("PlanOsImages");
 
                     b.Navigation("Prices");
                 });
@@ -2540,6 +2830,11 @@ namespace CloudServiceStore.Infrastructure.Migrations
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.Identity.AppUser", b =>
                 {
                     b.Navigation("UserRoles");
+                });
+
+            modelBuilder.Entity("CloudServiceStore.Domain.Entities.Identity.Customer", b =>
+                {
+                    b.Navigation("SshKeys");
                 });
 
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.Marketing.Promotion", b =>

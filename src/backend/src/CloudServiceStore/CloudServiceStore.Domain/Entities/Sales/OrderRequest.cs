@@ -51,4 +51,10 @@ public class OrderRequest
 
     // Giỏ hàng nhiều sản phẩm - 1 đơn có thể gồm nhiều dòng gói dịch vụ/tên miền trộn lẫn.
     public ICollection<OrderRequestItem> Items { get; set; } = new List<OrderRequestItem>();
+
+    // Fraud Review (Đợt 2, Phần 9) - rule-based, đánh giá 1 lần lúc tạo đơn (OrderRequestService.
+    // CreateAsync), KHÔNG chặn đơn (đơn vẫn tạo/thanh toán bình thường) - chỉ đánh dấu để Admin duyệt
+    // tay + loại khỏi auto-provisioning (xem OrderAutoProvisioningBackgroundService).
+    public bool IsFlaggedForReview { get; set; }
+    public string? FlagReason { get; set; }
 }

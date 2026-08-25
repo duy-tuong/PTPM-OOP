@@ -11,7 +11,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Field, FieldError, FieldGroup } from "@/components/ui/field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DiscountType, ScopeType, SCOPE_TYPE_LABELS } from "@/lib/types/enums";
+import {
+  DiscountType,
+  PromotionCustomerEligibility,
+  ScopeType,
+  PROMOTION_CUSTOMER_ELIGIBILITY_LABELS,
+  SCOPE_TYPE_LABELS,
+} from "@/lib/types/enums";
 import { createPromotionAction, updatePromotionAction } from "@/app/admin/promotions/actions";
 import type {
   AdminPromotionDto,
@@ -40,6 +46,7 @@ interface FormState {
   endDate: string;
   usageLimit: string;
   isActive: boolean;
+  customerEligibility: PromotionCustomerEligibility;
 }
 
 const EMPTY_FORM: FormState = {
@@ -54,6 +61,7 @@ const EMPTY_FORM: FormState = {
   endDate: "",
   usageLimit: "",
   isActive: true,
+  customerEligibility: PromotionCustomerEligibility.All,
 };
 
 interface FormErrors {
@@ -100,6 +108,10 @@ export function PromotionDialog({ open, onOpenChange, promotion, categories, pla
           endDate: toDateInputValue(promotion.endDate),
           usageLimit: promotion.usageLimit?.toString() ?? "",
           isActive: promotion.isActive,
+          customerEligibility:
+            PromotionCustomerEligibility[
+              promotion.customerEligibility as keyof typeof PromotionCustomerEligibility
+            ] ?? PromotionCustomerEligibility.All,
         });
         setScopes(
           promotion.scopes.map((scope) => ({
@@ -197,6 +209,7 @@ export function PromotionDialog({ open, onOpenChange, promotion, categories, pla
         endDate: new Date(form.endDate).toISOString(),
         usageLimit: form.usageLimit ? Number(form.usageLimit) : undefined,
         isActive: form.isActive,
+        customerEligibility: form.customerEligibility,
         scopes,
       };
 
@@ -388,6 +401,34 @@ export function PromotionDialog({ open, onOpenChange, promotion, categories, pla
               </div>
               Đang hoạt động
             </label>
+
+            <Field>
+              <Label htmlFor="promotion-customer-eligibility">Đối tượng áp dụng</Label>
+              <Select
+                items={Object.entries(PROMOTION_CUSTOMER_ELIGIBILITY_LABELS).map(([key, label]) => ({
+                  value: String(PromotionCustomerEligibility[key as keyof typeof PromotionCustomerEligibility]),
+                  label,
+                }))}
+                value={String(form.customerEligibility)}
+                onValueChange={(value) =>
+                  setForm((prev) => ({ ...prev, customerEligibility: Number(value) as PromotionCustomerEligibility }))
+                }
+              >
+                <SelectTrigger id="promotion-customer-eligibility" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(PROMOTION_CUSTOMER_ELIGIBILITY_LABELS).map(([key, label]) => (
+                    <SelectItem
+                      key={key}
+                      value={String(PromotionCustomerEligibility[key as keyof typeof PromotionCustomerEligibility])}
+                    >
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
 
             <div className="border-t border-zinc-100 pt-4">
               <div className="flex items-center justify-between">

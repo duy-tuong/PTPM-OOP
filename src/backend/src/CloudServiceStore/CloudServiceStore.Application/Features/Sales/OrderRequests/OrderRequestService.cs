@@ -62,6 +62,21 @@ public class OrderRequestService : IOrderRequestService
             {
                 throw new ValidationException("Mã khuyến mãi không còn hiệu lực.");
             }
+
+            if (promotion.CustomerEligibility != PromotionCustomerEligibility.All)
+            {
+                var hasCompletedOrderBefore = await HasCompletedOrderBeforeAsync(customerId, dto.CustomerEmail, cancellationToken);
+
+                if (promotion.CustomerEligibility == PromotionCustomerEligibility.NewCustomersOnly && hasCompletedOrderBefore)
+                {
+                    throw new ValidationException("Mã giảm giá chỉ áp dụng cho khách hàng mới.");
+                }
+
+                if (promotion.CustomerEligibility == PromotionCustomerEligibility.ExistingCustomersOnly && !hasCompletedOrderBefore)
+                {
+                    throw new ValidationException("Mã giảm giá chỉ áp dụng cho khách hàng đã từng mua hàng.");
+                }
+            }
         }
 
         var items = new List<OrderRequestItem>();
@@ -76,8 +91,9 @@ public class OrderRequestService : IOrderRequestService
                 throw new ValidationException("Mỗi dòng trong đơn hàng phải chọn đúng 1 trong 2: gói dịch vụ hoặc tên miền.");
             }
 
+            var provisioning = new NewPurchaseProvisioningInput(itemDto.OsImageId, itemDto.SshPublicKeyId, itemDto.Hostname, itemDto.Tags);
             var (item, planId, categoryId) = itemDto.ServicePlanId is not null
-                ? await BuildServicePlanItemAsync(itemDto.ServicePlanId.Value, itemDto.PeriodMonths, itemDto.Quantity, isRenewal: false, grandfatheredPlanPriceId: null, itemDto.Addons, itemDto.ChosenVcpu, itemDto.ChosenRamMb, itemDto.ChosenDiskGb, cancellationToken)
+                ? await BuildServicePlanItemAsync(itemDto.ServicePlanId.Value, itemDto.PeriodMonths, itemDto.Quantity, isRenewal: false, grandfatheredPlanPriceId: null, itemDto.Addons, itemDto.ChosenVcpu, itemDto.ChosenRamMb, itemDto.ChosenDiskGb, customerId, provisioning, cancellationToken)
                 : await BuildTldItemAsync(itemDto.TldPricingId!.Value, itemDto.DomainName, itemDto.Quantity, isRenewal: false, cancellationToken);
 
             items.Add(item);
@@ -113,6 +129,8 @@ public class OrderRequestService : IOrderRequestService
             totalPrice = Math.Max(0, grandSubtotal - discount) + addonsTotal;
         }
 
+        var (isFlagged, flagReason) = await EvaluateFraudRiskAsync(dto, totalPrice, customerId, cancellationToken);
+
         var orderRequest = new OrderRequest
         {
             OrderCode = RequestCodeGenerator.Generate("ORD"),
@@ -128,7 +146,9 @@ public class OrderRequestService : IOrderRequestService
             Note = dto.Note,
             Source = "public-website",
             CreatedAt = DateTime.UtcNow,
-            Items = items
+            Items = items,
+            IsFlaggedForReview = isFlagged,
+            FlagReason = flagReason
         };
 
         var orderRepository = _unitOfWork.Repository<OrderRequest, int>();
@@ -205,6 +225,7 @@ public class OrderRequestService : IOrderRequestService
             .Take(query.PageSize)
             .ToListAsync(cancellationToken);
 
+        var now = DateTime.UtcNow;
         var dtos = entities.Select(i => new MyServiceItemDto
         {
             ItemId = i.Id,
@@ -218,6 +239,9 @@ public class OrderRequestService : IOrderRequestService
             TldName = i.TldPricing?.Tld,
             PeriodMonths = i.PeriodMonths,
             ExpiresAt = i.ExpiresAt,
+            LifecycleStatus = DunningPolicy.ComputeLifecycleStatus(i.ExpiresAt, i.SuspendedAt, i.TerminatedAt, now),
+            OsImageName = i.OsImageName,
+            Hostname = i.Hostname,
             ProvisionedIpAddress = i.ProvisionedIpAddress,
             ProvisionedRootPassword = i.ProvisionedRootPassword,
             ProvisionedNameservers = i.ProvisionedNameservers
@@ -275,6 +299,7 @@ public class OrderRequestService : IOrderRequestService
                 ChosenVcpu = i.ChosenVcpu,
                 ChosenRamMb = i.ChosenRamMb,
                 ChosenDiskGb = i.ChosenDiskGb,
+                OsImageName = i.OsImageName,
                 ItemKind = i.ChangesFromItemId is not null ? "PlanChange" : i.RenewsFromItemId is not null ? "Renewal" : "New",
                 Addons = i.Addons.Select(OrderItemAddonDto.FromEntity).ToList()
             }).ToList(),
@@ -312,6 +337,13 @@ public class OrderRequestService : IOrderRequestService
             throw new ValidationException("Không thể gia hạn từ 1 đơn gia hạn khác - vui lòng chọn đúng dịch vụ gốc.");
         }
 
+        // Dunning (Phần 8) - dịch vụ đã bị hủy hẳn (quá hạn quá lâu, dữ liệu bàn giao đã bị xoá) không
+        // tự gia hạn lại được qua luồng thông thường, tránh cấp "ExpiresAt mới" cho dữ liệu đã mất.
+        if (original.TerminatedAt is not null)
+        {
+            throw new ValidationException("Dịch vụ đã bị hủy do quá hạn thanh toán quá lâu, vui lòng liên hệ hỗ trợ để được khôi phục.");
+        }
+
         var customer = await _unitOfWork.Repository<Customer, Guid>().GetByIdAsync(customerId, cancellationToken)
             ?? throw new NotFoundException(nameof(Customer), customerId);
 
@@ -332,9 +364,19 @@ public class OrderRequestService : IOrderRequestService
             .Select(a => new AddonSelectionDto { AddonId = a.AddonId, Quantity = a.Quantity })
             .ToList();
 
+        // OS Image (Phần 11) - giữ nguyên OS đã chọn lúc mua đầu (đổi OS coi như dùng luồng "Đổi gói",
+        // không hỗ trợ đổi qua gia hạn thường), nhưng phí Windows tính lại theo giá HIỆN HÀNH (không
+        // grandfathering riêng cho phí OS - mirror quyết định Addon không grandfathering). Hostname/Tags
+        // giữ nguyên hiển thị liên tục qua các lần gia hạn. SshPublicKeyId: null - gia hạn KHÔNG tra cứu
+        // lại theo Id, copy trực tiếp snapshot text từ item gốc bên dưới (xem ghi chú SSH Key, Phần 12).
+        var provisioning = new NewPurchaseProvisioningInput(original.OsImageId, SshPublicKeyId: null, original.Hostname, original.Tags);
         var (item, _, _) = original.ServicePlanId is not null
-            ? await BuildServicePlanItemAsync(original.ServicePlanId.Value, effectivePeriodMonths, original.Quantity, isRenewal: true, grandfatheredPlanPriceId, renewedAddonSelections, original.ChosenVcpu, original.ChosenRamMb, original.ChosenDiskGb, cancellationToken)
+            ? await BuildServicePlanItemAsync(original.ServicePlanId.Value, effectivePeriodMonths, original.Quantity, isRenewal: true, grandfatheredPlanPriceId, renewedAddonSelections, original.ChosenVcpu, original.ChosenRamMb, original.ChosenDiskGb, customerId, provisioning, cancellationToken)
             : await BuildTldItemAsync(original.TldPricingId!.Value, original.DomainName, dto.Years ?? original.Quantity, isRenewal: true, cancellationToken);
+
+        // SSH Key (Phần 12) - copy trực tiếp snapshot text từ item gốc, không re-validate format (dữ
+        // liệu đã snapshot hợp lệ từ lần mua trước, có thể khác định dạng nếu backend đổi rule sau này).
+        item.SshPublicKeySnapshot = original.SshPublicKeySnapshot;
 
         item.RenewsFromItemId = original.Id;
 
@@ -389,7 +431,7 @@ public class OrderRequestService : IOrderRequestService
     private async Task<(OrderRequestItem Item, int? PlanId, int? CategoryId)> BuildServicePlanItemAsync(
         int servicePlanId, int? periodMonths, int quantity, bool isRenewal, int? grandfatheredPlanPriceId,
         List<AddonSelectionDto> addonSelections, int? chosenVcpu, int? chosenRamMb, int? chosenDiskGb,
-        CancellationToken cancellationToken)
+        Guid? customerId, NewPurchaseProvisioningInput provisioning, CancellationToken cancellationToken)
     {
         var plan = await _unitOfWork.Repository<ServicePlan, int>().GetByIdAsync(servicePlanId, cancellationToken);
         if (plan is null)
@@ -450,6 +492,27 @@ public class OrderRequestService : IOrderRequestService
             unitPrice = price.PromotionalPrice ?? price.Price;
         }
 
+        // OS Image (Đợt 3, Phần 11) - chỉ validate "nằm trong danh sách cho phép của plan" nếu plan
+        // ĐÓ có cấu hình ≥1 OS (mirror đúng cách BuildOrderItemAddonsAsync suy luận addon được phép từ
+        // chính bảng nối, không thêm cờ RequiresOsImage riêng để tránh 2 nguồn sự thật lệch nhau) - plan
+        // không cấu hình OS nào (Storage/Firewall...) thì bỏ qua, osImageId luôn null ở kết quả.
+        var (osImage, osLicenseFee) = await ResolveOsImageAsync(plan.Id, provisioning.OsImageId, price.PeriodMonths, cancellationToken);
+        if (osLicenseFee is not null)
+        {
+            unitPrice += osLicenseFee.Value;
+        }
+
+        // SSH Key & Hostname/Tags (Đợt 3, Phần 12) - chỉ có ý nghĩa lúc mua MỚI thật sự (isRenewal=true
+        // vẫn đi qua nhánh này để tính lại phí OS, nhưng SshPublicKeyId luôn null từ CreateRenewalAsync
+        // và SshPublicKeySnapshot được caller copy trực tiếp từ item gốc SAU khi hàm này trả về).
+        var sshPublicKeySnapshot = await ResolveSshPublicKeySnapshotAsync(customerId, provisioning.SshPublicKeyId, cancellationToken);
+        var hostname = ValidateAndNormalizeHostname(provisioning.Hostname);
+        var tags = string.IsNullOrWhiteSpace(provisioning.Tags) ? null : provisioning.Tags.Trim();
+        if (tags is { Length: > 255 })
+        {
+            throw new ValidationException("Tags tối đa 255 ký tự.");
+        }
+
         var item = new OrderRequestItem
         {
             ServicePlanId = plan.Id,
@@ -461,10 +524,105 @@ public class OrderRequestService : IOrderRequestService
             ChosenVcpu = itemChosenVcpu,
             ChosenRamMb = itemChosenRamMb,
             ChosenDiskGb = itemChosenDiskGb,
+            OsImageId = osImage?.Id,
+            OsImageName = osImage?.Name,
+            OsLicenseFee = osLicenseFee,
+            SshPublicKeySnapshot = sshPublicKeySnapshot,
+            Hostname = hostname,
+            Tags = tags,
             Addons = await BuildOrderItemAddonsAsync(plan.Id, price.PeriodMonths, addonSelections, cancellationToken)
         };
 
         return (item, plan.Id, plan.CategoryId);
+    }
+
+    // Gộp 4 field chỉ có ý nghĩa lúc mua MỚI (Đợt 3, Phần 11+12) - tránh BuildServicePlanItemAsync phình
+    // thêm tham số int?/string? cùng kiểu rời rạc, dễ nhầm vị trí khi gọi. CreateRenewalAsync luôn
+    // truyền SshPublicKeyId: null (xem ghi chú tại đó).
+    private sealed record NewPurchaseProvisioningInput(int? OsImageId, int? SshPublicKeyId, string? Hostname, string? Tags);
+
+    // customerId null (về lý thuyết - controller thực tế luôn bắt đăng nhập) + sshPublicKeyId có giá trị
+    // = từ chối rõ ràng thay vì âm thầm bỏ qua, tránh khách tưởng nhầm key đã được áp dụng.
+    private async Task<string?> ResolveSshPublicKeySnapshotAsync(Guid? customerId, int? sshPublicKeyId, CancellationToken cancellationToken)
+    {
+        if (sshPublicKeyId is null)
+        {
+            return null;
+        }
+
+        if (customerId is null)
+        {
+            throw new ValidationException("Cần đăng nhập để dùng SSH Key đã lưu.");
+        }
+
+        var sshKey = await _unitOfWork.Repository<CustomerSshKey, int>().Query()
+            .FirstOrDefaultAsync(k => k.Id == sshPublicKeyId.Value && k.CustomerId == customerId.Value, cancellationToken);
+
+        if (sshKey is null)
+        {
+            throw new ValidationException("SSH Key đã chọn không tồn tại hoặc không thuộc về tài khoản của bạn.");
+        }
+
+        return sshKey.PublicKey;
+    }
+
+    // Hostname kiểu VPS (vd "web-prod-01.domain.com") - cho phép nhiều nhãn phân tách dấu chấm, mỗi
+    // nhãn theo đúng luật DNS như DomainLabelPattern (không bắt đầu/kết thúc bằng gạch ngang).
+    private static readonly Regex HostnamePattern = new(
+        @"^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$",
+        RegexOptions.Compiled);
+
+    private static string? ValidateAndNormalizeHostname(string? hostname)
+    {
+        if (string.IsNullOrWhiteSpace(hostname))
+        {
+            return null;
+        }
+
+        var trimmed = hostname.Trim();
+        if (trimmed.Length > 100 || !HostnamePattern.IsMatch(trimmed))
+        {
+            throw new ValidationException("Hostname không hợp lệ (chỉ chữ, số, gạch ngang, dấu chấm, tối đa 100 ký tự).");
+        }
+
+        return trimmed;
+    }
+
+    // Trả về (OsImage đã chọn, phí bản quyền ĐÃ nhân periodMonths cần cộng vào UnitPrice) - osImageId
+    // null (khách không chọn OS, hoặc plan không cấu hình OS nào) trả (null, null). WindowsLicenseFeePerMonth
+    // là phí CỐ ĐỊNH/tháng (không nhân theo core - xem OsImage.cs), áp dụng như nhau cho Fixed lẫn Custom.
+    private async Task<(OsImage? OsImage, decimal? LicenseFee)> ResolveOsImageAsync(
+        int servicePlanId, int? osImageId, int periodMonths, CancellationToken cancellationToken)
+    {
+        var allowedOsImageIds = await _unitOfWork.Repository<ServicePlanOsImage, int>().Query()
+            .Where(pi => pi.PlanId == servicePlanId)
+            .Select(pi => pi.OsImageId)
+            .ToListAsync(cancellationToken);
+
+        // Plan không cấu hình OS nào (Storage/Firewall...) - BỎ QUA hoàn toàn lựa chọn của khách nếu có
+        // (khác Addon: danh sách rỗng ở đây nghĩa là "không OS nào được phép", không phải "mọi OS đều
+        // được phép" - tránh lỗ hổng chấp nhận OsImageId bất kỳ khi plan chưa từng khai báo OS nào).
+        if (allowedOsImageIds.Count == 0 || osImageId is null)
+        {
+            return (null, null);
+        }
+
+        if (!allowedOsImageIds.Contains(osImageId.Value))
+        {
+            throw new ValidationException("Hệ điều hành đã chọn không thuộc gói dịch vụ này.");
+        }
+
+        var osImage = await _unitOfWork.Repository<OsImage, int>().GetByIdAsync(osImageId.Value, cancellationToken);
+        if (osImage is null || !osImage.IsActive)
+        {
+            throw new ValidationException("Hệ điều hành đã chọn hiện không khả dụng.");
+        }
+
+        var licenseFee = osImage.Family == OsFamily.Windows && osImage.WindowsLicenseFeePerMonth is not null
+            ? osImage.WindowsLicenseFeePerMonth.Value * periodMonths
+            : (decimal?)null;
+
+        return (osImage, licenseFee);
     }
 
     private static void ValidateCustomSelection(ServicePlan plan, int? vcpu, int? ramMb, int? diskGb)
@@ -580,6 +738,62 @@ public class OrderRequestService : IOrderRequestService
         };
 
         return (item, null, tldPricing.ServiceCategoryId);
+    }
+
+    // Fraud Review (Đợt 2, Phần 9) - rule-based, chỉ dựa dữ liệu đã có trong hệ thống (không gọi threat-
+    // intel/API bên ngoài nào - hệ thống không chạm dữ liệu thẻ tín dụng, PayOS là cổng thanh toán duy
+    // nhất). KHÔNG chặn đơn - chỉ đánh dấu để Admin duyệt tay (xem AdminOrderRequestDto.IsFlaggedForReview)
+    // + loại khỏi auto-provisioning (xem OrderAutoProvisioningBackgroundService). 3 rule độc lập, gộp lý
+    // do nếu trúng nhiều rule cùng lúc.
+    private async Task<(bool IsFlagged, string? Reason)> EvaluateFraudRiskAsync(
+        CreateOrderRequestDto dto, decimal totalPrice, Guid? customerId, CancellationToken cancellationToken)
+    {
+        var reasons = new List<string>();
+        var orderRepository = _unitOfWork.Repository<OrderRequest, int>();
+
+        // Rule 1: số lượng bất thường trên 1 dòng.
+        var maxLineQuantity = dto.Items.Count == 0 ? 0 : dto.Items.Max(i => i.Quantity);
+        if (maxLineQuantity > _appSettings.FraudMaxQuantityPerLine)
+        {
+            reasons.Add($"Số lượng 1 dòng vượt ngưỡng ({maxLineQuantity} > {_appSettings.FraudMaxQuantityPerLine}).");
+        }
+
+        // Rule 2: tần suất đặt hàng bất thường - cùng email/phone tạo nhiều đơn trong khoảng thời gian
+        // ngắn. recentOrderCount là số đơn ĐÃ có trước đó trong cửa sổ - đơn đang tạo sẽ là đơn thứ
+        // recentOrderCount+1, nên trúng rule khi recentOrderCount đã đạt ngưỡng (ngưỡng mặc định 3 nghĩa
+        // là "đơn thứ 4 trở đi" mới bị gắn cờ, khớp mô tả nghiệp vụ ">3 đơn").
+        var windowStart = DateTime.UtcNow.AddMinutes(-_appSettings.FraudOrderWindowMinutes);
+        var recentOrderCount = await orderRepository.Query()
+            .CountAsync(o => o.CreatedAt >= windowStart && (o.CustomerEmail == dto.CustomerEmail || o.CustomerPhone == dto.CustomerPhone), cancellationToken);
+        if (recentOrderCount >= _appSettings.FraudMaxOrdersPerWindow)
+        {
+            reasons.Add($"Tần suất đặt hàng bất thường ({recentOrderCount + 1} đơn trong {_appSettings.FraudOrderWindowMinutes} phút).");
+        }
+
+        // Rule 3: giá trị đơn cao bất thường với khách MỚI (chưa từng có đơn Completed nào trước đó) -
+        // khách quen mua giá trị lớn không bị gắn cờ, chỉ khách lần đầu xuất hiện với đơn giá trị cao.
+        if (totalPrice > _appSettings.FraudNewCustomerHighValueThreshold)
+        {
+            var hasCompletedOrderBefore = await HasCompletedOrderBeforeAsync(customerId, dto.CustomerEmail, cancellationToken);
+
+            if (!hasCompletedOrderBefore)
+            {
+                reasons.Add($"Giá trị đơn cao bất thường với khách mới ({totalPrice:N0}đ).");
+            }
+        }
+
+        return reasons.Count > 0 ? (true, string.Join(" ", reasons)) : (false, null);
+    }
+
+    // Dùng chung cho Fraud Review Rule 3 (Đợt 2, Phần 9) và điều kiện khách mới/khách cũ của mã giảm
+    // giá (Đợt 3, Phần 13) - "khách mới" nghĩa là chưa từng có đơn nào Completed. Match theo CustomerId
+    // nếu đã đăng nhập, ngược lại theo CustomerEmail (khách vãng lai không có CustomerId).
+    private async Task<bool> HasCompletedOrderBeforeAsync(Guid? customerId, string email, CancellationToken cancellationToken)
+    {
+        var orderRepository = _unitOfWork.Repository<OrderRequest, int>();
+        return customerId is not null
+            ? await orderRepository.Query().AnyAsync(o => o.CustomerId == customerId && o.Status == OrderRequestStatus.Completed, cancellationToken)
+            : await orderRepository.Query().AnyAsync(o => o.CustomerEmail == email && o.Status == OrderRequestStatus.Completed, cancellationToken);
     }
 
     // planId: chỉ set khi đặt ServicePlan (PromotionScope.ServicePlanId chỉ FK tới ServicePlan, TLD

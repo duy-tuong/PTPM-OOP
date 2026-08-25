@@ -24,4 +24,18 @@ public class CreateOrderRequestItemDto
     public int? ChosenVcpu { get; set; }
     public int? ChosenRamMb { get; set; }
     public int? ChosenDiskGb { get; set; }
+
+    // Hệ điều hành đã chọn (Đợt 3, Phần 11) - chỉ có ý nghĩa khi ServicePlanId có giá trị. Tuỳ chọn -
+    // để trống nếu plan không cấu hình OS nào hoặc khách không cần chọn - xem
+    // OrderRequestService.ResolveOsImageAsync.
+    public int? OsImageId { get; set; }
+
+    // Xác thực & bàn giao (Đợt 3, Phần 12) - đều tuỳ chọn, chỉ có ý nghĩa khi ServicePlanId có giá trị.
+    // SshPublicKeyId: key đã lưu trong tài khoản (xem CustomerSshKeyService) - để trống thì dùng mật
+    // khẩu root giả lập như hành vi cũ.
+    public int? SshPublicKeyId { get; set; }
+    [MaxLength(100)]
+    public string? Hostname { get; set; }
+    [MaxLength(255)]
+    public string? Tags { get; set; }
 }

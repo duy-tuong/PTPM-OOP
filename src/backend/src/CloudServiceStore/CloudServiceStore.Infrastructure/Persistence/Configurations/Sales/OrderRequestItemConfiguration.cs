@@ -17,6 +17,11 @@ public class OrderRequestItemConfiguration : IEntityTypeConfiguration<OrderReque
         builder.Property(x => x.ProvisionedIpAddress).HasMaxLength(45);
         builder.Property(x => x.ProvisionedRootPassword).HasMaxLength(100);
         builder.Property(x => x.ProvisionedNameservers).HasMaxLength(200);
+        builder.Property(x => x.OsImageName).HasMaxLength(100);
+        builder.Property(x => x.OsLicenseFee).HasColumnType("decimal(18,2)");
+        builder.Property(x => x.SshPublicKeySnapshot).HasMaxLength(2000);
+        builder.Property(x => x.Hostname).HasMaxLength(100);
+        builder.Property(x => x.Tags).HasMaxLength(255);
 
         builder.HasIndex(x => x.OrderRequestId);
 
@@ -35,6 +40,13 @@ public class OrderRequestItemConfiguration : IEntityTypeConfiguration<OrderReque
         builder.HasOne(x => x.TldPricing)
             .WithMany()
             .HasForeignKey(x => x.TldPricingId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Restrict - mirror ServicePlan/TldPricing: OsImage đang được đơn hàng tham chiếu không bị xoá
+        // cứng (chặn chủ động ở AdminOsImageService.DeleteAsync trước khi FK ném DbUpdateException).
+        builder.HasOne(x => x.OsImage)
+            .WithMany()
+            .HasForeignKey(x => x.OsImageId)
             .OnDelete(DeleteBehavior.Restrict);
 
         // Restrict - PlanPrice bị "đóng" (IsCurrent=false) chứ không bao giờ bị xoá cứng (xem

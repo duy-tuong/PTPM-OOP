@@ -28,6 +28,7 @@ public class ServicePlanService : IServicePlanService
             .Include(p => p.Features)
             .Include(p => p.Region)
             .Include(p => p.PlanAddons).ThenInclude(pa => pa.Addon)
+            .Include(p => p.PlanOsImages).ThenInclude(pi => pi.OsImage)
             .Where(p => p.Status == ServicePlanStatus.Active
                 && (query.CategorySlug == null || p.Category.Slug == query.CategorySlug)
                 && (query.IsFeatured == null || p.IsFeatured == query.IsFeatured)
@@ -54,6 +55,7 @@ public class ServicePlanService : IServicePlanService
             .Include(p => p.Prices)
             .Include(p => p.Region)
             .Include(p => p.PlanAddons).ThenInclude(pa => pa.Addon)
+            .Include(p => p.PlanOsImages).ThenInclude(pi => pi.OsImage)
             .FirstOrDefaultAsync(p => p.Slug == slug && p.Status == ServicePlanStatus.Active, cancellationToken);
 
         if (entity is null)
@@ -116,7 +118,8 @@ public class ServicePlanService : IServicePlanService
                     DiscountPercent = p.DiscountPercent
                 })
                 .ToList(),
-            Addons = MapAddons(plan)
+            Addons = MapAddons(plan),
+            OsImages = MapOsImages(plan)
         };
     }
 
@@ -195,7 +198,8 @@ public class ServicePlanService : IServicePlanService
                     DiscountPercent = p.DiscountPercent
                 })
                 .ToList(),
-            Addons = MapAddons(plan)
+            Addons = MapAddons(plan),
+            OsImages = MapOsImages(plan)
         };
     }
 
@@ -213,6 +217,20 @@ public class ServicePlanService : IServicePlanService
                 UnitName = pa.Addon.UnitName,
                 PricePerMonth = pa.Addon.PricePerMonth,
                 MaxQuantity = pa.MaxQuantity
+            })
+            .ToList();
+
+    // Chỉ trả OS còn IsActive - mirror MapAddons.
+    private static List<PlanOsImageDto> MapOsImages(ServicePlan plan) =>
+        plan.PlanOsImages
+            .Where(pi => pi.OsImage.IsActive)
+            .Select(pi => new PlanOsImageDto
+            {
+                OsImageId = pi.OsImageId,
+                OsImageName = pi.OsImage.Name,
+                Family = pi.OsImage.Family.ToString(),
+                WindowsLicenseFeePerMonth = pi.OsImage.WindowsLicenseFeePerMonth,
+                IsDefault = pi.IsDefault
             })
             .ToList();
 }

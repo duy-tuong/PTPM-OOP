@@ -32,6 +32,15 @@ export interface CartItem {
   chosenVcpu?: number;
   chosenRamMb?: number;
   chosenDiskGb?: number;
+  // Hệ điều hành đã chọn (Đợt 3, Phần 11) - osImageName chỉ để hiển thị tóm tắt trong giỏ, giá thật
+  // (phí bản quyền Windows nếu có) luôn do backend tính lại từ osImageId lúc đặt hàng.
+  osImageId?: number;
+  osImageName?: string;
+  // Xác thực & bàn giao (Đợt 3, Phần 12) - sshPublicKeyId chỉ để backend snapshot lại nội dung key
+  // lúc đặt hàng, hostname/tags là text tự do hiển thị trực tiếp, không qua tính toán giá.
+  sshPublicKeyId?: number;
+  hostname?: string;
+  tags?: string;
 }
 
 interface CartContextValue {

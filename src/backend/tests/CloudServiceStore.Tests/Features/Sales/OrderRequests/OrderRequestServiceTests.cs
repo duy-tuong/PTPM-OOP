@@ -24,6 +24,13 @@ public class OrderRequestServiceTests
     public OrderRequestServiceTests()
     {
         _appSettingsMock.SetupGet(a => a.PublicBaseUrl).Returns("http://localhost:3000");
+        // Ngưỡng Fraud Review (Phần 9) khớp mặc định production - các test CreateAsync không liên quan
+        // đến fraud (đại đa số) không bị vô tình gắn cờ chỉ vì Moq trả default(int)=0/default(decimal)=0
+        // cho property chưa setup.
+        _appSettingsMock.SetupGet(a => a.FraudMaxQuantityPerLine).Returns(5);
+        _appSettingsMock.SetupGet(a => a.FraudMaxOrdersPerWindow).Returns(3);
+        _appSettingsMock.SetupGet(a => a.FraudOrderWindowMinutes).Returns(10);
+        _appSettingsMock.SetupGet(a => a.FraudNewCustomerHighValueThreshold).Returns(10000000m);
         _paymentGatewayServiceMock
             .Setup(p => p.CreatePaymentLinkAsync(It.IsAny<OrderRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new PaymentLinkResult
@@ -132,7 +139,8 @@ public class OrderRequestServiceTests
         DateTime? endDate = null,
         ScopeType scopeType = ScopeType.All,
         int? scopedPlanId = null,
-        int? scopedCategoryId = null)
+        int? scopedCategoryId = null,
+        PromotionCustomerEligibility customerEligibility = PromotionCustomerEligibility.All)
     {
         var promotion = new Promotion
         {
@@ -145,6 +153,7 @@ public class OrderRequestServiceTests
             UsageLimit = usageLimit,
             UsageCount = usageCount,
             IsActive = isActive,
+            CustomerEligibility = customerEligibility,
             StartDate = startDate ?? DateTime.UtcNow.AddDays(-1),
             EndDate = endDate ?? DateTime.UtcNow.AddDays(1),
         };
@@ -561,6 +570,180 @@ public class OrderRequestServiceTests
         await Assert.ThrowsAsync<ValidationException>(() => sut.CreateAsync(dto));
     }
 
+    // Điều kiện khách mới/khách cũ (Đợt 3, Phần 13).
+
+    [Fact]
+    public async Task CreateAsync_NewCustomersOnlyPromotion_CustomerWithNoCompletedOrder_Applies()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var promotion = await SeedPromotionAsync(
+            context, DiscountType.Percentage, discountValue: 10m,
+            customerEligibility: PromotionCustomerEligibility.NewCustomersOnly);
+        var sut = CreateSut(context);
+        var dto = BuildDto(plan.Id, periodMonths: 1, quantity: 1);
+        dto.PromotionId = promotion.Id;
+
+        var result = await sut.CreateAsync(dto);
+
+        Assert.Equal(90000m, result.TotalPrice);
+    }
+
+    [Fact]
+    public async Task CreateAsync_NewCustomersOnlyPromotion_CustomerWithCompletedOrder_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var customerId = Guid.NewGuid();
+        context.OrderRequests.Add(new OrderRequest
+        {
+            OrderCode = "ORD-ELIGIBILITY-PRIOR",
+            CustomerId = customerId,
+            CustomerType = CustomerType.Individual,
+            CustomerName = "Existing Customer",
+            CustomerEmail = "existing-eligibility@example.com",
+            CustomerPhone = "0955555555",
+            TotalPrice = 100000m,
+            Status = OrderRequestStatus.Completed,
+            CreatedAt = DateTime.UtcNow.AddDays(-30),
+        });
+        await context.SaveChangesAsync();
+        var promotion = await SeedPromotionAsync(
+            context, DiscountType.Percentage, discountValue: 10m,
+            customerEligibility: PromotionCustomerEligibility.NewCustomersOnly);
+        var sut = CreateSut(context);
+        var dto = BuildDto(plan.Id, periodMonths: 1, quantity: 1);
+        dto.CustomerEmail = "existing-eligibility@example.com";
+        dto.PromotionId = promotion.Id;
+
+        await Assert.ThrowsAsync<ValidationException>(() => sut.CreateAsync(dto, customerId));
+    }
+
+    [Fact]
+    public async Task CreateAsync_ExistingCustomersOnlyPromotion_CustomerWithCompletedOrder_Applies()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var customerId = Guid.NewGuid();
+        context.OrderRequests.Add(new OrderRequest
+        {
+            OrderCode = "ORD-ELIGIBILITY-RETURNING",
+            CustomerId = customerId,
+            CustomerType = CustomerType.Individual,
+            CustomerName = "Returning Customer",
+            CustomerEmail = "returning-eligibility@example.com",
+            CustomerPhone = "0966666666",
+            TotalPrice = 100000m,
+            Status = OrderRequestStatus.Completed,
+            CreatedAt = DateTime.UtcNow.AddDays(-30),
+        });
+        await context.SaveChangesAsync();
+        var promotion = await SeedPromotionAsync(
+            context, DiscountType.Percentage, discountValue: 10m,
+            customerEligibility: PromotionCustomerEligibility.ExistingCustomersOnly);
+        var sut = CreateSut(context);
+        var dto = BuildDto(plan.Id, periodMonths: 1, quantity: 1);
+        dto.CustomerEmail = "returning-eligibility@example.com";
+        dto.PromotionId = promotion.Id;
+
+        var result = await sut.CreateAsync(dto, customerId);
+
+        Assert.Equal(90000m, result.TotalPrice);
+    }
+
+    [Fact]
+    public async Task CreateAsync_ExistingCustomersOnlyPromotion_CustomerWithNoCompletedOrder_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var promotion = await SeedPromotionAsync(
+            context, DiscountType.Percentage, discountValue: 10m,
+            customerEligibility: PromotionCustomerEligibility.ExistingCustomersOnly);
+        var sut = CreateSut(context);
+        var dto = BuildDto(plan.Id, periodMonths: 1, quantity: 1);
+        dto.PromotionId = promotion.Id;
+
+        await Assert.ThrowsAsync<ValidationException>(() => sut.CreateAsync(dto));
+    }
+
+    [Fact]
+    public async Task CreateAsync_NewCustomersOnlyPromotion_CustomerWithOnlyNonCompletedOrder_StillCountsAsNew()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var customerId = Guid.NewGuid();
+        context.OrderRequests.Add(new OrderRequest
+        {
+            OrderCode = "ORD-ELIGIBILITY-CANCELLED",
+            CustomerId = customerId,
+            CustomerType = CustomerType.Individual,
+            CustomerName = "Cancelled Order Customer",
+            CustomerEmail = "cancelled-eligibility@example.com",
+            CustomerPhone = "0977777777",
+            TotalPrice = 100000m,
+            Status = OrderRequestStatus.Cancelled,
+            CreatedAt = DateTime.UtcNow.AddDays(-5),
+        });
+        await context.SaveChangesAsync();
+        var promotion = await SeedPromotionAsync(
+            context, DiscountType.Percentage, discountValue: 10m,
+            customerEligibility: PromotionCustomerEligibility.NewCustomersOnly);
+        var sut = CreateSut(context);
+        var dto = BuildDto(plan.Id, periodMonths: 1, quantity: 1);
+        dto.CustomerEmail = "cancelled-eligibility@example.com";
+        dto.PromotionId = promotion.Id;
+
+        var result = await sut.CreateAsync(dto, customerId);
+
+        Assert.Equal(90000m, result.TotalPrice);
+    }
+
+    [Fact]
+    public async Task CreateAsync_AllEligibilityPromotion_AppliesRegardlessOfOrderHistory()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var promotion = await SeedPromotionAsync(
+            context, DiscountType.Percentage, discountValue: 10m,
+            customerEligibility: PromotionCustomerEligibility.All);
+        var sut = CreateSut(context);
+        var dto = BuildDto(plan.Id, periodMonths: 1, quantity: 1);
+        dto.PromotionId = promotion.Id;
+
+        var result = await sut.CreateAsync(dto);
+
+        Assert.Equal(90000m, result.TotalPrice);
+    }
+
+    [Fact]
+    public async Task CreateAsync_NewCustomersOnlyPromotion_GuestMatchesByEmailNotCustomerId()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        context.OrderRequests.Add(new OrderRequest
+        {
+            OrderCode = "ORD-ELIGIBILITY-GUEST",
+            CustomerId = null,
+            CustomerType = CustomerType.Individual,
+            CustomerName = "Guest Buyer",
+            CustomerEmail = "guest-eligibility@example.com",
+            CustomerPhone = "0988888888",
+            TotalPrice = 100000m,
+            Status = OrderRequestStatus.Completed,
+            CreatedAt = DateTime.UtcNow.AddDays(-10),
+        });
+        await context.SaveChangesAsync();
+        var promotion = await SeedPromotionAsync(
+            context, DiscountType.Percentage, discountValue: 10m,
+            customerEligibility: PromotionCustomerEligibility.NewCustomersOnly);
+        var sut = CreateSut(context);
+        var dto = BuildDto(plan.Id, periodMonths: 1, quantity: 1);
+        dto.CustomerEmail = "guest-eligibility@example.com";
+        dto.PromotionId = promotion.Id;
+
+        await Assert.ThrowsAsync<ValidationException>(() => sut.CreateAsync(dto, customerId: null));
+    }
+
     [Fact]
     public async Task CreateAsync_MultipleItems_SumsLineTotalsIntoGrandTotal()
     {
@@ -803,6 +986,23 @@ public class OrderRequestServiceTests
 
         await Assert.ThrowsAsync<NotFoundException>(() =>
             sut.CreateRenewalAsync(new CreateRenewalOrderRequestDto { OrderRequestItemId = originalItem.Id }, otherCustomer.Id));
+    }
+
+    // Dunning (Đợt 2, Phần 8) - dịch vụ đã bị hủy hẳn (quá hạn thanh toán quá lâu, dữ liệu bàn giao đã
+    // bị DunningBackgroundService xoá) không thể tự gia hạn lại qua luồng thông thường.
+    [Fact]
+    public async Task CreateRenewalAsync_TerminatedItem_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var (customer, originalItem) = await SeedRenewalOriginalAsync(context, plan);
+        originalItem.TerminatedAt = DateTime.UtcNow.AddDays(-1);
+        context.OrderRequestItems.Update(originalItem);
+        await context.SaveChangesAsync();
+        var sut = CreateSut(context);
+
+        await Assert.ThrowsAsync<ValidationException>(() =>
+            sut.CreateRenewalAsync(new CreateRenewalOrderRequestDto { OrderRequestItemId = originalItem.Id, PeriodMonths = 1 }, customer.Id));
     }
 
     [Fact]
@@ -1388,5 +1588,453 @@ public class OrderRequestServiceTests
         Assert.Equal("ORD-SOON", result.Items[0].OrderCode);
         Assert.Equal("ORD-LATER", result.Items[1].OrderCode);
         Assert.Equal("ORD-NOT-COMPLETED", result.Items[2].OrderCode);
+    }
+
+    // Fraud Review (Đợt 2, Phần 9) - Id cố ý khác dữ liệu HasData/các seed khác trong file, mirror quy
+    // ước chung của file này.
+    private static async Task<ServicePlan> SeedHighValuePlanAsync(AppDbContext context)
+    {
+        var category = new ServiceCategory { Id = 521, Name = "Test Category Fraud", Slug = "test-category-fraud", DisplayOrder = 1, IsActive = true };
+        var plan = new ServicePlan { Id = 521, CategoryId = category.Id, Category = category, Name = "Test Plan Fraud", Slug = "test-plan-fraud", Status = ServicePlanStatus.Active };
+        context.ServiceCategories.Add(category);
+        context.ServicePlans.Add(plan);
+        // Price cao để 1 đơn 1 sản phẩm (quantity=1, không đụng rule số lượng) đã vượt ngưỡng "khách mới
+        // giá trị cao" (mặc định 10.000.000đ) mà không cần nhiều dòng/số lượng lớn.
+        context.PlanPrices.Add(new PlanPrice { Id = 521, PlanId = plan.Id, PeriodMonths = 1, Price = 15000000m, IsDefault = true, IsActive = true, IsCurrent = true });
+        await context.SaveChangesAsync();
+        return plan;
+    }
+
+    [Fact]
+    public async Task CreateAsync_QuantityExceedsThreshold_FlagsForReview()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var sut = CreateSut(context);
+
+        var result = await sut.CreateAsync(BuildDto(plan.Id, periodMonths: 1, quantity: 6));
+
+        var saved = context.OrderRequests.Single(o => o.Id == result.Id);
+        Assert.True(saved.IsFlaggedForReview);
+        Assert.Contains("Số lượng", saved.FlagReason);
+    }
+
+    [Fact]
+    public async Task CreateAsync_QuantityAtThreshold_DoesNotFlag()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var sut = CreateSut(context);
+
+        // Ngưỡng mặc định 5 - đúng bằng ngưỡng (không VƯỢT) thì chưa bị gắn cờ.
+        var result = await sut.CreateAsync(BuildDto(plan.Id, periodMonths: 1, quantity: 5));
+
+        var saved = context.OrderRequests.Single(o => o.Id == result.Id);
+        Assert.False(saved.IsFlaggedForReview);
+        Assert.Null(saved.FlagReason);
+    }
+
+    [Fact]
+    public async Task CreateAsync_FourthOrderFromSameEmailWithinWindow_FlagsForReview()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        const string email = "frequent-buyer@example.com";
+        for (var i = 0; i < 3; i++)
+        {
+            context.OrderRequests.Add(new OrderRequest
+            {
+                OrderCode = $"ORD-FREQ-{i}",
+                CustomerType = CustomerType.Individual,
+                CustomerName = "Frequent Buyer",
+                CustomerEmail = email,
+                CustomerPhone = "0911111111",
+                TotalPrice = 100000m,
+                Status = OrderRequestStatus.New,
+                CreatedAt = DateTime.UtcNow.AddMinutes(-1),
+            });
+        }
+        await context.SaveChangesAsync();
+        var sut = CreateSut(context);
+
+        var dto = BuildDto(plan.Id, periodMonths: 1, quantity: 1);
+        dto.CustomerEmail = email;
+        var result = await sut.CreateAsync(dto);
+
+        var saved = context.OrderRequests.Single(o => o.Id == result.Id);
+        Assert.True(saved.IsFlaggedForReview);
+        Assert.Contains("Tần suất", saved.FlagReason);
+    }
+
+    [Fact]
+    public async Task CreateAsync_ThirdOrderFromSameEmailWithinWindow_DoesNotFlagForFrequency()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        const string email = "occasional-buyer@example.com";
+        for (var i = 0; i < 2; i++)
+        {
+            context.OrderRequests.Add(new OrderRequest
+            {
+                OrderCode = $"ORD-OCC-{i}",
+                CustomerType = CustomerType.Individual,
+                CustomerName = "Occasional Buyer",
+                CustomerEmail = email,
+                CustomerPhone = "0922222222",
+                TotalPrice = 100000m,
+                Status = OrderRequestStatus.New,
+                CreatedAt = DateTime.UtcNow.AddMinutes(-1),
+            });
+        }
+        await context.SaveChangesAsync();
+        var sut = CreateSut(context);
+
+        var dto = BuildDto(plan.Id, periodMonths: 1, quantity: 1);
+        dto.CustomerEmail = email;
+        var result = await sut.CreateAsync(dto);
+
+        var saved = context.OrderRequests.Single(o => o.Id == result.Id);
+        Assert.False(saved.IsFlaggedForReview);
+    }
+
+    [Fact]
+    public async Task CreateAsync_OrderOutsideFrequencyWindow_DoesNotCountTowardThreshold()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        const string email = "stale-buyer@example.com";
+        for (var i = 0; i < 3; i++)
+        {
+            context.OrderRequests.Add(new OrderRequest
+            {
+                OrderCode = $"ORD-STALE-{i}",
+                CustomerType = CustomerType.Individual,
+                CustomerName = "Stale Buyer",
+                CustomerEmail = email,
+                CustomerPhone = "0933333333",
+                TotalPrice = 100000m,
+                Status = OrderRequestStatus.New,
+                // Ngoài cửa sổ 10 phút mặc định - không được tính vào tần suất.
+                CreatedAt = DateTime.UtcNow.AddMinutes(-30),
+            });
+        }
+        await context.SaveChangesAsync();
+        var sut = CreateSut(context);
+
+        var dto = BuildDto(plan.Id, periodMonths: 1, quantity: 1);
+        dto.CustomerEmail = email;
+        var result = await sut.CreateAsync(dto);
+
+        var saved = context.OrderRequests.Single(o => o.Id == result.Id);
+        Assert.False(saved.IsFlaggedForReview);
+    }
+
+    [Fact]
+    public async Task CreateAsync_HighValueOrderFromNewCustomer_FlagsForReview()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedHighValuePlanAsync(context);
+        var sut = CreateSut(context);
+
+        var result = await sut.CreateAsync(BuildDto(plan.Id, periodMonths: 1, quantity: 1), customerId: Guid.NewGuid());
+
+        var saved = context.OrderRequests.Single(o => o.Id == result.Id);
+        Assert.True(saved.IsFlaggedForReview);
+        Assert.Contains("khách mới", saved.FlagReason);
+    }
+
+    [Fact]
+    public async Task CreateAsync_HighValueOrderFromReturningCustomer_DoesNotFlag()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedHighValuePlanAsync(context);
+        var customerId = Guid.NewGuid();
+        context.OrderRequests.Add(new OrderRequest
+        {
+            OrderCode = "ORD-PRIOR-COMPLETED",
+            CustomerId = customerId,
+            CustomerType = CustomerType.Individual,
+            CustomerName = "Returning Customer",
+            CustomerEmail = "returning@example.com",
+            CustomerPhone = "0944444444",
+            TotalPrice = 100000m,
+            Status = OrderRequestStatus.Completed,
+            CreatedAt = DateTime.UtcNow.AddDays(-30),
+        });
+        await context.SaveChangesAsync();
+        var sut = CreateSut(context);
+
+        var result = await sut.CreateAsync(BuildDto(plan.Id, periodMonths: 1, quantity: 1), customerId);
+
+        var saved = context.OrderRequests.Single(o => o.Id == result.Id);
+        Assert.False(saved.IsFlaggedForReview);
+    }
+
+    [Fact]
+    public async Task CreateAsync_NormalOrder_DoesNotFlagForReview()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var sut = CreateSut(context);
+
+        var result = await sut.CreateAsync(BuildDto(plan.Id, periodMonths: 1, quantity: 1));
+
+        var saved = context.OrderRequests.Single(o => o.Id == result.Id);
+        Assert.False(saved.IsFlaggedForReview);
+        Assert.Null(saved.FlagReason);
+    }
+
+    // OS Image (Đợt 3, Phần 11) - Id cố ý khác dữ liệu HasData (OsImage 1-7) và các seed khác trong
+    // file, mirror quy ước chung. WindowsLicenseFeePerMonth=50000 (khác giá seed thật) để dễ verify
+    // bằng tay, không phụ thuộc HasData có được InMemory provider nạp hay không.
+    private static async Task<(ServicePlan Plan, OsImage LinuxOs, OsImage WindowsOs)> SeedPlanWithOsImagesAsync(AppDbContext context)
+    {
+        var category = new ServiceCategory { Id = 541, Name = "Test Category OS", Slug = "test-category-os", DisplayOrder = 1, IsActive = true };
+        var plan = new ServicePlan { Id = 541, CategoryId = category.Id, Category = category, Name = "Test Plan OS", Slug = "test-plan-os", Status = ServicePlanStatus.Active };
+        context.ServiceCategories.Add(category);
+        context.ServicePlans.Add(plan);
+        context.PlanPrices.Add(new PlanPrice { Id = 541, PlanId = plan.Id, PeriodMonths = 1, Price = 100000m, IsDefault = true, IsActive = true, IsCurrent = true });
+
+        var linuxOs = new OsImage { Id = 541, Name = "Test Linux", Slug = "test-linux-541", Family = OsFamily.Linux, IsActive = true };
+        var windowsOs = new OsImage { Id = 542, Name = "Test Windows", Slug = "test-windows-542", Family = OsFamily.Windows, WindowsLicenseFeePerMonth = 50000m, IsActive = true };
+        context.OsImages.AddRange(linuxOs, windowsOs);
+        context.ServicePlanOsImages.AddRange(
+            new ServicePlanOsImage { PlanId = plan.Id, OsImageId = linuxOs.Id, IsDefault = true },
+            new ServicePlanOsImage { PlanId = plan.Id, OsImageId = windowsOs.Id }
+        );
+        await context.SaveChangesAsync();
+        return (plan, linuxOs, windowsOs);
+    }
+
+    private static CreateOrderRequestDto BuildOsDto(int servicePlanId, int? osImageId) => new()
+    {
+        CustomerType = CustomerType.Individual,
+        CustomerName = "Test Customer",
+        CustomerEmail = "test@example.com",
+        CustomerPhone = "0900000000",
+        Items = { new CreateOrderRequestItemDto { ServicePlanId = servicePlanId, PeriodMonths = 1, Quantity = 1, OsImageId = osImageId } }
+    };
+
+    [Fact]
+    public async Task CreateAsync_LinuxOsImage_SetsSnapshotFieldsWithoutLicenseFee()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var (plan, linuxOs, _) = await SeedPlanWithOsImagesAsync(context);
+        var sut = CreateSut(context);
+
+        var result = await sut.CreateAsync(BuildOsDto(plan.Id, linuxOs.Id));
+
+        var item = context.OrderRequestItems.Single(i => i.OrderRequestId == result.Id);
+        Assert.Equal(linuxOs.Id, item.OsImageId);
+        Assert.Equal(linuxOs.Name, item.OsImageName);
+        Assert.Null(item.OsLicenseFee);
+        Assert.Equal(100000m, item.UnitPrice);
+    }
+
+    [Fact]
+    public async Task CreateAsync_WindowsOsImage_AddsLicenseFeeToUnitPrice()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var (plan, _, windowsOs) = await SeedPlanWithOsImagesAsync(context);
+        var sut = CreateSut(context);
+
+        var result = await sut.CreateAsync(BuildOsDto(plan.Id, windowsOs.Id));
+
+        var item = context.OrderRequestItems.Single(i => i.OrderRequestId == result.Id);
+        Assert.Equal(windowsOs.Id, item.OsImageId);
+        Assert.Equal(50000m, item.OsLicenseFee);
+        Assert.Equal(150000m, item.UnitPrice); // 100000 (giá gốc) + 50000 (phí bản quyền).
+    }
+
+    [Fact]
+    public async Task CreateAsync_OsImageNotAllowedForPlan_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var (plan, _, _) = await SeedPlanWithOsImagesAsync(context);
+        var otherOs = new OsImage { Id = 543, Name = "Other OS", Slug = "test-other-543", Family = OsFamily.Linux, IsActive = true };
+        context.OsImages.Add(otherOs);
+        await context.SaveChangesAsync();
+        var sut = CreateSut(context);
+
+        await Assert.ThrowsAsync<ValidationException>(() => sut.CreateAsync(BuildOsDto(plan.Id, otherOs.Id)));
+    }
+
+    [Fact]
+    public async Task CreateAsync_PlanWithNoOsImagesConfigured_ForcesOsImageIdNull()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context); // Không cấu hình OS nào.
+        var (_, unrelatedOs, _) = await SeedPlanWithOsImagesAsync(context); // OsImage thật, nhưng của plan khác.
+        var sut = CreateSut(context);
+
+        // Gửi lên 1 OsImageId hợp lệ (tồn tại thật) nhưng của plan khác - phải bị BỎ QUA hoàn toàn
+        // (không throw, không áp dụng) vì plan này chưa từng cấu hình OS nào.
+        var result = await sut.CreateAsync(BuildOsDto(plan.Id, unrelatedOs.Id));
+
+        var item = context.OrderRequestItems.Single(i => i.OrderRequestId == result.Id);
+        Assert.Null(item.OsImageId);
+        Assert.Null(item.OsLicenseFee);
+    }
+
+    [Fact]
+    public async Task CreateRenewalAsync_KeepsOriginalOsImageAndRecomputesLicenseFeeAtCurrentRate()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var (plan, _, windowsOs) = await SeedPlanWithOsImagesAsync(context);
+        var customer = await SeedCustomerAsync(context, roleId: 941);
+        var originalOrder = new OrderRequest
+        {
+            OrderCode = "ORD-ORIGINAL-OS",
+            CustomerId = customer.Id,
+            CustomerType = CustomerType.Individual,
+            CustomerName = customer.FullName,
+            CustomerEmail = customer.Email,
+            CustomerPhone = customer.Phone!,
+            TotalPrice = 150000m,
+            Status = OrderRequestStatus.Completed,
+            CreatedAt = DateTime.UtcNow,
+            Items = { new OrderRequestItem { ServicePlanId = plan.Id, PeriodMonths = 1, Quantity = 1, UnitPrice = 150000m, LineTotal = 150000m, OsImageId = windowsOs.Id, OsImageName = windowsOs.Name, OsLicenseFee = 50000m } }
+        };
+        context.OrderRequests.Add(originalOrder);
+        await context.SaveChangesAsync();
+        var originalItem = originalOrder.Items.Single();
+
+        // Admin tăng phí bản quyền Windows SAU khi khách đã mua lần đầu - gia hạn phải phản ánh giá mới.
+        windowsOs.WindowsLicenseFeePerMonth = 80000m;
+        context.OsImages.Update(windowsOs);
+        await context.SaveChangesAsync();
+        var sut = CreateSut(context);
+
+        var result = await sut.CreateRenewalAsync(new CreateRenewalOrderRequestDto { OrderRequestItemId = originalItem.Id, PeriodMonths = 1 }, customer.Id);
+
+        var renewalItem = context.OrderRequestItems.Single(i => i.RenewsFromItemId == originalItem.Id);
+        Assert.Equal(windowsOs.Id, renewalItem.OsImageId);
+        Assert.Equal(80000m, renewalItem.OsLicenseFee);
+        Assert.Equal(100000m + 80000m, renewalItem.UnitPrice);
+    }
+
+    // SSH Key & Hostname/Tags (Đợt 3, Phần 12).
+    private static CreateOrderRequestDto BuildProvisioningDto(int servicePlanId, int? sshPublicKeyId = null, string? hostname = null, string? tags = null) => new()
+    {
+        CustomerType = CustomerType.Individual,
+        CustomerName = "Test Customer",
+        CustomerEmail = "test@example.com",
+        CustomerPhone = "0900000000",
+        Items = { new CreateOrderRequestItemDto { ServicePlanId = servicePlanId, PeriodMonths = 1, Quantity = 1, SshPublicKeyId = sshPublicKeyId, Hostname = hostname, Tags = tags } }
+    };
+
+    [Fact]
+    public async Task CreateAsync_ValidSshPublicKeyId_SnapshotsPublicKeyIntoItem()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var customer = await SeedCustomerAsync(context, roleId: 961);
+        var sshKey = new CustomerSshKey { CustomerId = customer.Id, Label = "Laptop", PublicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBWc test@laptop" };
+        context.CustomerSshKeys.Add(sshKey);
+        await context.SaveChangesAsync();
+        var sut = CreateSut(context);
+
+        var result = await sut.CreateAsync(BuildProvisioningDto(plan.Id, sshPublicKeyId: sshKey.Id), customer.Id);
+
+        var item = context.OrderRequestItems.Single(i => i.OrderRequestId == result.Id);
+        Assert.Equal(sshKey.PublicKey, item.SshPublicKeySnapshot);
+    }
+
+    [Fact]
+    public async Task CreateAsync_SshPublicKeyBelongsToDifferentCustomer_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var owner = await SeedCustomerAsync(context, roleId: 962, email: "owner-ssh@example.com");
+        var buyer = await SeedCustomerAsync(context, roleId: 963, email: "buyer-ssh@example.com");
+        var sshKey = new CustomerSshKey { CustomerId = owner.Id, Label = "Owner Key", PublicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBWc owner@laptop" };
+        context.CustomerSshKeys.Add(sshKey);
+        await context.SaveChangesAsync();
+        var sut = CreateSut(context);
+
+        await Assert.ThrowsAsync<ValidationException>(() =>
+            sut.CreateAsync(BuildProvisioningDto(plan.Id, sshPublicKeyId: sshKey.Id), buyer.Id));
+    }
+
+    [Fact]
+    public async Task CreateAsync_SshPublicKeyIdWithoutCustomerId_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var sut = CreateSut(context);
+
+        // Khách vãng lai (customerId null) không thể dùng SSH key đã lưu - key luôn gắn theo tài khoản.
+        await Assert.ThrowsAsync<ValidationException>(() =>
+            sut.CreateAsync(BuildProvisioningDto(plan.Id, sshPublicKeyId: 1)));
+    }
+
+    [Fact]
+    public async Task CreateAsync_ValidHostname_SetsHostnameOnItem()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var sut = CreateSut(context);
+
+        var result = await sut.CreateAsync(BuildProvisioningDto(plan.Id, hostname: "web-prod-01.domain.com"));
+
+        var item = context.OrderRequestItems.Single(i => i.OrderRequestId == result.Id);
+        Assert.Equal("web-prod-01.domain.com", item.Hostname);
+    }
+
+    [Theory]
+    [InlineData("-invalid-start")]
+    [InlineData("invalid_underscore")]
+    [InlineData("has space")]
+    public async Task CreateAsync_InvalidHostname_ThrowsValidationException(string invalidHostname)
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var sut = CreateSut(context);
+
+        await Assert.ThrowsAsync<ValidationException>(() => sut.CreateAsync(BuildProvisioningDto(plan.Id, hostname: invalidHostname)));
+    }
+
+    [Fact]
+    public async Task CreateAsync_TagsExceeds255Characters_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var sut = CreateSut(context);
+        var tooLongTags = new string('a', 256);
+
+        await Assert.ThrowsAsync<ValidationException>(() => sut.CreateAsync(BuildProvisioningDto(plan.Id, tags: tooLongTags)));
+    }
+
+    [Fact]
+    public async Task CreateAsync_ValidTags_SetsTagsOnItem()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var sut = CreateSut(context);
+
+        var result = await sut.CreateAsync(BuildProvisioningDto(plan.Id, tags: "production, web-tier"));
+
+        var item = context.OrderRequestItems.Single(i => i.OrderRequestId == result.Id);
+        Assert.Equal("production, web-tier", item.Tags);
+    }
+
+    [Fact]
+    public async Task CreateRenewalAsync_CopiesSshPublicKeySnapshotFromOriginalWithoutRevalidating()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var (customer, originalItem) = await SeedRenewalOriginalAsync(context, plan, roleId: 964);
+        // Snapshot cũ có thể "hợp lệ theo rule thời điểm mua" nhưng không nhất thiết khớp regex hiện tại
+        // - gán trực tiếp 1 giá trị bất kỳ để verify hàm gia hạn KHÔNG re-validate, chỉ copy nguyên văn.
+        originalItem.SshPublicKeySnapshot = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBWc archived@old-laptop";
+        context.OrderRequestItems.Update(originalItem);
+        await context.SaveChangesAsync();
+        var sut = CreateSut(context);
+
+        var result = await sut.CreateRenewalAsync(new CreateRenewalOrderRequestDto { OrderRequestItemId = originalItem.Id, PeriodMonths = 1 }, customer.Id);
+
+        var renewalItem = context.OrderRequestItems.Single(i => i.RenewsFromItemId == originalItem.Id);
+        Assert.Equal(originalItem.SshPublicKeySnapshot, renewalItem.SshPublicKeySnapshot);
+        Assert.Equal(result.Id, renewalItem.OrderRequestId);
     }
 }

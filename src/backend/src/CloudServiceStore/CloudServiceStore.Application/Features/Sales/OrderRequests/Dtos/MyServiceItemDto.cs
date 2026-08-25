@@ -1,3 +1,5 @@
+using CloudServiceStore.Application.Features.Sales.OrderRequests;
+
 namespace CloudServiceStore.Application.Features.Sales.OrderRequests.Dtos;
 
 // Tier 4 "vòng đời gia hạn" - dùng cho GET /order-requests/mine/services. Khác MyOrderRequestDto: đây
@@ -18,6 +20,12 @@ public class MyServiceItemDto
     public string? TldName { get; init; }
     public int? PeriodMonths { get; init; }
     public DateTime? ExpiresAt { get; init; }
+    // "Active" | "Overdue" | "Suspended" | "Terminated" - xem DunningPolicy.ComputeLifecycleStatus.
+    public string LifecycleStatus { get; init; } = DunningPolicy.StatusActive;
+    // Hệ điều hành đã chọn lúc mua (Đợt 3, Phần 11) - null nếu không chọn.
+    public string? OsImageName { get; init; }
+    // Hostname bàn giao (Đợt 3, Phần 12) - null nếu không nhập.
+    public string? Hostname { get; init; }
     public string? ProvisionedIpAddress { get; init; }
     public string? ProvisionedRootPassword { get; init; }
     public string? ProvisionedNameservers { get; init; }

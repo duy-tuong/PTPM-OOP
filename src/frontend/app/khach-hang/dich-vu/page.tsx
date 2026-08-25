@@ -3,6 +3,7 @@ import { getCustomerAccessToken } from "@/lib/auth/customerSession";
 import { getMyServices } from "@/lib/api/customer";
 import { ApiError } from "@/lib/api/http";
 import { OrderStatusBadge } from "@/components/admin/OrderStatusBadge";
+import { LifecycleStatusBadge } from "@/components/admin/LifecycleStatusBadge";
 import { RenewServiceDialog } from "@/components/account/RenewServiceDialog";
 import { PlanChangeDialog } from "@/components/account/PlanChangeDialog";
 import {
@@ -79,6 +80,7 @@ export default async function MyServicesPage({
                     <th className="px-6 py-4 font-medium">Mã đơn</th>
                     <th className="px-6 py-4 font-medium">Trạng thái đơn</th>
                     <th className="px-6 py-4 font-medium">Hạn dùng</th>
+                    <th className="px-6 py-4 font-medium" aria-label="Trạng thái vòng đời" />
                     <th className="px-6 py-4 font-medium" aria-label="Gia hạn" />
                   </tr>
                 </thead>
@@ -88,6 +90,7 @@ export default async function MyServicesPage({
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
                           <span className="font-medium text-foreground">{formatServiceName(item)}</span>
+                          {item.osImageName && <span className="text-xs text-muted-foreground">{item.osImageName}</span>}
                           {(item.provisionedIpAddress || item.provisionedNameservers) && (
                             <span className="mt-1 font-mono text-xs text-muted-foreground bg-muted w-fit px-2 py-0.5 rounded-md">
                               {item.provisionedIpAddress ? `IP: ${item.provisionedIpAddress}` : `NS: ${item.provisionedNameservers}`}
@@ -100,12 +103,21 @@ export default async function MyServicesPage({
                         <OrderStatusBadge status={item.orderStatus} />
                       </td>
                       <td className="px-6 py-4 text-muted-foreground">{item.expiresAt ? formatDate(item.expiresAt) : "-"}</td>
+                      <td className="px-6 py-4">
+                        <LifecycleStatusBadge status={item.lifecycleStatus} />
+                      </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end gap-2">
-                          {item.expiresAt && item.servicePlanId && item.servicePlanPackageType === "Fixed" && (
-                            <PlanChangeDialog item={item} />
+                          {/* Dịch vụ đã bị hủy (Dunning, Phần 8) - backend từ chối gia hạn/đổi gói qua
+                              luồng thông thường, ẩn luôn nút để tránh khách bấm rồi gặp lỗi. */}
+                          {item.lifecycleStatus !== "Terminated" && (
+                            <>
+                              {item.expiresAt && item.servicePlanId && item.servicePlanPackageType === "Fixed" && (
+                                <PlanChangeDialog item={item} />
+                              )}
+                              {item.expiresAt && <RenewServiceDialog item={item} />}
+                            </>
                           )}
-                          {item.expiresAt && <RenewServiceDialog item={item} />}
                         </div>
                       </td>
                     </tr>

@@ -58,4 +58,5 @@ public class ServicePlan : ISoftDelete
     public ICollection<PlanFeature> Features { get; set; } = new List<PlanFeature>();
     public ICollection<PlanPrice> Prices { get; set; } = new List<PlanPrice>();
     public ICollection<ServicePlanAddon> PlanAddons { get; set; } = new List<ServicePlanAddon>();
+    public ICollection<ServicePlanOsImage> PlanOsImages { get; set; } = new List<ServicePlanOsImage>();
 }

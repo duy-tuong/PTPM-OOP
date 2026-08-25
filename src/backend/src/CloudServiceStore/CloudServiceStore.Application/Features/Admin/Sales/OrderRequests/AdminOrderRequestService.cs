@@ -1,3 +1,4 @@
+using CloudServiceStore.Application.Common.Exceptions;
 using CloudServiceStore.Application.Common.Interfaces;
 using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Sales.OrderRequests.Dtos;
@@ -29,6 +30,7 @@ public class AdminOrderRequestService : IAdminOrderRequestService
             .Include(o => o.Items).ThenInclude(i => i.Addons).ThenInclude(a => a.Addon)
             .Include(o => o.AssignedToUser)
             .Where(o => query.Status == null || o.Status == query.Status)
+            .Where(o => query.FlaggedOnly != true || o.IsFlaggedForReview)
             .OrderByDescending(o => o.CreatedAt);
 
         var totalCount = await baseQuery.CountAsync(cancellationToken);
@@ -45,6 +47,39 @@ public class AdminOrderRequestService : IAdminOrderRequestService
     {
         var entity = await _transitionService.TransitionAsync(id, dto.NewStatus, changedByUserId, cancellationToken);
         return MapToDto(entity);
+    }
+
+    public async Task<AdminOrderRequestDto> LiftSuspensionAsync(int itemId, CancellationToken cancellationToken = default)
+    {
+        var itemRepository = _unitOfWork.Repository<OrderRequestItem, int>();
+        var item = await itemRepository.Query()
+            .Include(i => i.OrderRequest).ThenInclude(o => o.Items).ThenInclude(i => i.ServicePlan)
+            .Include(i => i.OrderRequest).ThenInclude(o => o.Items).ThenInclude(i => i.TldPricing)
+            .Include(i => i.OrderRequest).ThenInclude(o => o.Items).ThenInclude(i => i.Addons).ThenInclude(a => a.Addon)
+            .Include(i => i.OrderRequest).ThenInclude(o => o.AssignedToUser)
+            .FirstOrDefaultAsync(i => i.Id == itemId, cancellationToken);
+
+        if (item is null)
+        {
+            throw new NotFoundException(nameof(OrderRequestItem), itemId);
+        }
+
+        if (item.TerminatedAt is not null)
+        {
+            throw new ValidationException("Dịch vụ đã bị hủy hẳn (quá hạn quá lâu, dữ liệu bàn giao đã bị xoá) - không thể gỡ khóa, cần tạo gia hạn/bàn giao lại thủ công nếu muốn khôi phục.");
+        }
+
+        if (item.SuspendedAt is null && item.TerminationWarningSentAt is null)
+        {
+            throw new ValidationException("Dịch vụ này hiện không bị tạm khóa.");
+        }
+
+        item.SuspendedAt = null;
+        item.TerminationWarningSentAt = null;
+        itemRepository.Update(item);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return MapToDto(item.OrderRequest);
     }
 
     private static AdminOrderRequestDto MapToDto(OrderRequest order)
@@ -65,7 +100,9 @@ public class AdminOrderRequestService : IAdminOrderRequestService
             AssignedToUserId = order.AssignedToUserId,
             AssignedToUserName = order.AssignedToUser?.FullName,
             Source = order.Source,
-            CreatedAt = order.CreatedAt
+            CreatedAt = order.CreatedAt,
+            IsFlaggedForReview = order.IsFlaggedForReview,
+            FlagReason = order.FlagReason
         };
     }
 }

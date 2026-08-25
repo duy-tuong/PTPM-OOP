@@ -133,4 +133,59 @@ public class AdminOrderRequestServiceTests
 
         Assert.Equal(nameof(OrderRequestStatus.Completed), result.Status);
     }
+
+    // Dunning Automation (Đợt 2, Phần 8) - Admin gỡ tạm khóa thủ công.
+    [Fact]
+    public async Task LiftSuspensionAsync_ItemNotFound_ThrowsNotFoundException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var sut = CreateSut(context, new Mock<IOrderStatusObserver>());
+
+        await Assert.ThrowsAsync<NotFoundException>(() => sut.LiftSuspensionAsync(9999));
+    }
+
+    [Fact]
+    public async Task LiftSuspensionAsync_NotSuspended_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var order = await SeedOrderRequestAsync(context, status: OrderRequestStatus.Completed);
+        var item = order.Items.Single();
+        var sut = CreateSut(context, new Mock<IOrderStatusObserver>());
+
+        await Assert.ThrowsAsync<ValidationException>(() => sut.LiftSuspensionAsync(item.Id));
+    }
+
+    [Fact]
+    public async Task LiftSuspensionAsync_AlreadyTerminated_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var order = await SeedOrderRequestAsync(context, status: OrderRequestStatus.Completed);
+        var item = order.Items.Single();
+        item.SuspendedAt = DateTime.UtcNow.AddDays(-10);
+        item.TerminatedAt = DateTime.UtcNow.AddDays(-1);
+        context.OrderRequestItems.Update(item);
+        await context.SaveChangesAsync();
+        var sut = CreateSut(context, new Mock<IOrderStatusObserver>());
+
+        await Assert.ThrowsAsync<ValidationException>(() => sut.LiftSuspensionAsync(item.Id));
+    }
+
+    [Fact]
+    public async Task LiftSuspensionAsync_Suspended_ClearsSuspendedAndWarningFields()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var order = await SeedOrderRequestAsync(context, status: OrderRequestStatus.Completed);
+        var item = order.Items.Single();
+        item.SuspendedAt = DateTime.UtcNow.AddDays(-5);
+        item.TerminationWarningSentAt = DateTime.UtcNow.AddDays(-1);
+        context.OrderRequestItems.Update(item);
+        await context.SaveChangesAsync();
+        var sut = CreateSut(context, new Mock<IOrderStatusObserver>());
+
+        await sut.LiftSuspensionAsync(item.Id);
+
+        var reloaded = context.OrderRequestItems.Single(i => i.Id == item.Id);
+        Assert.Null(reloaded.SuspendedAt);
+        Assert.Null(reloaded.TerminationWarningSentAt);
+    }
 }

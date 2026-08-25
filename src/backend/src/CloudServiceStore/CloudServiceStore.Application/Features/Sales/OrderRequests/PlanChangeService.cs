@@ -154,6 +154,12 @@ public class PlanChangeService : IPlanChangeService
             throw new ValidationException("Dịch vụ chưa được bàn giao xong, không thể đổi gói.");
         }
 
+        // Dunning (Phần 8) - dịch vụ đã bị hủy hẳn (dữ liệu bàn giao đã bị xoá) không thể đổi gói.
+        if (original.TerminatedAt is not null)
+        {
+            throw new ValidationException("Dịch vụ đã bị hủy do quá hạn thanh toán quá lâu, vui lòng liên hệ hỗ trợ để được khôi phục.");
+        }
+
         var originalPlan = original.ServicePlan;
         if (originalPlan.PackageType != ServicePlanPackageType.Fixed)
         {

@@ -30,4 +30,5 @@ public class ServicePlanListItemDto
     public List<PlanFeatureDto> Features { get; init; } = [];
     public List<PlanPriceDto> Prices { get; init; } = [];
     public List<PlanAddonDto> Addons { get; init; } = [];
+    public List<PlanOsImageDto> OsImages { get; init; } = [];
 }

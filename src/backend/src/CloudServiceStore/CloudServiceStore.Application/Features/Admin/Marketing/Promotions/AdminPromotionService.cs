@@ -49,6 +49,7 @@ public class AdminPromotionService : IAdminPromotionService
             UsageLimit = dto.UsageLimit,
             UsageCount = 0,
             IsActive = dto.IsActive,
+            CustomerEligibility = dto.CustomerEligibility,
             IsDeleted = false,
             CreatedAt = DateTime.UtcNow
         };
@@ -86,6 +87,7 @@ public class AdminPromotionService : IAdminPromotionService
         entity.EndDate = dto.EndDate;
         entity.UsageLimit = dto.UsageLimit;
         entity.IsActive = dto.IsActive;
+        entity.CustomerEligibility = dto.CustomerEligibility;
         entity.UpdatedAt = DateTime.UtcNow;
 
         ApplyScopes(entity, dto.Scopes);
@@ -202,6 +204,7 @@ public class AdminPromotionService : IAdminPromotionService
             UsageLimit = promotion.UsageLimit,
             UsageCount = promotion.UsageCount,
             IsActive = promotion.IsActive,
+            CustomerEligibility = promotion.CustomerEligibility.ToString(),
             Scopes = promotion.Scopes.Select(s => new PromotionScopeDto
             {
                 ScopeType = s.ScopeType.ToString(),

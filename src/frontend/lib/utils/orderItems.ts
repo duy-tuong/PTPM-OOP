@@ -18,6 +18,15 @@ export function formatOrderItemLabel(item: OrderRequestItemDto): string {
   return kindLabel ? `[${kindLabel}] ${name} x${item.quantity}` : `${name} x${item.quantity}`;
 }
 
+// Dunning Automation (Đợt 2, Phần 8) - nhãn cho DunningPolicy.ComputeLifecycleStatus (backend). "Active"
+// cố tình không có nhãn riêng (trạng thái bình thường, đã thể hiện qua OrderStatusBadge) - chỉ 3 trạng
+// thái bất thường mới cần cảnh báo thêm, xem LifecycleStatusBadge.tsx.
+export const LIFECYCLE_STATUS_LABELS: Record<string, string> = {
+  Overdue: "Quá hạn",
+  Suspended: "Tạm khóa",
+  Terminated: "Đã hủy",
+};
+
 // Tóm tắt 1 dòng cho các danh sách chật chỗ (bảng Admin) - tên item đầu tiên, kèm "+N khác" nếu đơn
 // có nhiều hơn 1 dòng. Nơi có đủ chỗ hơn (modal OrderStatusDialog) nên liệt kê từng item riêng bằng
 // formatOrderItemLabel thay vì gọi hàm này.
@@ -25,4 +34,28 @@ export function formatOrderProductSummary(items: OrderRequestItemDto[]): string 
   if (items.length === 0) return "-";
   const first = formatOrderItemLabel(items[0]);
   return items.length > 1 ? `${first} +${items.length - 1} khác` : first;
+}
+
+// Thứ tự "xấu dần" để chọn 1 trạng thái đại diện hiện lên bảng Admin (1 đơn có thể nhiều dòng, mỗi
+// dòng 1 lifecycleStatus riêng) - Terminated đáng chú ý nhất, Active/null (bình thường) không đáng hiện.
+const LIFECYCLE_SEVERITY: Record<string, number> = { Overdue: 1, Suspended: 2, Terminated: 3 };
+
+export function getWorstLifecycleStatus(items: OrderRequestItemDto[]): string | null {
+  let worst: string | null = null;
+  let worstSeverity = 0;
+  for (const item of items) {
+    const severity = item.lifecycleStatus ? (LIFECYCLE_SEVERITY[item.lifecycleStatus] ?? 0) : 0;
+    if (severity > worstSeverity) {
+      worst = item.lifecycleStatus!;
+      worstSeverity = severity;
+    }
+  }
+  return worst;
+}
+
+// Id của dòng đầu tiên đang Suspended trong đơn - dùng cho nút "Gỡ khóa" (Admin gỡ tạm khóa thủ công,
+// xem LiftSuspensionButton.tsx). Thường 1 đơn chỉ có 1 dòng nên trường hợp nhiều dòng Suspended cùng
+// lúc là biên, chỉ gỡ dòng đầu tiên tìm thấy.
+export function getFirstSuspendedItemId(items: OrderRequestItemDto[]): number | null {
+  return items.find((item) => item.lifecycleStatus === "Suspended")?.id ?? null;
 }

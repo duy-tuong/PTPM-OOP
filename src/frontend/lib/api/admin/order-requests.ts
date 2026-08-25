@@ -11,6 +11,11 @@ export function updateAdminOrderRequestStatus(baseUrl: string, id: number, dto: 
   return apiFetch<AdminOrderRequestDto>(baseUrl, `/admin/order-requests/${id}/status`, "PUT", { body: dto, token });
 }
 
+// Dunning Automation (Đợt 2, Phần 8) - itemId là OrderRequestItem.Id (không phải id đơn hàng).
+export function liftAdminOrderRequestItemSuspension(baseUrl: string, itemId: number, token?: string) {
+  return apiFetch<AdminOrderRequestDto>(baseUrl, `/admin/order-requests/items/${itemId}/lift-suspension`, "POST", { token });
+}
+
 // Export Excel trả về file nhị phân (không phải JSON) nên không dùng apiFetch chung - tự fetch
 // và trả Blob cho ExportButton (Phase 6.9) tự tạo link download.
 export async function exportAdminOrderRequests(

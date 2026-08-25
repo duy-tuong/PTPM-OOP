@@ -74,6 +74,16 @@ export interface PlanAddonDto {
   maxQuantity: number;
 }
 
+// Khớp Application/Features/Catalog/ServicePlans/Dtos/PlanOsImageDto.cs (Đợt 3, Phần 11) - dùng chung
+// cho cả response Admin (AdminServicePlanDto) và public, mirror PlanAddonDto.
+export interface PlanOsImageDto {
+  osImageId: number;
+  osImageName: string;
+  family: string;
+  windowsLicenseFeePerMonth?: number | null;
+  isDefault: boolean;
+}
+
 export interface ServicePlanListItemDto extends ServicePlanCustomConfigFields {
   id: number;
   name: string;
@@ -88,6 +98,7 @@ export interface ServicePlanListItemDto extends ServicePlanCustomConfigFields {
   features: PlanFeatureDto[];
   prices: PlanPriceDto[];
   addons: PlanAddonDto[];
+  osImages: PlanOsImageDto[];
 }
 
 export interface ServicePlanDetailDto extends ServicePlanCustomConfigFields {
@@ -104,6 +115,7 @@ export interface ServicePlanDetailDto extends ServicePlanCustomConfigFields {
   features: PlanFeatureDto[];
   prices: PlanPriceDto[];
   addons: PlanAddonDto[];
+  osImages: PlanOsImageDto[];
 }
 
 // Khớp Application/Features/Catalog/TldPricings/Dtos/*.cs

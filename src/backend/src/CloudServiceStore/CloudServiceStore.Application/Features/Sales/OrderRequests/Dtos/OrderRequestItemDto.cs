@@ -1,3 +1,4 @@
+using CloudServiceStore.Application.Features.Sales.OrderRequests;
 using CloudServiceStore.Domain.Entities.Sales;
 
 namespace CloudServiceStore.Application.Features.Sales.OrderRequests.Dtos;
@@ -20,11 +21,27 @@ public class OrderRequestItemDto
     public int? ChosenRamMb { get; init; }
     public int? ChosenDiskGb { get; init; }
 
+    // Hệ điều hành đã chọn lúc mua (Đợt 3, Phần 11) - null nếu không chọn OS. OsLicenseFee là phần phụ
+    // phí bản quyền Windows ĐÃ cộng vào UnitPrice (snapshot, không tính lại) - null nếu Linux/không chọn.
+    public string? OsImageName { get; init; }
+    public decimal? OsLicenseFee { get; init; }
+
+    // Hostname/Tags bàn giao (Đợt 3, Phần 12) - null nếu không nhập. Không trả SshPublicKeySnapshot ra
+    // response (chỉ cần biết CÓ hay KHÔNG dùng SSH key - suy ra từ ProvisionedRootPassword == null sau
+    // khi Completed - không cần lộ nguyên nội dung public key trong mọi response đơn hàng).
+    public string? Hostname { get; init; }
+    public string? Tags { get; init; }
+
     // "New" | "Renewal" | "PlanChange" - dùng chung cho cả 2 UI (khách hàng/Admin) gắn nhãn rõ loại
     // dòng, tránh hiểu nhầm item "PlanChange" (UnitPrice = số tiền PHỤ THU proration, không phải giá
     // đầy đủ gói đích) là đang mua nguyên gói mới với giá đó. Xem OrderRequestItem.RenewsFromItemId/
     // ChangesFromItemId.
     public string ItemKind { get; init; } = "New";
+
+    // "Active" | "Overdue" | "Suspended" | "Terminated" | null - chỉ có ý nghĩa trên item "đang sống"
+    // (ItemKind == "New"), null cho item "biên lai" gia hạn/đổi gói (không có vòng đời riêng, xem
+    // DunningPolicy).
+    public string? LifecycleStatus { get; init; }
 
     // Thông tin bàn giao mô phỏng (Tier 3) - chỉ có giá trị sau khi đơn Completed (xem
     // OrderRequestStatusTransitionService.GenerateProvisioningDetails). Không cần check "chỉ map khi
@@ -52,7 +69,14 @@ public class OrderRequestItemDto
         ChosenVcpu = item.ChosenVcpu,
         ChosenRamMb = item.ChosenRamMb,
         ChosenDiskGb = item.ChosenDiskGb,
+        OsImageName = item.OsImageName,
+        OsLicenseFee = item.OsLicenseFee,
+        Hostname = item.Hostname,
+        Tags = item.Tags,
         ItemKind = item.ChangesFromItemId is not null ? "PlanChange" : item.RenewsFromItemId is not null ? "Renewal" : "New",
+        LifecycleStatus = item.ChangesFromItemId is null && item.RenewsFromItemId is null
+            ? DunningPolicy.ComputeLifecycleStatus(item.ExpiresAt, item.SuspendedAt, item.TerminatedAt, DateTime.UtcNow)
+            : null,
         ProvisionedIpAddress = item.ProvisionedIpAddress,
         ProvisionedRootPassword = item.ProvisionedRootPassword,
         ProvisionedNameservers = item.ProvisionedNameservers,

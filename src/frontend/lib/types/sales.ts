@@ -19,6 +19,26 @@ export interface CreateOrderRequestItemDto {
   chosenVcpu?: number;
   chosenRamMb?: number;
   chosenDiskGb?: number;
+  // Hệ điều hành đã chọn (Đợt 3, Phần 11) - chỉ có ý nghĩa khi servicePlanId có giá trị, tuỳ chọn.
+  osImageId?: number;
+
+  // Xác thực & bàn giao (Đợt 3, Phần 12) - đều tuỳ chọn, chỉ có ý nghĩa khi servicePlanId có giá trị.
+  sshPublicKeyId?: number;
+  hostname?: string;
+  tags?: string;
+}
+
+// Khớp Application/Features/Customers/SshKeys/Dtos/*.cs (Đợt 3, Phần 12)
+export interface CustomerSshKeyDto {
+  id: number;
+  label: string;
+  publicKey: string;
+  createdAt: string;
+}
+
+export interface CreateSshKeyDto {
+  label: string;
+  publicKey: string;
 }
 
 // Khớp Application/Features/Sales/OrderRequests/Dtos/CreateOrderRequestDto.cs - giỏ hàng nhiều dòng
@@ -62,6 +82,8 @@ export interface OrderLookupItemDto {
   chosenVcpu?: number | null;
   chosenRamMb?: number | null;
   chosenDiskGb?: number | null;
+  // Hệ điều hành đã chọn lúc mua (Đợt 3, Phần 11) - null nếu không chọn.
+  osImageName?: string | null;
   // "New" | "Renewal" | "PlanChange" - xem ghi chú OrderRequestItemDto.ItemKind (backend). Đặc biệt
   // quan trọng ở trang /thanh-toan: đơn "PlanChange" chỉ thu đúng phần PHỤ THU proration, không phải
   // giá đầy đủ của productName.
@@ -134,8 +156,18 @@ export interface OrderRequestItemDto {
   chosenVcpu?: number | null;
   chosenRamMb?: number | null;
   chosenDiskGb?: number | null;
+  // Hệ điều hành đã chọn lúc mua (Đợt 3, Phần 11) - null nếu không chọn. osLicenseFee là phần phụ phí
+  // bản quyền Windows ĐÃ cộng vào unitPrice (snapshot) - null nếu Linux/không chọn.
+  osImageName?: string | null;
+  osLicenseFee?: number | null;
+  // Hostname/Tags bàn giao (Đợt 3, Phần 12) - null nếu không nhập.
+  hostname?: string | null;
+  tags?: string | null;
   // "New" | "Renewal" | "PlanChange" - xem ORDER_ITEM_KIND_LABELS ở lib/utils/orderItems.ts.
   itemKind: string;
+  // "Active" | "Overdue" | "Suspended" | "Terminated" | null - null cho item "biên lai" (itemKind !=
+  // "New", không có vòng đời riêng). Xem LIFECYCLE_STATUS_LABELS ở lib/utils/orderItems.ts.
+  lifecycleStatus?: string | null;
   // Thông tin bàn giao mô phỏng (Tier 3 - "cấp phát tự động") - chỉ có giá trị sau khi đơn Completed.
   provisionedIpAddress?: string | null;
   provisionedRootPassword?: string | null;
@@ -179,6 +211,12 @@ export interface MyServiceItemDto {
   tldName?: string | null;
   periodMonths?: number | null;
   expiresAt?: string | null;
+  // "Active" | "Overdue" | "Suspended" | "Terminated" - xem LIFECYCLE_STATUS_LABELS ở lib/utils/orderItems.ts.
+  lifecycleStatus: string;
+  // Hệ điều hành đã chọn lúc mua (Đợt 3, Phần 11) - null nếu không chọn.
+  osImageName?: string | null;
+  // Hostname bàn giao (Đợt 3, Phần 12) - null nếu không nhập.
+  hostname?: string | null;
   provisionedIpAddress?: string | null;
   provisionedRootPassword?: string | null;
   provisionedNameservers?: string | null;

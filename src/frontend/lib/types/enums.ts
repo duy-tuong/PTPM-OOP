@@ -67,6 +67,17 @@ export enum ServicePlanPackageType {
   Custom = 2,
 }
 
+export enum OsFamily {
+  Linux = 1,
+  Windows = 2,
+}
+
+export enum PromotionCustomerEligibility {
+  All = 1,
+  NewCustomersOnly = 2,
+  ExistingCustomersOnly = 3,
+}
+
 export const CUSTOMER_TYPE_LABELS: Record<string, string> = {
   Individual: "Cá nhân",
   Business: "Doanh nghiệp",
@@ -140,4 +151,15 @@ export const ADDON_BILLING_TYPE_LABELS: Record<string, string> = {
 export const SERVICE_PLAN_PACKAGE_TYPE_LABELS: Record<string, string> = {
   Fixed: "Gói cố định",
   Custom: "Gói tuỳ biến (kéo thanh trượt)",
+};
+
+export const OS_FAMILY_LABELS: Record<string, string> = {
+  Linux: "Linux",
+  Windows: "Windows Server",
+};
+
+export const PROMOTION_CUSTOMER_ELIGIBILITY_LABELS: Record<string, string> = {
+  All: "Tất cả khách hàng",
+  NewCustomersOnly: "Chỉ khách hàng mới",
+  ExistingCustomersOnly: "Chỉ khách hàng đã mua",
 };

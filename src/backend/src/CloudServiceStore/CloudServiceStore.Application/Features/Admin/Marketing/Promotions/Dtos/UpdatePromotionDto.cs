@@ -34,5 +34,8 @@ public class UpdatePromotionDto
 
     public bool IsActive { get; set; }
 
+    [Required, EnumDataType(typeof(PromotionCustomerEligibility))]
+    public PromotionCustomerEligibility CustomerEligibility { get; set; } = PromotionCustomerEligibility.All;
+
     public List<PromotionScopeInputDto> Scopes { get; set; } = new();
 }

@@ -104,6 +104,10 @@ export function CartCheckoutPanel({ promotion }: { promotion: PromotionDto | nul
           chosenVcpu: item.chosenVcpu,
           chosenRamMb: item.chosenRamMb,
           chosenDiskGb: item.chosenDiskGb,
+          osImageId: item.osImageId,
+          sshPublicKeyId: item.sshPublicKeyId,
+          hostname: item.hostname,
+          tags: item.tags,
         })),
       };
 
@@ -150,6 +154,8 @@ export function CartCheckoutPanel({ promotion }: { promotion: PromotionDto | nul
                       {item.chosenVcpu} vCPU - {(item.chosenRamMb / 1024).toFixed(item.chosenRamMb % 1024 === 0 ? 0 : 1)} GB RAM - {item.chosenDiskGb} GB Disk
                     </p>
                   )}
+                  {item.osImageName && <p className="text-xs text-muted-foreground">OS: {item.osImageName}</p>}
+                  {item.hostname && <p className="text-xs text-muted-foreground">Hostname: {item.hostname}</p>}
                   {item.addons && item.addons.length > 0 && (
                     <ul className="mt-1 flex flex-col gap-0.5">
                       {item.addons.map((addon) => (

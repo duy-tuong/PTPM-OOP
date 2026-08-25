@@ -12,4 +12,12 @@ public class AdminCustomerDto
     public bool IsEmailVerified { get; init; }
     public bool IsActive { get; init; }
     public DateTime CreatedAt { get; init; }
+
+    // CRM: Hồ sơ B2B & Sales Rep (Đợt 2, Phần 10).
+    public string? BillingAddress { get; init; }
+    public string? LegalRepresentativeName { get; init; }
+    public string? BusinessLicenseNumber { get; init; }
+    public decimal? CreditLimit { get; init; }
+    public Guid? AssignedSalesRepUserId { get; init; }
+    public string? AssignedSalesRepUserName { get; init; }
 }

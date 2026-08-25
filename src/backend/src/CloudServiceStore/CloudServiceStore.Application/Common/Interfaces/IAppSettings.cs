@@ -9,6 +9,14 @@ public interface IAppSettings
     int ProvisioningDelaySeconds { get; }
     int ProvisioningCompletionDelaySeconds { get; }
     int RenewalReminderLeadDays { get; }
+    int DunningSuspendAfterDays { get; }
+    int DunningTerminationWarningAfterDays { get; }
+    int DunningTerminateAfterDays { get; }
+
+    int FraudMaxQuantityPerLine { get; }
+    int FraudMaxOrdersPerWindow { get; }
+    int FraudOrderWindowMinutes { get; }
+    decimal FraudNewCustomerHighValueThreshold { get; }
 
     string PayOsClientId { get; }
     string PayOsApiKey { get; }

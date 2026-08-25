@@ -58,4 +58,6 @@ public class UpdateServicePlanDto
     public List<PlanPriceInputDto> Prices { get; set; } = new();
 
     public List<PlanAddonInputDto> Addons { get; set; } = new();
+
+    public List<PlanOsImageInputDto> OsImages { get; set; } = new();
 }

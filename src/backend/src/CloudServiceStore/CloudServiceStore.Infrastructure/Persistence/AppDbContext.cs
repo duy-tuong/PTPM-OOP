@@ -19,6 +19,7 @@ public class AppDbContext : DbContext
     public DbSet<AppUser> AppUsers => Set<AppUser>();
     public DbSet<AppUserRole> AppUserRoles => Set<AppUserRole>();
     public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<CustomerSshKey> CustomerSshKeys => Set<CustomerSshKey>();
 
     // System
     public DbSet<SiteSetting> SiteSettings => Set<SiteSetting>();
@@ -33,6 +34,8 @@ public class AppDbContext : DbContext
     public DbSet<Region> Regions => Set<Region>();
     public DbSet<Addon> Addons => Set<Addon>();
     public DbSet<ServicePlanAddon> ServicePlanAddons => Set<ServicePlanAddon>();
+    public DbSet<OsImage> OsImages => Set<OsImage>();
+    public DbSet<ServicePlanOsImage> ServicePlanOsImages => Set<ServicePlanOsImage>();
 
     // Marketing
     public DbSet<Promotion> Promotions => Set<Promotion>();

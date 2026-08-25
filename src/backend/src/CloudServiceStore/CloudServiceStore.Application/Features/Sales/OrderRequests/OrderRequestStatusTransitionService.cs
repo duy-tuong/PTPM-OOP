@@ -116,6 +116,11 @@ public class OrderRequestStatusTransitionService : IOrderRequestStatusTransition
                         original.PlanPriceId = item.PlanPriceId;
                         original.UnitPrice = newUnitPrice;
                         original.LineTotal = newUnitPrice * original.Quantity;
+                        // Dunning (Phần 8) - khách vừa trả tiền đổi gói, khôi phục dịch vụ nếu đang bị
+                        // tạm khóa/cảnh báo (PlanChangeService.ValidateAndComputeAsync đã chặn đổi gói
+                        // khi TerminatedAt != null nên không cần reset field đó ở đây).
+                        original.SuspendedAt = null;
+                        original.TerminationWarningSentAt = null;
                         itemRepository.Update(original);
                     }
                 }
@@ -135,6 +140,11 @@ public class OrderRequestStatusTransitionService : IOrderRequestStatusTransition
                     original.ExpiresAt = item.ServicePlanId is not null
                         ? extendFrom.AddMonths(item.PeriodMonths ?? 0)
                         : extendFrom.AddYears(item.Quantity);
+                    // Dunning (Phần 8) - khách vừa trả tiền gia hạn, khôi phục dịch vụ nếu đang bị tạm
+                    // khóa/cảnh báo (OrderRequestService.CreateRenewalAsync đã chặn gia hạn khi
+                    // TerminatedAt != null nên không cần reset field đó ở đây).
+                    original.SuspendedAt = null;
+                    original.TerminationWarningSentAt = null;
                     itemRepository.Update(original);
                 }
 
@@ -144,7 +154,7 @@ public class OrderRequestStatusTransitionService : IOrderRequestStatusTransition
 
             if (item.ServicePlanId is not null)
             {
-                var (ipAddress, rootPassword) = _fakeProvisioningGenerator.GenerateServerCredentials();
+                var (ipAddress, rootPassword) = _fakeProvisioningGenerator.GenerateServerCredentials(hasSshKey: item.SshPublicKeySnapshot is not null);
                 item.ProvisionedIpAddress = ipAddress;
                 item.ProvisionedRootPassword = rootPassword;
                 item.ExpiresAt = now.AddMonths(item.PeriodMonths ?? 0);

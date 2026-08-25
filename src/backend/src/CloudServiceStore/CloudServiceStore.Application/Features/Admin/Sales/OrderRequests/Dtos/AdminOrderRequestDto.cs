@@ -19,4 +19,8 @@ public class AdminOrderRequestDto
     public string? AssignedToUserName { get; init; }
     public string? Source { get; init; }
     public DateTime CreatedAt { get; init; }
+
+    // Fraud Review (Đợt 2, Phần 9) - xem OrderRequestService.EvaluateFraudRiskAsync.
+    public bool IsFlaggedForReview { get; init; }
+    public string? FlagReason { get; init; }
 }

@@ -32,6 +32,7 @@ public class AdminServicePlanService : IAdminServicePlanService
             .Include(p => p.Prices)
             .Include(p => p.Region)
             .Include(p => p.PlanAddons).ThenInclude(pa => pa.Addon)
+            .Include(p => p.PlanOsImages).ThenInclude(pi => pi.OsImage)
             .Where(p => (query.CategorySlug == null || p.Category.Slug == query.CategorySlug)
                 && (query.IsFeatured == null || p.IsFeatured == query.IsFeatured)
                 && (query.Status == null || p.Status == query.Status)
@@ -57,6 +58,7 @@ public class AdminServicePlanService : IAdminServicePlanService
             .Include(p => p.Prices)
             .Include(p => p.Region)
             .Include(p => p.PlanAddons).ThenInclude(pa => pa.Addon)
+            .Include(p => p.PlanOsImages).ThenInclude(pi => pi.OsImage)
             .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
 
         if (entity is null)
@@ -76,6 +78,7 @@ public class AdminServicePlanService : IAdminServicePlanService
         await EnsureSkuIsUniqueAsync(planRepository, dto.Sku, excludeId: null, cancellationToken);
         var region = await GetRegionOrThrowAsync(dto.RegionId, cancellationToken);
         var addonsById = await GetAddonsOrThrowAsync(dto.Addons.Select(a => a.AddonId), cancellationToken);
+        var osImagesById = await GetOsImagesOrThrowAsync(dto.OsImages.Select(o => o.OsImageId), cancellationToken);
         ValidateCustomPackageConfig(
             dto.PackageType,
             dto.MinVcpu, dto.MaxVcpu, dto.StepVcpu,
@@ -147,6 +150,12 @@ public class AdminServicePlanService : IAdminServicePlanService
                 AddonId = a.AddonId,
                 Addon = addonsById[a.AddonId],
                 MaxQuantity = a.MaxQuantity
+            }).ToList(),
+            PlanOsImages = dto.OsImages.Select(o => new ServicePlanOsImage
+            {
+                OsImageId = o.OsImageId,
+                OsImage = osImagesById[o.OsImageId],
+                IsDefault = o.IsDefault
             }).ToList()
         };
 
@@ -166,6 +175,7 @@ public class AdminServicePlanService : IAdminServicePlanService
             .Include(p => p.Features)
             .Include(p => p.Prices)
             .Include(p => p.PlanAddons)
+            .Include(p => p.PlanOsImages)
             .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
 
         if (entity is null)
@@ -178,6 +188,7 @@ public class AdminServicePlanService : IAdminServicePlanService
         await EnsureSkuIsUniqueAsync(planRepository, dto.Sku, excludeId: id, cancellationToken);
         var region = await GetRegionOrThrowAsync(dto.RegionId, cancellationToken);
         var addonsById = await GetAddonsOrThrowAsync(dto.Addons.Select(a => a.AddonId), cancellationToken);
+        var osImagesById = await GetOsImagesOrThrowAsync(dto.OsImages.Select(o => o.OsImageId), cancellationToken);
         ValidateCustomPackageConfig(
             dto.PackageType,
             dto.MinVcpu, dto.MaxVcpu, dto.StepVcpu,
@@ -245,6 +256,19 @@ public class AdminServicePlanService : IAdminServicePlanService
                 AddonId = a.AddonId,
                 Addon = addonsById[a.AddonId],
                 MaxQuantity = a.MaxQuantity
+            });
+        }
+
+        // Bảng nối đơn giản (không có gì tham chiếu tới ServicePlanOsImage từ bên ngoài - đơn hàng chỉ
+        // tham chiếu thẳng OsImageId, xem OrderRequestItem.OsImageId) - mirror PlanAddons ở trên.
+        entity.PlanOsImages.Clear();
+        foreach (var o in dto.OsImages)
+        {
+            entity.PlanOsImages.Add(new ServicePlanOsImage
+            {
+                OsImageId = o.OsImageId,
+                OsImage = osImagesById[o.OsImageId],
+                IsDefault = o.IsDefault
             });
         }
 
@@ -320,6 +344,28 @@ public class AdminServicePlanService : IAdminServicePlanService
         }
 
         return addons;
+    }
+
+    // Trả về map OsImageId -> OsImage đã fetch - mirror GetAddonsOrThrowAsync.
+    private async Task<Dictionary<int, OsImage>> GetOsImagesOrThrowAsync(IEnumerable<int> osImageIds, CancellationToken cancellationToken)
+    {
+        var distinctIds = osImageIds.Distinct().ToList();
+        if (distinctIds.Count == 0)
+        {
+            return new Dictionary<int, OsImage>();
+        }
+
+        var osImages = await _unitOfWork.Repository<OsImage, int>().Query()
+            .Where(o => distinctIds.Contains(o.Id))
+            .ToDictionaryAsync(o => o.Id, cancellationToken);
+
+        var missingIds = distinctIds.Where(id => !osImages.ContainsKey(id)).ToList();
+        if (missingIds.Count > 0)
+        {
+            throw new NotFoundException(nameof(OsImage), missingIds[0]);
+        }
+
+        return osImages;
     }
 
     // Chỉ validate khi Custom - Fixed bỏ qua toàn bộ Min/Max/Step/PricePerUnit (có gửi lên cũng
@@ -543,6 +589,14 @@ public class AdminServicePlanService : IAdminServicePlanService
                 UnitName = pa.Addon.UnitName,
                 PricePerMonth = pa.Addon.PricePerMonth,
                 MaxQuantity = pa.MaxQuantity
+            }).ToList(),
+            OsImages = plan.PlanOsImages.Select(pi => new PlanOsImageDto
+            {
+                OsImageId = pi.OsImageId,
+                OsImageName = pi.OsImage.Name,
+                Family = pi.OsImage.Family.ToString(),
+                WindowsLicenseFeePerMonth = pi.OsImage.WindowsLicenseFeePerMonth,
+                IsDefault = pi.IsDefault
             }).ToList()
         };
     }

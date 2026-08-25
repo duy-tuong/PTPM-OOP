@@ -47,6 +47,10 @@ export function MyOrderRow({ order }: { order: MyOrderRequestDto }) {
                     <span className="text-muted-foreground">{formatCurrency(item.lineTotal)}</span>
                   </div>
 
+                  {item.hostname && (
+                    <p className="mt-1 text-xs text-muted-foreground">Hostname: {item.hostname}</p>
+                  )}
+
                   {(item.provisionedIpAddress || item.provisionedNameservers) && (
                     <div className="mt-3 rounded-md border border-primary/30 bg-primary/5 px-3 py-2">
                       <p className="text-xs font-medium text-foreground">Thông tin bàn giao</p>
@@ -57,12 +61,18 @@ export function MyOrderRow({ order }: { order: MyOrderRequestDto }) {
                             <dd className="text-foreground">{item.provisionedIpAddress}</dd>
                           </div>
                         )}
-                        {item.provisionedRootPassword && (
-                          <div className="flex items-center gap-2">
-                            <dt className="text-muted-foreground">Mật khẩu root:</dt>
-                            <dd className="text-foreground">{item.provisionedRootPassword}</dd>
-                          </div>
-                        )}
+                        {item.provisionedIpAddress &&
+                          (item.provisionedRootPassword ? (
+                            <div className="flex items-center gap-2">
+                              <dt className="text-muted-foreground">Mật khẩu root:</dt>
+                              <dd className="text-foreground">{item.provisionedRootPassword}</dd>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <dt className="text-muted-foreground">Đăng nhập:</dt>
+                              <dd className="text-foreground">Bằng SSH Key đã lưu</dd>
+                            </div>
+                          ))}
                         {item.provisionedNameservers && (
                           <div className="flex items-center gap-2">
                             <dt className="text-muted-foreground">Nameserver:</dt>

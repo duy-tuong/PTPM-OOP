@@ -21,11 +21,13 @@ import {
 } from "@/lib/types/enums";
 import type {
   AdminAddonDto,
+  AdminOsImageDto,
   AdminServiceCategoryDto,
   AdminServicePlanDto,
   PlanFeatureInputDto,
   PlanPriceInputDto,
 } from "@/lib/types/admin";
+import { OS_FAMILY_LABELS } from "@/lib/types/enums";
 import type { RegionDto } from "@/lib/types/catalog";
 
 const STATUS_OPTIONS = Object.entries(ServicePlanStatus)
@@ -63,6 +65,7 @@ interface ServicePlanFormProps {
   categories: AdminServiceCategoryDto[];
   regions: RegionDto[];
   availableAddons: AdminAddonDto[];
+  availableOsImages: AdminOsImageDto[];
 }
 
 interface FormErrors {
@@ -141,7 +144,7 @@ function emptyPrice(isDefault: boolean): PlanPriceInputDto {
 // LoginForm.tsx) - Features/Prices quản lý bằng useState<T[]> + thao tác index-based, khớp convention
 // hiện có. Update là full-replace (đã verify AdminServicePlanService.UpdateAsync Clear() rồi add lại)
 // nên form luôn gửi toàn bộ mảng hiện tại, không gửi delta.
-export function ServicePlanForm({ mode, initialData, categories, regions, availableAddons }: ServicePlanFormProps) {
+export function ServicePlanForm({ mode, initialData, categories, regions, availableAddons, availableOsImages }: ServicePlanFormProps) {
   const router = useRouter();
 
   const [categoryId, setCategoryId] = useState(initialData?.categoryId ?? categories[0]?.id ?? 0);
@@ -185,6 +188,10 @@ export function ServicePlanForm({ mode, initialData, categories, regions, availa
   // AddonId -> MaxQuantity - chỉ addon có mặt trong map này mới được coi là "cho phép mua kèm gói này".
   const [selectedAddons, setSelectedAddons] = useState<Record<number, number>>(() =>
     Object.fromEntries((initialData?.addons ?? []).map((a) => [a.addonId, a.maxQuantity])),
+  );
+  // OsImageId -> IsDefault - chỉ OS có mặt trong map này mới được coi là "cho phép chọn khi mua gói này".
+  const [selectedOsImages, setSelectedOsImages] = useState<Record<number, boolean>>(() =>
+    Object.fromEntries((initialData?.osImages ?? []).map((o) => [o.osImageId, o.isDefault])),
   );
   const [errors, setErrors] = useState<FormErrors>({});
   const [featureErrors, setFeatureErrors] = useState<Record<number, FeatureRowErrors>>({});
@@ -237,6 +244,21 @@ export function ServicePlanForm({ mode, initialData, categories, regions, availa
 
   function updateAddonMaxQuantity(addonId: number, maxQuantity: number) {
     setSelectedAddons((prev) => ({ ...prev, [addonId]: Math.max(1, maxQuantity || 1) }));
+  }
+
+  function toggleOsImage(osImageId: number, checked: boolean) {
+    setSelectedOsImages((prev) => {
+      const next = { ...prev };
+      if (checked) next[osImageId] = Object.keys(prev).length === 0;
+      else delete next[osImageId];
+      return next;
+    });
+  }
+
+  function setDefaultOsImage(osImageId: number) {
+    setSelectedOsImages((prev) =>
+      Object.fromEntries(Object.keys(prev).map((id) => [Number(id), Number(id) === osImageId])),
+    );
   }
 
   function validate(): boolean {
@@ -338,6 +360,10 @@ export function ServicePlanForm({ mode, initialData, categories, regions, availa
         addons: Object.entries(selectedAddons).map(([addonId, maxQuantity]) => ({
           addonId: Number(addonId),
           maxQuantity,
+        })),
+        osImages: Object.entries(selectedOsImages).map(([osImageId, isDefault]) => ({
+          osImageId: Number(osImageId),
+          isDefault,
         })),
       };
 
@@ -917,6 +943,65 @@ export function ServicePlanForm({ mode, initialData, categories, regions, availa
                     placeholder="Số lượng tối đa"
                     className="bg-white"
                   />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="rounded-[24px] border border-zinc-200/60 bg-white p-8 shadow-sm ring-1 ring-zinc-950/5">
+        <h2 className="font-heading text-lg font-semibold text-zinc-900">Hệ điều hành cho phép chọn</h2>
+        <p className="mt-1 text-sm text-zinc-500">
+          Chọn OS khách được phép cài khi mua gói này (Windows tự cộng phụ phí bản quyền vào giá). Quản lý
+          danh sách hệ điều hành ở trang{" "}
+          <a href="/admin/os-images" className="text-zinc-900 underline underline-offset-2">
+            Hệ điều hành
+          </a>
+          . Không chọn gói nào = gói này không cần chọn OS (VD Storage/Firewall).
+        </p>
+
+        <div className="mt-6 flex flex-col gap-3">
+          {availableOsImages.length === 0 && <p className="text-sm text-zinc-500">Chưa có hệ điều hành nào trong hệ thống.</p>}
+          {availableOsImages.map((osImage) => {
+            const checked = osImage.id in selectedOsImages;
+            const isDefault = selectedOsImages[osImage.id] ?? false;
+            return (
+              <div
+                key={osImage.id}
+                className="grid grid-cols-1 items-center gap-3 rounded-2xl border border-zinc-200/60 bg-zinc-50/50 p-4 sm:grid-cols-[auto_1fr_10rem]"
+              >
+                <label className="flex cursor-pointer items-center gap-2">
+                  <div className="relative flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={(e) => toggleOsImage(osImage.id, e.target.checked)}
+                      className="peer sr-only"
+                    />
+                    <div className="h-5 w-9 rounded-full bg-zinc-200 transition-colors peer-checked:bg-zinc-900 peer-focus-visible:ring-2 peer-focus-visible:ring-zinc-900/20" />
+                    <div className="absolute left-0.5 top-0.5 size-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-4" />
+                  </div>
+                </label>
+                <div className="flex flex-col">
+                  <span className="font-medium text-zinc-900">{osImage.name}</span>
+                  <span className="text-xs text-zinc-500">
+                    {OS_FAMILY_LABELS[osImage.family] ?? osImage.family}
+                    {osImage.windowsLicenseFeePerMonth ? ` - +${formatCurrency(osImage.windowsLicenseFeePerMonth)}/tháng` : " - Miễn phí"}
+                  </span>
+                </div>
+                {checked && (
+                  <button
+                    type="button"
+                    onClick={() => setDefaultOsImage(osImage.id)}
+                    className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                      isDefault
+                        ? "bg-zinc-900 text-white"
+                        : "bg-white text-zinc-500 ring-1 ring-zinc-200 hover:bg-zinc-100"
+                    }`}
+                  >
+                    {isDefault ? "Mặc định" : "Đặt làm mặc định"}
+                  </button>
                 )}
               </div>
             );
