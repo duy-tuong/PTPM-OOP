@@ -77,7 +77,7 @@ public class OrderRequestService : IOrderRequestService
             }
 
             var (item, planId, categoryId) = itemDto.ServicePlanId is not null
-                ? await BuildServicePlanItemAsync(itemDto.ServicePlanId.Value, itemDto.PeriodMonths, itemDto.Quantity, cancellationToken)
+                ? await BuildServicePlanItemAsync(itemDto.ServicePlanId.Value, itemDto.PeriodMonths, itemDto.Quantity, isRenewal: false, grandfatheredPlanPriceId: null, cancellationToken)
                 : await BuildTldItemAsync(itemDto.TldPricingId!.Value, itemDto.DomainName, itemDto.Quantity, isRenewal: false, cancellationToken);
 
             items.Add(item);
@@ -281,6 +281,7 @@ public class OrderRequestService : IOrderRequestService
         var itemRepository = _unitOfWork.Repository<OrderRequestItem, int>();
         var original = await itemRepository.Query()
             .Include(i => i.OrderRequest)
+            .Include(i => i.ServicePlan)
             .FirstOrDefaultAsync(i => i.Id == dto.OrderRequestItemId, cancellationToken);
 
         // Dùng chung 404 cho cả "không tồn tại" lẫn "không phải chủ đơn" - đúng tinh thần tránh lộ
@@ -300,8 +301,19 @@ public class OrderRequestService : IOrderRequestService
         var customer = await _unitOfWork.Repository<Customer, Guid>().GetByIdAsync(customerId, cancellationToken)
             ?? throw new NotFoundException(nameof(Customer), customerId);
 
+        // Grandfathering: chỉ giữ giá cũ khi gia hạn ĐÚNG chu kỳ đã mua trước đó (đổi chu kỳ = thoả
+        // thuận mới, tính giá sống) và plan còn bật chính sách này. original.PlanPriceId null nghĩa là
+        // item được tạo trước khi tính năng này tồn tại - không có gì để "giữ", tính giá sống như cũ.
+        var effectivePeriodMonths = dto.PeriodMonths ?? original.PeriodMonths;
+        int? grandfatheredPlanPriceId = original.ServicePlanId is not null
+            && original.PlanPriceId is not null
+            && effectivePeriodMonths == original.PeriodMonths
+            && original.ServicePlan?.AllowGrandfatheredRenewal == true
+                ? original.PlanPriceId
+                : null;
+
         var (item, _, _) = original.ServicePlanId is not null
-            ? await BuildServicePlanItemAsync(original.ServicePlanId.Value, dto.PeriodMonths ?? original.PeriodMonths, original.Quantity, cancellationToken)
+            ? await BuildServicePlanItemAsync(original.ServicePlanId.Value, effectivePeriodMonths, original.Quantity, isRenewal: true, grandfatheredPlanPriceId, cancellationToken)
             : await BuildTldItemAsync(original.TldPricingId!.Value, original.DomainName, dto.Years ?? original.Quantity, isRenewal: true, cancellationToken);
 
         item.RenewsFromItemId = original.Id;
@@ -343,10 +355,19 @@ public class OrderRequestService : IOrderRequestService
         };
     }
 
-    // Dùng chung cho CreateAsync (mỗi dòng trong giỏ) và CreateRenewalAsync (item gia hạn) - trả kèm
-    // (planId, categoryId) để caller tính khuyến mãi theo dòng mà không cần tra lại DB.
+    // Dùng chung cho CreateAsync (mỗi dòng trong giỏ, isRenewal=false) và CreateRenewalAsync (item gia
+    // hạn, isRenewal=true) - trả kèm (planId, categoryId) để caller tính khuyến mãi theo dòng mà không
+    // cần tra lại DB.
+    //
+    // isRenewal đổi 2 việc:
+    // 1. Điều kiện Status cho phép: mua mới chỉ Active; gia hạn còn cho cả OutOfStock/Deprecated (khách
+    //    cũ vẫn được tiếp tục dùng dịch vụ dù Admin đã ngừng bán mới) - chỉ Archived/Draft mới chặn hẳn.
+    // 2. grandfatheredPlanPriceId (chỉ có ý nghĩa khi isRenewal=true): khi khác null, LẤY THẲNG đúng
+    //    row PlanPrice đó (Grandfathering - giữ giá cũ) thay vì tra giá sống, kể cả khi row đã
+    //    IsCurrent=false do Admin đổi giá sau đó. Caller (CreateRenewalAsync) chịu trách nhiệm quyết
+    //    định có áp dụng Grandfathering hay không (đổi chu kỳ / plan tắt policy => truyền null).
     private async Task<(OrderRequestItem Item, int? PlanId, int? CategoryId)> BuildServicePlanItemAsync(
-        int servicePlanId, int? periodMonths, int quantity, CancellationToken cancellationToken)
+        int servicePlanId, int? periodMonths, int quantity, bool isRenewal, int? grandfatheredPlanPriceId, CancellationToken cancellationToken)
     {
         var plan = await _unitOfWork.Repository<ServicePlan, int>().GetByIdAsync(servicePlanId, cancellationToken);
         if (plan is null)
@@ -354,17 +375,31 @@ public class OrderRequestService : IOrderRequestService
             throw new NotFoundException(nameof(ServicePlan), servicePlanId);
         }
 
-        if (plan.Status != ServicePlanStatus.Active)
+        var isAvailable = isRenewal
+            ? plan.Status is ServicePlanStatus.Active or ServicePlanStatus.OutOfStock or ServicePlanStatus.Deprecated
+            : plan.Status == ServicePlanStatus.Active;
+
+        if (!isAvailable)
         {
-            throw new ValidationException("Gói dịch vụ này hiện không khả dụng để đặt mua.");
+            throw new ValidationException(isRenewal
+                ? "Gói dịch vụ này hiện không thể gia hạn."
+                : "Gói dịch vụ này hiện không khả dụng để đặt mua.");
         }
 
-        var priceQuery = _unitOfWork.Repository<PlanPrice, int>().Query()
-            .Where(p => p.PlanId == servicePlanId && p.IsActive);
+        PlanPrice? price;
+        if (grandfatheredPlanPriceId is not null)
+        {
+            price = await _unitOfWork.Repository<PlanPrice, int>().GetByIdAsync(grandfatheredPlanPriceId.Value, cancellationToken);
+        }
+        else
+        {
+            var priceQuery = _unitOfWork.Repository<PlanPrice, int>().Query()
+                .Where(p => p.PlanId == servicePlanId && p.IsCurrent && p.IsActive);
 
-        var price = periodMonths is not null
-            ? await priceQuery.FirstOrDefaultAsync(p => p.PeriodMonths == periodMonths.Value, cancellationToken)
-            : await priceQuery.FirstOrDefaultAsync(p => p.IsDefault, cancellationToken);
+            price = periodMonths is not null
+                ? await priceQuery.FirstOrDefaultAsync(p => p.PeriodMonths == periodMonths.Value, cancellationToken)
+                : await priceQuery.FirstOrDefaultAsync(p => p.IsDefault, cancellationToken);
+        }
 
         if (price is null)
         {
@@ -375,6 +410,7 @@ public class OrderRequestService : IOrderRequestService
         var item = new OrderRequestItem
         {
             ServicePlanId = plan.Id,
+            PlanPriceId = price.Id,
             PeriodMonths = price.PeriodMonths,
             Quantity = quantity,
             UnitPrice = unitPrice,

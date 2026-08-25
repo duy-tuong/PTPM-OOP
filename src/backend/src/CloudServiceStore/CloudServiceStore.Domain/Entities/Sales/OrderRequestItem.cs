@@ -19,6 +19,12 @@ public class OrderRequestItem
     public TldPricing? TldPricing { get; set; }
     public string? DomainName { get; set; }
 
+    // Neo đúng row PlanPrice đã dùng lúc tạo item này (Price Versioning) - phục vụ Grandfathering khi
+    // gia hạn (chỉ có ý nghĩa với item ServicePlan, null với item TLD). Xem
+    // OrderRequestService.BuildServicePlanItemAsync.
+    public int? PlanPriceId { get; set; }
+    public PlanPrice? PlanPrice { get; set; }
+
     public int? PeriodMonths { get; set; }
     public int Quantity { get; set; } = 1;
     public decimal UnitPrice { get; set; }

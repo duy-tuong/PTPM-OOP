@@ -82,6 +82,110 @@ public class AdminServicePlanServiceTests
         await Assert.ThrowsAsync<ConflictException>(() => sut.CreateAsync(dto));
     }
 
+    private static UpdateServicePlanDto BuildUpdateDto(ServicePlan plan, List<PlanPriceInputDto> prices) => new()
+    {
+        CategoryId = plan.CategoryId,
+        Name = plan.Name,
+        Slug = plan.Slug,
+        Sku = plan.Sku,
+        IsFeatured = plan.IsFeatured,
+        Status = plan.Status,
+        AllowGrandfatheredRenewal = plan.AllowGrandfatheredRenewal,
+        DisplayOrder = plan.DisplayOrder,
+        Prices = prices,
+    };
+
+    // Price Versioning: đây là 3 test cốt lõi cho ApplyPriceVersioning (thay "Clear() rồi re-add" cũ
+    // vốn xoá sạch lịch sử giá mỗi lần Admin sửa - phá vỡ Grandfathering, xem OrderRequestServiceTests).
+    [Fact]
+    public async Task UpdateAsync_PriceChangedForExistingPeriod_ClosesOldRowAndCreatesNewVersion()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var category = await SeedCategoryAsync(context);
+        var plan = new ServicePlan { Id = 631, CategoryId = category.Id, Name = "Versioned Plan", Slug = "versioned-plan" };
+        context.ServicePlans.Add(plan);
+        context.PlanPrices.Add(new PlanPrice { Id = 631, PlanId = plan.Id, PeriodMonths = 1, Price = 100000m, IsDefault = true, IsActive = true, Version = 1, IsCurrent = true });
+        await context.SaveChangesAsync();
+        var sut = CreateSut(context);
+
+        var dto = BuildUpdateDto(plan, [new PlanPriceInputDto { PeriodMonths = 1, Price = 150000m, Currency = "VND", IsDefault = true, IsActive = true }]);
+        await sut.UpdateAsync(plan.Id, dto);
+
+        var oldRow = context.PlanPrices.Single(p => p.Id == 631);
+        Assert.False(oldRow.IsCurrent);
+        Assert.NotNull(oldRow.EffectiveTo);
+
+        var newRow = Assert.Single(context.PlanPrices.Where(p => p.PlanId == plan.Id && p.IsCurrent));
+        Assert.Equal(150000m, newRow.Price);
+        Assert.Equal(2, newRow.Version);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_PriceUnchangedForExistingPeriod_DoesNotCreateNewVersion()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var category = await SeedCategoryAsync(context);
+        var plan = new ServicePlan { Id = 632, CategoryId = category.Id, Name = "Stable Plan", Slug = "stable-plan" };
+        context.ServicePlans.Add(plan);
+        context.PlanPrices.Add(new PlanPrice { Id = 632, PlanId = plan.Id, PeriodMonths = 1, Price = 100000m, IsDefault = false, IsActive = true, Version = 1, IsCurrent = true });
+        await context.SaveChangesAsync();
+        var sut = CreateSut(context);
+
+        // Chỉ đổi IsDefault (true), giá giữ nguyên 100000 - không được sinh version mới.
+        var dto = BuildUpdateDto(plan, [new PlanPriceInputDto { PeriodMonths = 1, Price = 100000m, Currency = "VND", IsDefault = true, IsActive = true }]);
+        await sut.UpdateAsync(plan.Id, dto);
+
+        var rows = context.PlanPrices.Where(p => p.PlanId == plan.Id).ToList();
+        var row = Assert.Single(rows);
+        Assert.Equal(632, row.Id);
+        Assert.True(row.IsCurrent);
+        Assert.Equal(1, row.Version);
+        Assert.True(row.IsDefault);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_PeriodMonthsRemovedFromForm_ClosesRowWithoutHardDelete()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var category = await SeedCategoryAsync(context);
+        var plan = new ServicePlan { Id = 633, CategoryId = category.Id, Name = "Shrinking Plan", Slug = "shrinking-plan" };
+        context.ServicePlans.Add(plan);
+        context.PlanPrices.Add(new PlanPrice { Id = 633, PlanId = plan.Id, PeriodMonths = 12, Price = 900000m, IsDefault = true, IsActive = true, Version = 1, IsCurrent = true });
+        await context.SaveChangesAsync();
+        var sut = CreateSut(context);
+
+        // Admin xoá dòng giá 12 tháng khỏi form -> gửi Prices rỗng.
+        var dto = BuildUpdateDto(plan, []);
+        await sut.UpdateAsync(plan.Id, dto);
+
+        var row = context.PlanPrices.Single(p => p.Id == 633);
+        Assert.False(row.IsCurrent);
+        Assert.False(row.IsActive);
+        Assert.NotNull(row.EffectiveTo);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_NewPeriodMonthsAdded_CreatesVersion1Row()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var category = await SeedCategoryAsync(context);
+        var plan = new ServicePlan { Id = 634, CategoryId = category.Id, Name = "Growing Plan", Slug = "growing-plan" };
+        context.ServicePlans.Add(plan);
+        context.PlanPrices.Add(new PlanPrice { Id = 634, PlanId = plan.Id, PeriodMonths = 1, Price = 100000m, IsDefault = true, IsActive = true, Version = 1, IsCurrent = true });
+        await context.SaveChangesAsync();
+        var sut = CreateSut(context);
+
+        var dto = BuildUpdateDto(plan, [
+            new PlanPriceInputDto { PeriodMonths = 1, Price = 100000m, Currency = "VND", IsDefault = true, IsActive = true },
+            new PlanPriceInputDto { PeriodMonths = 12, Price = 1000000m, Currency = "VND", IsDefault = false, IsActive = true }
+        ]);
+        await sut.UpdateAsync(plan.Id, dto);
+
+        var newRow = context.PlanPrices.Single(p => p.PlanId == plan.Id && p.PeriodMonths == 12);
+        Assert.Equal(1, newRow.Version);
+        Assert.True(newRow.IsCurrent);
+    }
+
     [Fact]
     public async Task GetByIdAsync_NotFound_ThrowsNotFoundException()
     {

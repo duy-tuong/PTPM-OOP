@@ -47,6 +47,9 @@ export interface AdminServicePlanDto {
   // string (không phải enum) - response đã map sẵn thành tên chuỗi (vd "Active"), khớp
   // AdminServicePlanDto.cs. Dùng cùng SERVICE_PLAN_STATUS_LABELS ở lib/types/enums.ts để hiển thị.
   status: string;
+  // Price Versioning & Grandfathering - Admin gia hạn cùng chu kỳ có được giữ giá cũ hay luôn tính
+  // giá sống hiện hành.
+  allowGrandfatheredRenewal: boolean;
   displayOrder: number;
   qrCodeUrl?: string | null;
   features: PlanFeatureDto[];
@@ -83,6 +86,7 @@ export interface CreateServicePlanDto {
   // enum thật (không phải string) - request body backend chưa có JsonStringEnumConverter, phải gửi
   // số nguyên khớp CloudServiceStore.Domain.Enums.ServicePlanStatus (xem ghi chú đầu file này).
   status: ServicePlanStatus;
+  allowGrandfatheredRenewal: boolean;
   displayOrder: number;
   features: PlanFeatureInputDto[];
   prices: PlanPriceInputDto[];

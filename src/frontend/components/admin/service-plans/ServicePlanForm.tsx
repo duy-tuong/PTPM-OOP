@@ -118,6 +118,9 @@ export function ServicePlanForm({ mode, initialData, categories }: ServicePlanFo
   const [description, setDescription] = useState(initialData?.description ?? "");
   const [isFeatured, setIsFeatured] = useState(initialData?.isFeatured ?? false);
   const [status, setStatus] = useState<ServicePlanStatus>(statusNameToValue(initialData?.status));
+  const [allowGrandfatheredRenewal, setAllowGrandfatheredRenewal] = useState(
+    initialData?.allowGrandfatheredRenewal ?? true,
+  );
   const [displayOrder, setDisplayOrder] = useState(initialData?.displayOrder ?? 0);
   const [features, setFeatures] = useState<PlanFeatureInputDto[]>(initialData?.features.map(toFeatureInput) ?? []);
   const [prices, setPrices] = useState<PlanPriceInputDto[]>(initialData?.prices.map(toPriceInput) ?? []);
@@ -217,6 +220,7 @@ export function ServicePlanForm({ mode, initialData, categories }: ServicePlanFo
         description: description.trim() || undefined,
         isFeatured,
         status,
+        allowGrandfatheredRenewal,
         displayOrder,
         features,
         prices,
@@ -382,6 +386,24 @@ export function ServicePlanForm({ mode, initialData, categories }: ServicePlanFo
                 <div className="absolute left-0.5 top-0.5 size-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-4" />
               </div>
               Gói nổi bật
+            </label>
+
+            <label
+              htmlFor="plan-grandfather"
+              className="flex cursor-pointer items-center gap-3 text-sm font-medium text-zinc-700"
+            >
+              <div className="relative flex items-center">
+                <input
+                  id="plan-grandfather"
+                  type="checkbox"
+                  checked={allowGrandfatheredRenewal}
+                  onChange={(e) => setAllowGrandfatheredRenewal(e.target.checked)}
+                  className="peer sr-only"
+                />
+                <div className="h-5 w-9 rounded-full bg-zinc-200 transition-colors peer-checked:bg-zinc-900 peer-focus-visible:ring-2 peer-focus-visible:ring-zinc-900/20" />
+                <div className="absolute left-0.5 top-0.5 size-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-4" />
+              </div>
+              Giữ giá cũ khi khách gia hạn cùng chu kỳ
             </label>
           </div>
         </FieldGroup>

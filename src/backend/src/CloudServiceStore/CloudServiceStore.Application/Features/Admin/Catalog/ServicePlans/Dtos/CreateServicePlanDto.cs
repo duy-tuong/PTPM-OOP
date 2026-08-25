@@ -26,6 +26,8 @@ public class CreateServicePlanDto
 
     public ServicePlanStatus Status { get; set; } = ServicePlanStatus.Active;
 
+    public bool AllowGrandfatheredRenewal { get; set; } = true;
+
     public int DisplayOrder { get; set; }
 
     public List<PlanFeatureInputDto> Features { get; set; } = new();

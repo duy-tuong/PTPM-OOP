@@ -848,6 +848,137 @@ public class OrderRequestServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_PlanDeprecated_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        plan.Status = ServicePlanStatus.Deprecated;
+        await context.SaveChangesAsync();
+        var sut = CreateSut(context);
+
+        await Assert.ThrowsAsync<ValidationException>(() => sut.CreateAsync(BuildDto(plan.Id, periodMonths: null, quantity: 1)));
+    }
+
+    [Fact]
+    public async Task CreateRenewalAsync_PlanDeprecated_StillAllowsRenewal()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var customer = await SeedCustomerAsync(context, roleId: 901);
+        var sut = CreateSut(context);
+        var created = await sut.CreateAsync(BuildDto(plan.Id, periodMonths: 1, quantity: 1), customer.Id);
+        var originalItem = context.OrderRequests.Single(o => o.Id == created.Id).Items.Single();
+
+        // Ngừng bán mới SAU khi khách đã mua - đúng kịch bản Deprecated (khác Archived, xem
+        // BuildServicePlanItemAsync).
+        plan.Status = ServicePlanStatus.Deprecated;
+        await context.SaveChangesAsync();
+
+        var result = await sut.CreateRenewalAsync(new CreateRenewalOrderRequestDto { OrderRequestItemId = originalItem.Id, PeriodMonths = 1 }, customer.Id);
+
+        Assert.Equal(100000m, result.TotalPrice);
+    }
+
+    [Fact]
+    public async Task CreateRenewalAsync_PlanArchived_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var customer = await SeedCustomerAsync(context, roleId: 901);
+        var sut = CreateSut(context);
+        var created = await sut.CreateAsync(BuildDto(plan.Id, periodMonths: 1, quantity: 1), customer.Id);
+        var originalItem = context.OrderRequests.Single(o => o.Id == created.Id).Items.Single();
+
+        plan.Status = ServicePlanStatus.Archived;
+        await context.SaveChangesAsync();
+
+        await Assert.ThrowsAsync<ValidationException>(() =>
+            sut.CreateRenewalAsync(new CreateRenewalOrderRequestDto { OrderRequestItemId = originalItem.Id, PeriodMonths = 1 }, customer.Id));
+    }
+
+    [Fact]
+    public async Task CreateAsync_ServicePlanItem_StoresPlanPriceIdUsedForPricing()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context); // PlanPrice Id 501 = PeriodMonths 1
+        var sut = CreateSut(context);
+
+        var created = await sut.CreateAsync(BuildDto(plan.Id, periodMonths: 1, quantity: 1));
+
+        var savedItem = context.OrderRequests.Single(o => o.Id == created.Id).Items.Single();
+        Assert.Equal(501, savedItem.PlanPriceId);
+    }
+
+    // Bug thật đã phát hiện trước khi có Grandfathering: CreateRenewalOrderAsync luôn tra giá SỐNG,
+    // nên Admin đổi giá sẽ tính lại giá mới ngay cho khách gia hạn - xem PlanPrice.cs.
+    [Fact]
+    public async Task CreateRenewalAsync_SameCycleWithGrandfathering_KeepsOriginalPriceAfterPlanPriceChanges()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        var customer = await SeedCustomerAsync(context, roleId: 901);
+        var sut = CreateSut(context);
+        var created = await sut.CreateAsync(BuildDto(plan.Id, periodMonths: 1, quantity: 1), customer.Id);
+        var originalItem = context.OrderRequests.Single(o => o.Id == created.Id).Items.Single();
+        Assert.NotNull(originalItem.PlanPriceId);
+
+        // Mô phỏng đúng luồng AdminServicePlanService.ApplyPriceVersioning: đóng row cũ, tạo row mới.
+        var oldPrice = context.PlanPrices.Single(p => p.Id == originalItem.PlanPriceId);
+        oldPrice.IsCurrent = false;
+        context.PlanPrices.Add(new PlanPrice
+        {
+            Id = 601, PlanId = plan.Id, PeriodMonths = 1, Price = 150000m,
+            IsDefault = true, IsActive = true, Version = 2, IsCurrent = true
+        });
+        await context.SaveChangesAsync();
+
+        var result = await sut.CreateRenewalAsync(new CreateRenewalOrderRequestDto { OrderRequestItemId = originalItem.Id, PeriodMonths = 1 }, customer.Id);
+
+        Assert.Equal(100000m, result.TotalPrice);
+    }
+
+    [Fact]
+    public async Task CreateRenewalAsync_DifferentCycleThanOriginal_UsesLivePriceForNewCycle()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context); // PeriodMonths=12 -> giá khuyến mãi 900000
+        var customer = await SeedCustomerAsync(context, roleId: 901);
+        var sut = CreateSut(context);
+        var created = await sut.CreateAsync(BuildDto(plan.Id, periodMonths: 1, quantity: 1), customer.Id);
+        var originalItem = context.OrderRequests.Single(o => o.Id == created.Id).Items.Single();
+
+        var result = await sut.CreateRenewalAsync(new CreateRenewalOrderRequestDto { OrderRequestItemId = originalItem.Id, PeriodMonths = 12 }, customer.Id);
+
+        Assert.Equal(900000m, result.TotalPrice);
+    }
+
+    [Fact]
+    public async Task CreateRenewalAsync_GrandfatheringDisabledOnPlan_AlwaysUsesLivePrice()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var plan = await SeedPlanWithPricesAsync(context);
+        plan.AllowGrandfatheredRenewal = false;
+        await context.SaveChangesAsync();
+        var customer = await SeedCustomerAsync(context, roleId: 901);
+        var sut = CreateSut(context);
+        var created = await sut.CreateAsync(BuildDto(plan.Id, periodMonths: 1, quantity: 1), customer.Id);
+        var originalItem = context.OrderRequests.Single(o => o.Id == created.Id).Items.Single();
+
+        var oldPrice = context.PlanPrices.Single(p => p.Id == originalItem.PlanPriceId);
+        oldPrice.IsCurrent = false;
+        context.PlanPrices.Add(new PlanPrice
+        {
+            Id = 602, PlanId = plan.Id, PeriodMonths = 1, Price = 150000m,
+            IsDefault = true, IsActive = true, Version = 2, IsCurrent = true
+        });
+        await context.SaveChangesAsync();
+
+        var result = await sut.CreateRenewalAsync(new CreateRenewalOrderRequestDto { OrderRequestItemId = originalItem.Id, PeriodMonths = 1 }, customer.Id);
+
+        Assert.Equal(150000m, result.TotalPrice);
+    }
+
+    [Fact]
     public async Task GetMyServicesAsync_OrdersByExpiresAtAscendingWithNullsLast()
     {
         using var context = TestDbContextFactory.CreateContext();

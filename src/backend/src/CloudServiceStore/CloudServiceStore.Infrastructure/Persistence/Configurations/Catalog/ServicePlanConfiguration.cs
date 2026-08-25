@@ -47,6 +47,7 @@ public class ServicePlanConfiguration : IEntityTypeConfiguration<ServicePlan>
                 Description = "Gói VPS SSD Starter phù hợp cho website cá nhân, blog, ứng dụng nhỏ cần tài nguyên vừa phải.",
                 IsFeatured = false,
                 Status = ServicePlanStatus.Active,
+                AllowGrandfatheredRenewal = true,
                 DisplayOrder = 1,
                 IsDeleted = false,
                 CreatedAt = seedCreatedAt
@@ -61,6 +62,7 @@ public class ServicePlanConfiguration : IEntityTypeConfiguration<ServicePlan>
                 Description = "Gói VPS SSD Business dành cho ứng dụng doanh nghiệp cần hiệu năng ổn định, tài nguyên lớn.",
                 IsFeatured = true,
                 Status = ServicePlanStatus.Active,
+                AllowGrandfatheredRenewal = true,
                 DisplayOrder = 2,
                 IsDeleted = false,
                 CreatedAt = seedCreatedAt

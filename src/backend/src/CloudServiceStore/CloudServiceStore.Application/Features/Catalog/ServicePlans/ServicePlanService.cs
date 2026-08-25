@@ -60,7 +60,7 @@ public class ServicePlanService : IServicePlanService
 
     private static ServicePlanListItemDto MapToListItemDto(ServicePlan plan)
     {
-        var activePrices = plan.Prices.Where(x => x.IsActive).ToList();
+        var activePrices = plan.Prices.Where(x => x.IsActive && x.IsCurrent).ToList();
 
         return new ServicePlanListItemDto
         {
@@ -126,7 +126,7 @@ public class ServicePlanService : IServicePlanService
                 })
                 .ToList(),
             Prices = plan.Prices
-                .Where(p => p.IsActive)
+                .Where(p => p.IsActive && p.IsCurrent)
                 .Select(p => new PlanPriceDto
                 {
                     PeriodMonths = p.PeriodMonths,

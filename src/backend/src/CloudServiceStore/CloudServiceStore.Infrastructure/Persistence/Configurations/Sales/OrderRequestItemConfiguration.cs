@@ -37,6 +37,13 @@ public class OrderRequestItemConfiguration : IEntityTypeConfiguration<OrderReque
             .HasForeignKey(x => x.TldPricingId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // Restrict - PlanPrice bị "đóng" (IsCurrent=false) chứ không bao giờ bị xoá cứng (xem
+        // AdminServicePlanService.UpdateAsync), nên Cascade không cần thiết; Restrict an toàn hơn.
+        builder.HasOne(x => x.PlanPrice)
+            .WithMany()
+            .HasForeignKey(x => x.PlanPriceId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasIndex(x => x.RenewsFromItemId);
 
         // Self-referencing, Restrict (không Cascade) - mirror ServicePlan/TldPricing: item gốc không

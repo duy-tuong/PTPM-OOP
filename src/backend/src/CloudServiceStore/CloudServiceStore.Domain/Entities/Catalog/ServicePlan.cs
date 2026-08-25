@@ -18,6 +18,10 @@ public class ServicePlan : ISoftDelete
     public string? Description { get; set; }
     public bool IsFeatured { get; set; }
     public ServicePlanStatus Status { get; set; } = ServicePlanStatus.Active;
+    // Khách gia hạn cùng chu kỳ có được giữ giá cũ (Grandfathering) hay luôn tính theo giá sống hiện
+    // hành - xem OrderRequestService.CreateRenewalAsync. Mặc định true (đúng kỳ vọng khách hàng thật:
+    // giữ giá đã cam kết khi mua, tránh tranh chấp khi Admin tăng giá - xem PDF "3 mắt xích").
+    public bool AllowGrandfatheredRenewal { get; set; } = true;
     public int DisplayOrder { get; set; }
     public string? QrCodeUrl { get; set; }
     public bool IsDeleted { get; set; }

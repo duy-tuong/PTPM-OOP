@@ -16,6 +16,7 @@ public class AdminServicePlanDto
     // backend chưa có JsonStringEnumConverter toàn cục, request body (Create/UpdateServicePlanDto)
     // vẫn nhận enum thật (bind số nguyên), còn response trả sẵn tên chuỗi cho FE dùng trực tiếp.
     public string Status { get; init; } = string.Empty;
+    public bool AllowGrandfatheredRenewal { get; init; }
     public int DisplayOrder { get; init; }
     public string? QrCodeUrl { get; init; }
     public List<PlanFeatureDto> Features { get; init; } = new();
