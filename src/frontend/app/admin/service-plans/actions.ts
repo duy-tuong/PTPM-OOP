@@ -25,7 +25,7 @@ export async function createServicePlanAction(
   try {
     const data = await createAdminServicePlan(getApiUrl(), dto, await getToken());
     revalidatePath("/admin/service-plans");
-    revalidateTag("service-plans");
+    revalidateTag("service-plans", "max");
     return { success: true, data };
   } catch (error) {
     if (error instanceof ApiError) return { success: false, message: error.message };
@@ -53,7 +53,7 @@ export async function deleteServicePlanAction(id: number): Promise<{ success: bo
   try {
     await deleteAdminServicePlan(getApiUrl(), id, await getToken());
     revalidatePath("/admin/service-plans");
-    revalidateTag("service-plans");
+    revalidateTag("service-plans", "max");
     return { success: true };
   } catch (error) {
     if (error instanceof ApiError) return { success: false, message: error.message };

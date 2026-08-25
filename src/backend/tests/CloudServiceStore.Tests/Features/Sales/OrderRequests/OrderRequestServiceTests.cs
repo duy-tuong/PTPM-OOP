@@ -48,7 +48,7 @@ public class OrderRequestServiceTests
     private static async Task<ServicePlan> SeedPlanWithPricesAsync(AppDbContext context)
     {
         var category = new ServiceCategory { Id = 501, Name = "Test Category", Slug = "test-category-orq", DisplayOrder = 1, IsActive = true };
-        var plan = new ServicePlan { Id = 501, CategoryId = category.Id, Category = category, Name = "Test Plan", Slug = "test-plan-orq", IsActive = true };
+        var plan = new ServicePlan { Id = 501, CategoryId = category.Id, Category = category, Name = "Test Plan", Slug = "test-plan-orq", Status = ServicePlanStatus.Active };
 
         context.ServiceCategories.Add(category);
         context.ServicePlans.Add(plan);
@@ -255,7 +255,7 @@ public class OrderRequestServiceTests
     {
         using var context = TestDbContextFactory.CreateContext();
         var plan = await SeedPlanWithPricesAsync(context);
-        plan.IsActive = false;
+        plan.Status = ServicePlanStatus.Archived;
         await context.SaveChangesAsync();
         var sut = CreateSut(context);
 

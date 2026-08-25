@@ -354,7 +354,7 @@ public class OrderRequestService : IOrderRequestService
             throw new NotFoundException(nameof(ServicePlan), servicePlanId);
         }
 
-        if (!plan.IsActive)
+        if (plan.Status != ServicePlanStatus.Active)
         {
             throw new ValidationException("Gói dịch vụ này hiện không khả dụng để đặt mua.");
         }

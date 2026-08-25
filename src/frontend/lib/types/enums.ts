@@ -41,6 +41,14 @@ export enum ScopeType {
   Plan = 3,
 }
 
+export enum ServicePlanStatus {
+  Draft = 1,
+  Active = 2,
+  OutOfStock = 3,
+  Archived = 4,
+  Deprecated = 5,
+}
+
 export const CUSTOMER_TYPE_LABELS: Record<string, string> = {
   Individual: "Cá nhân",
   Business: "Doanh nghiệp",
@@ -78,4 +86,22 @@ export const SCOPE_TYPE_LABELS: Record<string, string> = {
   All: "Toàn bộ",
   Category: "Theo danh mục",
   Plan: "Theo gói dịch vụ",
+};
+
+export const SERVICE_PLAN_STATUS_LABELS: Record<string, string> = {
+  Draft: "Bản nháp",
+  Active: "Đang bán",
+  OutOfStock: "Tạm hết hàng",
+  Archived: "Đã khai tử",
+  Deprecated: "Ngừng bán mới",
+};
+
+// Mô tả ngắn cho mỗi trạng thái - hiển thị trong dropdown chọn Status ở ServicePlanForm để Admin
+// hiểu rõ khác biệt giữa Archived (chặn cả gia hạn) và Deprecated (khách cũ vẫn gia hạn được).
+export const SERVICE_PLAN_STATUS_DESCRIPTIONS: Record<string, string> = {
+  Draft: "Đang soạn thảo, chưa hiển thị công khai.",
+  Active: "Hiển thị công khai, khách mua mới bình thường.",
+  OutOfStock: "Ẩn khỏi mua mới (Admin tự bật khi hết hạ tầng), khách cũ vẫn gia hạn được.",
+  Archived: "Ngừng hẳn - chặn cả mua mới lẫn gia hạn.",
+  Deprecated: "Ẩn khỏi khách mới, nhưng khách đã mua vẫn gia hạn được với giá cũ.",
 };

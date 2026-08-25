@@ -3,6 +3,7 @@ using CloudServiceStore.Application.Common.Interfaces;
 using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Catalog.ServicePlans.Dtos;
 using CloudServiceStore.Domain.Entities.Catalog;
+using CloudServiceStore.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace CloudServiceStore.Application.Features.Catalog.ServicePlans;
@@ -24,7 +25,7 @@ public class ServicePlanService : IServicePlanService
             .Include(p => p.Category)
             .Include(p => p.Prices)
             .Include(p => p.Features)
-            .Where(p => p.IsActive
+            .Where(p => p.Status == ServicePlanStatus.Active
                 && (query.CategorySlug == null || p.Category.Slug == query.CategorySlug)
                 && (query.IsFeatured == null || p.IsFeatured == query.IsFeatured))
             .OrderBy(p => p.DisplayOrder);
@@ -47,7 +48,7 @@ public class ServicePlanService : IServicePlanService
             .Include(p => p.Category)
             .Include(p => p.Features)
             .Include(p => p.Prices)
-            .FirstOrDefaultAsync(p => p.Slug == slug && p.IsActive, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Slug == slug && p.Status == ServicePlanStatus.Active, cancellationToken);
 
         if (entity is null)
         {

@@ -18,13 +18,14 @@ import {
 } from "@/components/ui/pagination";
 import { ServicePlansFilterBar } from "@/components/admin/service-plans/ServicePlansFilterBar";
 import { ServicePlansTable } from "@/components/admin/service-plans/ServicePlansTable";
+import type { ServicePlanStatus } from "@/lib/types/enums";
 
 export const metadata: Metadata = {
   title: "Quản lý gói dịch vụ",
 };
 
 interface AdminServicePlansPageProps {
-  searchParams: Promise<{ page?: string; categorySlug?: string; isFeatured?: string }>;
+  searchParams: Promise<{ page?: string; categorySlug?: string; isFeatured?: string; status?: string }>;
 }
 
 export default async function AdminServicePlansPage({ searchParams }: AdminServicePlansPageProps) {
@@ -42,6 +43,7 @@ export default async function AdminServicePlansPage({ searchParams }: AdminServi
         pageSize: 20,
         categorySlug: params.categorySlug || undefined,
         isFeatured: params.isFeatured === "true" ? true : undefined,
+        status: params.status ? (Number(params.status) as ServicePlanStatus) : undefined,
       },
       token,
     ),
@@ -54,6 +56,7 @@ export default async function AdminServicePlansPage({ searchParams }: AdminServi
     const search = new URLSearchParams();
     if (params.categorySlug) search.set("categorySlug", params.categorySlug);
     if (params.isFeatured) search.set("isFeatured", params.isFeatured);
+    if (params.status) search.set("status", params.status);
     search.set("page", String(page));
     return `/admin/service-plans?${search.toString()}`;
   }
@@ -84,6 +87,7 @@ export default async function AdminServicePlansPage({ searchParams }: AdminServi
               categories={categories}
               currentCategorySlug={params.categorySlug}
               currentIsFeatured={params.isFeatured}
+              currentStatus={params.status}
             />
           </div>
           <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0">

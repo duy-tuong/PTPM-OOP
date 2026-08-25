@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using CloudServiceStore.Domain.Enums;
 
 namespace CloudServiceStore.Application.Features.Admin.Catalog.ServicePlans.Dtos;
 
@@ -13,6 +14,9 @@ public class CreateServicePlanDto
     [Required, MaxLength(120)]
     public string Slug { get; set; } = string.Empty;
 
+    [MaxLength(64)]
+    public string? Sku { get; set; }
+
     [MaxLength(500)]
     public string? ShortDescription { get; set; }
 
@@ -20,7 +24,7 @@ public class CreateServicePlanDto
 
     public bool IsFeatured { get; set; }
 
-    public bool IsActive { get; set; } = true;
+    public ServicePlanStatus Status { get; set; } = ServicePlanStatus.Active;
 
     public int DisplayOrder { get; set; }
 

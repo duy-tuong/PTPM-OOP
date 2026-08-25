@@ -19,7 +19,7 @@ export async function createPartnerAction(dto: CreatePartnerDto): Promise<Action
   try {
     const data = await createAdminPartner(getApiUrl(), dto, await getToken());
     revalidatePath("/admin/partners");
-    revalidateTag("partners");
+    revalidateTag("partners", "max");
     return { success: true, data };
   } catch (error) {
     if (error instanceof ApiError) return { success: false, message: error.message };
@@ -34,7 +34,7 @@ export async function updatePartnerAction(
   try {
     const data = await updateAdminPartner(getApiUrl(), id, dto, await getToken());
     revalidatePath("/admin/partners");
-    revalidateTag("partners");
+    revalidateTag("partners", "max");
     return { success: true, data };
   } catch (error) {
     if (error instanceof ApiError) return { success: false, message: error.message };
@@ -46,7 +46,7 @@ export async function deletePartnerAction(id: number): Promise<{ success: boolea
   try {
     await deleteAdminPartner(getApiUrl(), id, await getToken());
     revalidatePath("/admin/partners");
-    revalidateTag("partners");
+    revalidateTag("partners", "max");
     return { success: true };
   } catch (error) {
     if (error instanceof ApiError) return { success: false, message: error.message };

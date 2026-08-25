@@ -12,12 +12,29 @@ import { Field, FieldError, FieldGroup } from "@/components/ui/field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { slugify } from "@/lib/utils";
 import { createServicePlanAction, updateServicePlanAction } from "@/app/admin/service-plans/actions";
+import { ServicePlanStatus, SERVICE_PLAN_STATUS_LABELS, SERVICE_PLAN_STATUS_DESCRIPTIONS } from "@/lib/types/enums";
 import type {
   AdminServiceCategoryDto,
   AdminServicePlanDto,
   PlanFeatureInputDto,
   PlanPriceInputDto,
 } from "@/lib/types/admin";
+
+const STATUS_OPTIONS = Object.entries(ServicePlanStatus)
+  .filter(([, value]) => typeof value === "number")
+  .map(([key, value]) => ({
+    value: String(value),
+    label: SERVICE_PLAN_STATUS_LABELS[key] ?? key,
+    description: SERVICE_PLAN_STATUS_DESCRIPTIONS[key],
+  }));
+
+// AdminServicePlanDto.status là chuỗi tên enum (vd "Active") - map ngược sang giá trị số của
+// ServicePlanStatus để làm giá trị khởi tạo cho state (dto gửi đi cần enum số, xem lib/types/admin.ts).
+function statusNameToValue(name: string | undefined): ServicePlanStatus {
+  if (!name) return ServicePlanStatus.Active;
+  const entry = Object.entries(ServicePlanStatus).find(([key]) => key === name);
+  return entry ? (Number(entry[1]) as ServicePlanStatus) : ServicePlanStatus.Active;
+}
 
 interface ServicePlanFormProps {
   mode: "create" | "edit";
@@ -96,10 +113,11 @@ export function ServicePlanForm({ mode, initialData, categories }: ServicePlanFo
   const [name, setName] = useState(initialData?.name ?? "");
   const [slug, setSlug] = useState(initialData?.slug ?? "");
   const [slugTouched, setSlugTouched] = useState(!!initialData);
+  const [sku, setSku] = useState(initialData?.sku ?? "");
   const [shortDescription, setShortDescription] = useState(initialData?.shortDescription ?? "");
   const [description, setDescription] = useState(initialData?.description ?? "");
   const [isFeatured, setIsFeatured] = useState(initialData?.isFeatured ?? false);
-  const [isActive, setIsActive] = useState(initialData?.isActive ?? true);
+  const [status, setStatus] = useState<ServicePlanStatus>(statusNameToValue(initialData?.status));
   const [displayOrder, setDisplayOrder] = useState(initialData?.displayOrder ?? 0);
   const [features, setFeatures] = useState<PlanFeatureInputDto[]>(initialData?.features.map(toFeatureInput) ?? []);
   const [prices, setPrices] = useState<PlanPriceInputDto[]>(initialData?.prices.map(toPriceInput) ?? []);
@@ -194,10 +212,11 @@ export function ServicePlanForm({ mode, initialData, categories }: ServicePlanFo
         categoryId,
         name: name.trim(),
         slug: slug.trim(),
+        sku: sku.trim() || undefined,
         shortDescription: shortDescription.trim() || undefined,
         description: description.trim() || undefined,
         isFeatured,
-        isActive,
+        status,
         displayOrder,
         features,
         prices,
@@ -287,6 +306,43 @@ export function ServicePlanForm({ mode, initialData, categories }: ServicePlanFo
             </Field>
           </div>
 
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field>
+              <Label htmlFor="plan-sku">Mã sản phẩm (SKU)</Label>
+              <Input
+                id="plan-sku"
+                value={sku}
+                onChange={(e) => setSku(e.target.value)}
+                placeholder="Tuỳ chọn - mã tra cứu nội bộ, vd: VPS-GEN-1C-2G"
+              />
+            </Field>
+
+            <Field>
+              <Label htmlFor="plan-status">Trạng thái</Label>
+              <Select
+                items={STATUS_OPTIONS}
+                value={String(status)}
+                onValueChange={(value) => setStatus(Number(value) as ServicePlanStatus)}
+              >
+                <SelectTrigger id="plan-status" className="w-full">
+                  <SelectValue placeholder="Chọn trạng thái" />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUS_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {STATUS_OPTIONS.find((o) => o.value === String(status))?.description && (
+                <p className="text-xs text-zinc-500">
+                  {STATUS_OPTIONS.find((o) => o.value === String(status))?.description}
+                </p>
+              )}
+            </Field>
+          </div>
+
           <Field>
             <Label htmlFor="plan-short-description">Mô tả ngắn</Label>
             <Input
@@ -326,24 +382,6 @@ export function ServicePlanForm({ mode, initialData, categories }: ServicePlanFo
                 <div className="absolute left-0.5 top-0.5 size-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-4" />
               </div>
               Gói nổi bật
-            </label>
-
-            <label
-              htmlFor="plan-active"
-              className="flex cursor-pointer items-center gap-3 text-sm font-medium text-zinc-700"
-            >
-              <div className="relative flex items-center">
-                <input
-                  id="plan-active"
-                  type="checkbox"
-                  checked={isActive}
-                  onChange={(e) => setIsActive(e.target.checked)}
-                  className="peer sr-only"
-                />
-                <div className="h-5 w-9 rounded-full bg-zinc-200 transition-colors peer-checked:bg-emerald-600 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-600/20" />
-                <div className="absolute left-0.5 top-0.5 size-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-4" />
-              </div>
-              Đang hoạt động
             </label>
           </div>
         </FieldGroup>

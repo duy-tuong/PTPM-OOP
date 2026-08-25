@@ -7,6 +7,7 @@ import type {
   DiscountType,
   OrderRequestStatus,
   ScopeType,
+  ServicePlanStatus,
 } from "./enums";
 
 // ---- Admin Catalog: Service Categories ----
@@ -39,10 +40,13 @@ export interface AdminServicePlanDto {
   categoryId: number;
   name: string;
   slug: string;
+  sku?: string | null;
   shortDescription?: string | null;
   description?: string | null;
   isFeatured: boolean;
-  isActive: boolean;
+  // string (không phải enum) - response đã map sẵn thành tên chuỗi (vd "Active"), khớp
+  // AdminServicePlanDto.cs. Dùng cùng SERVICE_PLAN_STATUS_LABELS ở lib/types/enums.ts để hiển thị.
+  status: string;
   displayOrder: number;
   qrCodeUrl?: string | null;
   features: PlanFeatureDto[];
@@ -72,10 +76,13 @@ export interface CreateServicePlanDto {
   categoryId: number;
   name: string;
   slug: string;
+  sku?: string;
   shortDescription?: string;
   description?: string;
   isFeatured: boolean;
-  isActive: boolean;
+  // enum thật (không phải string) - request body backend chưa có JsonStringEnumConverter, phải gửi
+  // số nguyên khớp CloudServiceStore.Domain.Enums.ServicePlanStatus (xem ghi chú đầu file này).
+  status: ServicePlanStatus;
   displayOrder: number;
   features: PlanFeatureInputDto[];
   prices: PlanPriceInputDto[];
@@ -237,6 +244,7 @@ export type UpdateNewsArticleDto = CreateNewsArticleDto;
 export interface AdminServicePlanQueryParams extends PaginationParams {
   categorySlug?: string;
   isFeatured?: boolean;
+  status?: ServicePlanStatus;
 }
 
 export interface AdminNewsArticleQueryParams extends PaginationParams {

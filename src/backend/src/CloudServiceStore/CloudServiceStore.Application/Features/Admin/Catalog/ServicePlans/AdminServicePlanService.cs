@@ -19,7 +19,9 @@ public class AdminServicePlanService : IAdminServicePlanService
         _qrCodeFactory = qrCodeFactory;
     }
 
-    // Không lọc IsActive (khác bản public ServicePlanService) — Admin cần thấy cả gói đã tắt để bật lại.
+    // Không ép cứng lọc theo 1 Status (khác bản public ServicePlanService luôn chỉ trả Active) — Admin
+    // cần thấy mọi trạng thái (kể cả Draft/Archived) để quản lý; query.Status khi có thì lọc đúng 1
+    // trạng thái Admin chọn trên bộ lọc.
     public async Task<PagedResult<AdminServicePlanDto>> GetListAsync(ServicePlanQueryParams query, CancellationToken cancellationToken = default)
     {
         var repository = _unitOfWork.Repository<ServicePlan, int>();
@@ -28,7 +30,8 @@ public class AdminServicePlanService : IAdminServicePlanService
             .Include(p => p.Features)
             .Include(p => p.Prices)
             .Where(p => (query.CategorySlug == null || p.Category.Slug == query.CategorySlug)
-                && (query.IsFeatured == null || p.IsFeatured == query.IsFeatured))
+                && (query.IsFeatured == null || p.IsFeatured == query.IsFeatured)
+                && (query.Status == null || p.Status == query.Status))
             .OrderBy(p => p.DisplayOrder);
 
         var totalCount = await baseQuery.CountAsync(cancellationToken);
@@ -64,16 +67,18 @@ public class AdminServicePlanService : IAdminServicePlanService
 
         await EnsureCategoryExistsAsync(dto.CategoryId, cancellationToken);
         await EnsureSlugIsUniqueAsync(planRepository, dto.Slug, excludeId: null, cancellationToken);
+        await EnsureSkuIsUniqueAsync(planRepository, dto.Sku, excludeId: null, cancellationToken);
 
         var plan = new ServicePlan
         {
             CategoryId = dto.CategoryId,
             Name = dto.Name,
             Slug = dto.Slug,
+            Sku = dto.Sku,
             ShortDescription = dto.ShortDescription,
             Description = dto.Description,
             IsFeatured = dto.IsFeatured,
-            IsActive = dto.IsActive,
+            Status = dto.Status,
             DisplayOrder = dto.DisplayOrder,
             // Factory Method: sinh QR ngay lúc tạo — QR chỉ encode theo Slug nên không cần chờ Id.
             QrCodeUrl = _qrCodeFactory.GenerateForServicePlan(0, dto.Slug),
@@ -125,14 +130,16 @@ public class AdminServicePlanService : IAdminServicePlanService
 
         await EnsureCategoryExistsAsync(dto.CategoryId, cancellationToken);
         await EnsureSlugIsUniqueAsync(planRepository, dto.Slug, excludeId: id, cancellationToken);
+        await EnsureSkuIsUniqueAsync(planRepository, dto.Sku, excludeId: id, cancellationToken);
 
         entity.CategoryId = dto.CategoryId;
         entity.Name = dto.Name;
         entity.Slug = dto.Slug;
+        entity.Sku = dto.Sku;
         entity.ShortDescription = dto.ShortDescription;
         entity.Description = dto.Description;
         entity.IsFeatured = dto.IsFeatured;
-        entity.IsActive = dto.IsActive;
+        entity.Status = dto.Status;
         entity.DisplayOrder = dto.DisplayOrder;
         // "kèm sinh lại mã QR" (mục 3.2.3 đề bài) — regenerate mỗi lần Admin sửa gói.
         entity.QrCodeUrl = _qrCodeFactory.GenerateForServicePlan(entity.Id, entity.Slug);
@@ -218,6 +225,27 @@ public class AdminServicePlanService : IAdminServicePlanService
         }
     }
 
+    // Sku là tuỳ chọn (nullable) - chỉ kiểm tra trùng khi Admin thực sự nhập giá trị.
+    private static async Task EnsureSkuIsUniqueAsync(
+        IRepository<ServicePlan, int> repository,
+        string? sku,
+        int? excludeId,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(sku))
+        {
+            return;
+        }
+
+        var isDuplicate = await repository.Query()
+            .AnyAsync(p => p.Sku == sku && p.Id != (excludeId ?? 0), cancellationToken);
+
+        if (isDuplicate)
+        {
+            throw new ConflictException($"Sku '{sku}' đã tồn tại.");
+        }
+    }
+
     private static AdminServicePlanDto MapToDto(ServicePlan plan)
     {
         return new AdminServicePlanDto
@@ -226,10 +254,11 @@ public class AdminServicePlanService : IAdminServicePlanService
             CategoryId = plan.CategoryId,
             Name = plan.Name,
             Slug = plan.Slug,
+            Sku = plan.Sku,
             ShortDescription = plan.ShortDescription,
             Description = plan.Description,
             IsFeatured = plan.IsFeatured,
-            IsActive = plan.IsActive,
+            Status = plan.Status.ToString(),
             DisplayOrder = plan.DisplayOrder,
             QrCodeUrl = plan.QrCodeUrl,
             Features = plan.Features.Select(f => new PlanFeatureDto
