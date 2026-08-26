@@ -21,7 +21,8 @@ export function applyCustomerAuthCookies(
   options: { persistent?: boolean } = {},
 ): void {
   const persistent = options.persistent ?? true;
-  const accessTokenMaxAge = Math.max(1, Math.round((new Date(result.expiresAtUtc).getTime() - Date.now()) / 1000));
+  const rawDiff = Math.round((new Date(result.expiresAtUtc).getTime() - Date.now()) / 1000);
+  const accessTokenMaxAge = Number.isFinite(rawDiff) && rawDiff > 60 ? rawDiff : CUSTOMER_REFRESH_TOKEN_MAX_AGE_SECONDS;
 
   response.cookies.set(CUSTOMER_ACCESS_TOKEN_COOKIE, result.accessToken, {
     httpOnly: true,
