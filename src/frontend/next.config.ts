@@ -12,8 +12,8 @@ const nextConfig: NextConfig = {
         destination: `${backendHost}/uploads/:path*`,
       },
       {
-        source: "/api/:path*",
-        destination: `${backendHost}/api/:path*`,
+        source: "/api/((?!auth|customer-auth).*)",
+        destination: `${backendHost}/api/$1`,
       },
     ];
   },
