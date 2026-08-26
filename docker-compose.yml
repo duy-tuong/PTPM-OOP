@@ -62,7 +62,7 @@ services:
       context: ./src/frontend
       dockerfile: Dockerfile
       args:
-        - NEXT_PUBLIC_API_URL=http://35.254.67.105:5000/api
+        - NEXT_PUBLIC_API_URL=https://dichvucloud.duckdns.org/api
     container_name: cloudstore_frontend
     restart: always
     environment:
