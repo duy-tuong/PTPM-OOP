@@ -37,7 +37,7 @@ export function PlanPricingGrid({ plans }: { plans: ServicePlanListItemDto[] }) 
   const selectedPeriod = isAnnual ? ANNUAL_PERIOD_MONTHS : MONTHLY_PERIOD_MONTHS;
 
   return (
-    <div className="flex flex-col items-center gap-10">
+    <div className="flex flex-col items-center gap-8">
       {hasAnnualPricing && (
         <div className="flex items-center gap-3 rounded-full border border-border/50 bg-muted/30 p-1 shadow-sm">
           <button
@@ -67,7 +67,7 @@ export function PlanPricingGrid({ plans }: { plans: ServicePlanListItemDto[] }) 
       )}
 
       <div className={cn(
-        "mx-auto grid w-full items-stretch gap-6 lg:gap-8",
+        "mx-auto grid w-full items-stretch gap-5 lg:gap-6",
         plans.length === 2 && "max-w-3xl md:grid-cols-2",
         plans.length >= 3 && "max-w-6xl grid-cols-1 md:grid-cols-3",
         plans.length === 1 && "max-w-sm"
@@ -105,7 +105,7 @@ function PlanCard({
   return (
     <div
       className={cn(
-        "group relative flex h-full flex-col rounded-[20px] border p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl",
+        "group relative flex h-full flex-col rounded-[20px] border p-6 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl",
         highlighted 
           ? "border-blue-500 bg-blue-50/50 shadow-lg dark:bg-blue-900/10" 
           : "border-border bg-card shadow-sm hover:border-blue-500/30"
@@ -117,13 +117,13 @@ function PlanCard({
         </div>
       )}
 
-      <div className="mb-6">
+      <div className="mb-4">
         <span className="text-[10px] font-bold tracking-widest text-blue-600 dark:text-blue-400 uppercase mb-2 block">{plan.categoryName}</span>
         <h3 className="font-heading text-xl font-bold text-foreground">{plan.name}</h3>
         {plan.shortDescription && <p className="mt-2 text-sm text-muted-foreground">{plan.shortDescription}</p>}
       </div>
 
-      <div className="mb-8 flex items-baseline gap-1">
+      <div className="mb-6 flex items-baseline gap-1">
         {amount === null ? (
           <span className="text-4xl font-extrabold tracking-tight">Liên hệ</span>
         ) : (
@@ -134,7 +134,7 @@ function PlanCard({
         )}
       </div>
 
-      <ul className="mb-8 flex flex-1 flex-col gap-4">
+      <ul className="mb-6 flex flex-1 flex-col gap-3">
         {plan.features.map((feature) => (
           <li key={feature.featureKey} className="flex items-start gap-3 text-sm text-foreground">
             <CheckCircle className="mt-0.5 size-5 shrink-0 text-blue-600 dark:text-blue-400" weight="fill" />

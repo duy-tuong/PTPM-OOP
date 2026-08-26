@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowRight, EnvelopeSimple } from "@phosphor-icons/react/dist/ssr";
 import { Button } from "@/components/ui/button";
 import { MagneticButton } from "@/components/shared/MagneticButton";
+import { AnimatedNumber } from "@/components/shared/AnimatedNumber";
 
 export function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -22,7 +23,7 @@ export function HeroSection() {
   const y = useTransform(scrollYProgress, [0, 1], [0, 60]);
 
   return (
-    <section ref={sectionRef} className="relative flex min-h-screen flex-col items-center pt-32 pb-16 overflow-hidden px-4 sm:px-6 lg:px-8">
+    <section ref={sectionRef} className="relative flex min-h-screen flex-col items-center pt-28 pb-12 overflow-hidden px-4 sm:px-6 lg:px-8">
       
       <motion.div 
         style={{ opacity, scale, y }}
@@ -111,8 +112,8 @@ export function HeroSection() {
               <div className="flex flex-col gap-2 rounded-lg border border-border/50 bg-background/50 p-4">
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">CPU Usage</span>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-bold text-foreground">12%</span>
-                  <span className="text-xs font-medium text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">-2.4%</span>
+                  <span className="text-2xl font-bold text-foreground"><AnimatedNumber value={12} />%</span>
+                  <span className="text-xs font-medium text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">-<AnimatedNumber value={2.4} decimals={1} />%</span>
                 </div>
                 <div className="mt-3 h-1.5 w-full rounded-full bg-muted overflow-hidden">
                   <motion.div 
@@ -128,7 +129,7 @@ export function HeroSection() {
               <div className="flex flex-col gap-2 rounded-lg border border-border/50 bg-background/50 p-4">
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Memory Allocation</span>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-bold text-foreground">4.2<span className="text-lg font-semibold text-muted-foreground">GB</span></span>
+                  <span className="text-2xl font-bold text-foreground"><AnimatedNumber value={4.2} decimals={1} /><span className="text-lg font-semibold text-muted-foreground">GB</span></span>
                   <span className="text-xs font-medium text-muted-foreground">/ 16 GB</span>
                 </div>
                 <div className="mt-3 h-1.5 w-full rounded-full bg-muted overflow-hidden">
@@ -145,7 +146,7 @@ export function HeroSection() {
               <div className="flex flex-col gap-2 rounded-lg border border-border/50 bg-background/50 p-4">
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Network Traffic</span>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-bold text-foreground">854<span className="text-lg font-semibold text-muted-foreground">Mbps</span></span>
+                  <span className="text-2xl font-bold text-foreground"><AnimatedNumber value={854} /><span className="text-lg font-semibold text-muted-foreground">Mbps</span></span>
                 </div>
                 {/* Mini chart mock */}
                 <div className="mt-3 flex h-4 w-full items-end gap-1">

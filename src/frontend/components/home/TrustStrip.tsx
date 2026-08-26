@@ -4,6 +4,7 @@ import { FallbackImage } from "@/components/shared/FallbackImage";
 import { Marquee } from "@/components/shared/Marquee";
 import type { PartnerDto } from "@/lib/types/content";
 import { Hexagon, Globe, Cloud, Database, ShieldCheck } from "@phosphor-icons/react/dist/ssr";
+import { AnimatedNumber } from "@/components/shared/AnimatedNumber";
 
 const DUMMY_PARTNERS = [
   { id: "d1", name: "Acme Corp", icon: <Hexagon weight="fill" className="size-6" /> },
@@ -23,25 +24,25 @@ export async function TrustStrip() {
   const shouldMarquee = hasRealPartners ? partners.length > 1 : true;
 
   return (
-    <section className="border-y border-border/50 bg-background py-16 sm:py-24">
+    <section className="border-y border-border/50 bg-background py-12 sm:py-16">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         
         {/* Metrics Grid */}
-        <div className="mb-20 grid grid-cols-2 gap-y-12 sm:grid-cols-4 sm:gap-y-0 sm:divide-x sm:divide-border/50">
+        <div className="mb-12 grid grid-cols-2 gap-y-12 sm:grid-cols-4 sm:gap-y-0 sm:divide-x sm:divide-border/50">
           <div className="flex flex-col items-center justify-center text-center px-4">
-            <span className="text-3xl font-extrabold text-foreground sm:text-4xl mb-2">99.9%</span>
+            <span className="text-3xl font-extrabold text-foreground sm:text-4xl mb-2"><AnimatedNumber value={99.9} decimals={1} />%</span>
             <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Uptime Server</span>
           </div>
           <div className="flex flex-col items-center justify-center text-center px-4">
-            <span className="text-3xl font-extrabold text-foreground sm:text-4xl mb-2">24/7</span>
+            <span className="text-3xl font-extrabold text-foreground sm:text-4xl mb-2"><AnimatedNumber value={24} />/7</span>
             <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Technical Support</span>
           </div>
           <div className="flex flex-col items-center justify-center text-center px-4">
-            <span className="text-3xl font-extrabold text-foreground sm:text-4xl mb-2">5 phút</span>
+            <span className="text-3xl font-extrabold text-foreground sm:text-4xl mb-2"><AnimatedNumber value={5} /> phút</span>
             <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Triển khai</span>
           </div>
           <div className="flex flex-col items-center justify-center text-center px-4">
-            <span className="text-3xl font-extrabold text-foreground sm:text-4xl mb-2">99.99%</span>
+            <span className="text-3xl font-extrabold text-foreground sm:text-4xl mb-2"><AnimatedNumber value={99.99} decimals={2} />%</span>
             <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Network Availability</span>
           </div>
         </div>

@@ -9,19 +9,17 @@ import { Button } from "@/components/ui/button";
 export async function PromotionBannerSection() {
   const promotions = await safeFetch(() => getPromotions({ revalidate: 300 }), []);
 
-  const activePromotion = promotions.length > 0 ? promotions[0] : {
-    id: "promo-1",
-    code: "SUMMER2026",
-    name: "Khuyến mãi hè 2026 - Giảm 30%",
-    description: "",
-    endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 + 3 * 60 * 60 * 1000 + 2 * 60 * 1000).toISOString(),
-  } as any;
+  if (promotions.length === 0) {
+    return null;
+  }
+
+  const activePromotion = promotions[0];
 
   return (
     <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
       <ScrollReveal>
         <div className="relative overflow-hidden rounded-[20px] border border-blue-100 bg-gradient-to-br from-[#EFF6FF] to-[#ECFEFF] p-6 shadow-sm dark:border-blue-900/50 dark:from-blue-950/40 dark:to-cyan-950/20 md:px-10 md:py-8">
-          
+
           <div className="relative flex flex-col items-center gap-8 md:flex-row md:items-center md:justify-between">
             <ScrollReveal direction="left" delay={0.1} className="flex flex-col items-center gap-2 text-center md:items-start md:text-left">
               <span className="flex items-center gap-1.5 text-xs font-bold tracking-widest text-blue-600 dark:text-blue-400 uppercase">
@@ -29,7 +27,7 @@ export async function PromotionBannerSection() {
                 Ưu đãi có hạn
               </span>
               <h2 className="font-heading text-2xl font-extrabold text-foreground sm:text-3xl">
-                {activePromotion.name.replace(" - Giảm 30%", "")}
+                {activePromotion.name}
               </h2>
             </ScrollReveal>
 

@@ -19,9 +19,9 @@ export async function ServicesBentoSection() {
   const useBentoLayout = categories.length === BENTO_CATEGORY_COUNT;
 
   return (
-    <section className="relative w-full border-y border-border/50 bg-muted/10 py-16 sm:py-24">
+    <section className="relative w-full border-y border-border/50 bg-muted/10 py-12 sm:py-16">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <ScrollReveal className="mb-16 flex flex-col gap-4 text-center">
+        <ScrollReveal className="mb-12 flex flex-col gap-4 text-center">
           <h2 className="font-heading text-3xl font-extrabold text-foreground sm:text-4xl">Danh mục dịch vụ</h2>
           <p className="mx-auto max-w-2xl text-base text-muted-foreground sm:text-lg">
             Hệ sinh thái hạ tầng đám mây toàn diện, bảo mật và hiệu suất cao dành riêng cho doanh nghiệp.
@@ -31,7 +31,7 @@ export async function ServicesBentoSection() {
         <div
           className={cn(
             "grid grid-cols-1 gap-5",
-            useBentoLayout ? "md:grid-cols-3 md:auto-rows-[240px]" : "md:grid-cols-2 lg:grid-cols-3",
+            useBentoLayout ? "md:grid-cols-3 md:auto-rows-[200px]" : "md:grid-cols-2 lg:grid-cols-3",
           )}
         >
           {categories.map((category, index) => {
