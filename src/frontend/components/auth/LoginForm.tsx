@@ -70,7 +70,7 @@ export function LoginForm() {
       const data = (await res.json()) as { fullName: string };
       toast.success(`Chào mừng trở lại, ${data.fullName}`);
       notifyCustomerSessionChanged();
-      router.push("/");
+      window.location.href = "/";
     } finally {
       setIsSubmitting(false);
     }
