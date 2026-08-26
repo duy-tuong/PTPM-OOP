@@ -5,7 +5,6 @@ import { getFaqs } from "@/lib/api/content";
 import { safeFetch, emptyPagedResult } from "@/lib/api/safe";
 import { Button } from "@/components/ui/button";
 import { FaqColumn } from "@/components/home/FaqColumn";
-import { FinalCtaSection } from "@/components/home/FinalCtaSection";
 import { ServicesCommandCenter } from "@/components/services/ServicesCommandCenter";
 import { ServiceWhyChooseFeatures } from "@/components/services/ServiceWhyChooseFeatures";
 import { ServiceComparisonTable } from "@/components/services/ServiceComparisonTable";
@@ -100,7 +99,6 @@ export default async function ServicesPage() {
         </div>
       )}
 
-      <FinalCtaSection />
     </>
   );
 }
