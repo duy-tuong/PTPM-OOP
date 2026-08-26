@@ -80,7 +80,7 @@ export function NewsSplitScreen({
       <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-12 sm:px-6 lg:flex-row lg:gap-12 lg:px-8">
         <div className="flex flex-col gap-8 lg:sticky lg:top-32 lg:h-fit lg:w-[35%] lg:self-start">
           <div className="flex flex-col gap-3">
-            <h1 className="font-heading text-4xl font-bold text-foreground sm:text-5xl">Tin Tức & Cập Nhật</h1>
+            <h1 className="font-heading text-3xl font-bold text-foreground sm:text-4xl">Tin Tức & Cập Nhật</h1>
             <p className="text-sm text-muted-foreground">
               Cập nhật kiến thức, ưu đãi và những thông tin mới nhất từ hệ sinh thái Cloudverse.
             </p>

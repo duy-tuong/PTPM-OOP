@@ -53,7 +53,7 @@ export function NewsArticleDetail({
           <span className="w-fit rounded bg-muted px-3 py-1 text-xs font-medium text-foreground uppercase">
             {article.categoryName}
           </span>
-          <h1 className="mt-4 font-heading text-4xl font-bold text-foreground sm:text-5xl">{article.title}</h1>
+          <h1 className="mt-4 font-heading text-3xl font-bold text-foreground sm:text-4xl">{article.title}</h1>
           <p className="mt-4 text-sm text-muted-foreground">
             {formatDate(article.publishedAt)} • {readingMinutes} phút đọc • {article.viewCount} lượt xem
           </p>
