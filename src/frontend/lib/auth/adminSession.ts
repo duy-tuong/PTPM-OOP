@@ -15,8 +15,10 @@ export { ADMIN_ACCESS_TOKEN_COOKIE, ADMIN_REFRESH_TOKEN_COOKIE, ADMIN_SESSION_CO
 // lib/auth/customerSession.ts#applyCustomerAuthCookies.
 export function applyAdminAuthCookies(response: NextResponse, result: LoginResponse): void {
   const expiresStr = result.expiresAtUtc.endsWith("Z") ? result.expiresAtUtc : result.expiresAtUtc + "Z";
-  const accessTokenMaxAge = Math.max(1, Math.round((new Date(expiresStr).getTime() - Date.now()) / 1000));
+  const rawDiff = Math.round((new Date(expiresStr).getTime() - Date.now()) / 1000);
+  const accessTokenMaxAge = Number.isFinite(rawDiff) && rawDiff > 0 ? rawDiff : ADMIN_REFRESH_TOKEN_MAX_AGE_SECONDS;
   const isSecure = process.env.NODE_ENV === "production";
+
 
   response.cookies.set(ADMIN_ACCESS_TOKEN_COOKIE, result.accessToken, {
     httpOnly: true,

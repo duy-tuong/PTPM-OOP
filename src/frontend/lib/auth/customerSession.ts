@@ -22,8 +22,11 @@ export function applyCustomerAuthCookies(
 ): void {
   const persistent = options.persistent ?? true;
   const expiresStr = result.expiresAtUtc.endsWith("Z") ? result.expiresAtUtc : result.expiresAtUtc + "Z";
-  const accessTokenMaxAge = Math.max(1, Math.round((new Date(expiresStr).getTime() - Date.now()) / 1000));
+  const rawDiff = Math.round((new Date(expiresStr).getTime() - Date.now()) / 1000);
+  const accessTokenMaxAge = Number.isFinite(rawDiff) && rawDiff > 0 ? rawDiff : CUSTOMER_REFRESH_TOKEN_MAX_AGE_SECONDS;
   const isSecure = process.env.NODE_ENV === "production";
+
+
 
   response.cookies.set(CUSTOMER_ACCESS_TOKEN_COOKIE, result.accessToken, {
     httpOnly: true,
