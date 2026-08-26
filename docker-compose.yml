@@ -69,7 +69,7 @@ services:
       - API_URL=http://backend:5000/api
       - NEXT_PUBLIC_API_URL=https://dichvucloud.duckdns.org/api
     ports:
-      - "80:3000"
+      - "3000:3000"
     depends_on:
       - backend
     networks:
