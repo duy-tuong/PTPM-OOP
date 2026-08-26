@@ -19,9 +19,15 @@ const TODAY_FORMATTER = new Intl.DateTimeFormat("vi-VN", {
   year: "numeric",
 });
 
+import { redirect } from "next/navigation";
+
 export default async function AdminDashboardPage() {
   const session = await getAdminSession();
-  const isAdmin = session?.roles.includes("Admin") ?? false;
+  if (!session) {
+    redirect("/admin/login");
+  }
+
+  const isAdmin = session.roles.includes("Admin");
 
   const headerBlock = (
     <div>
@@ -30,9 +36,6 @@ export default async function AdminDashboardPage() {
     </div>
   );
 
-  // Editor không có quyền GET /admin/dashboard-stats/order-requests theo cách Admin dùng - dashboard
-  // riêng cho Editor (số liệu Bài viết/Bình luận + lối tắt) thay hẳn nội dung Admin, không chỉ vá
-  // fallback text như trước.
   if (!isAdmin) {
     return (
       <div className="min-h-full px-4 py-8 sm:px-6 lg:px-8">
@@ -48,10 +51,19 @@ export default async function AdminDashboardPage() {
   const token = cookieStore.get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
   const baseUrl = getApiUrl();
 
-  const [stats, recentOrders] = await Promise.all([
-    getAdminDashboardStats(baseUrl, token),
-    getAdminOrderRequests(baseUrl, { pageSize: 5 }, token),
-  ]);
+  let stats: any = { totalCustomers: 0, activeServices: 0, pendingOrders: 0, monthlyRevenue: 0 };
+  let recentOrders: any = [];
+
+  try {
+    const [statsRes, ordersRes] = await Promise.all([
+      getAdminDashboardStats(baseUrl, token),
+      getAdminOrderRequests(baseUrl, { pageSize: 5 }, token),
+    ]);
+    stats = statsRes;
+    recentOrders = ordersRes;
+  } catch {
+    // Gracefully handle backend API errors
+  }
 
   return (
     <div className="min-h-full px-4 py-8 sm:px-6 lg:px-8">
