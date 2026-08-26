@@ -7,7 +7,7 @@ import type {
   ChangeCustomerPasswordDto,
   RequestEmailChangeDto,
 } from "@/lib/types/customerAuth";
-import type { MyOrderRequestDto, MyServiceItemDto, MyConsultationRequestDto } from "@/lib/types/sales";
+import type { MyOrderRequestDto, MyServiceItemDto, MyConsultationRequestDto, CustomerSshKeyDto, CreateSshKeyDto } from "@/lib/types/sales";
 
 // Server-only - gọi các endpoint tự phục vụ [Authorize(Roles="Customer")], dùng trong
 // app/khach-hang/** (Server Component đọc token qua getCustomerAccessToken()) và các Route Handler
@@ -41,4 +41,17 @@ export function getMyConsultationRequests(params: PaginationParams, token: strin
     params,
     token,
   });
+}
+
+// SSH Key (Đợt 3, Phần 12) - gọi từ app/api/customer/ssh-keys/**/route.ts.
+export function getMySshKeys(token: string) {
+  return apiFetch<CustomerSshKeyDto[]>(getApiUrl(), "/customer/ssh-keys", "GET", { token });
+}
+
+export function createMySshKey(dto: CreateSshKeyDto, token: string) {
+  return apiFetch<CustomerSshKeyDto>(getApiUrl(), "/customer/ssh-keys", "POST", { body: dto, token });
+}
+
+export function deleteMySshKey(id: number, token: string) {
+  return apiFetch<void>(getApiUrl(), `/customer/ssh-keys/${id}`, "DELETE", { token });
 }

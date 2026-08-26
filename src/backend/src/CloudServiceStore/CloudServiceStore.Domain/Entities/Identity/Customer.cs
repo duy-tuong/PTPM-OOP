@@ -33,4 +33,22 @@ public class Customer : ISoftDelete
     public DateTime? DeletedAt { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
+
+    // CRM: Hồ sơ B2B & Sales Rep (Đợt 2, Phần 10) - tất cả nullable, không bắt buộc, chỉ có ý nghĩa
+    // tham khảo cho Sales, không có logic nghiệp vụ nào phụ thuộc vào chúng.
+    public string? BillingAddress { get; set; }
+    public string? LegalRepresentativeName { get; set; }
+    public string? BusinessLicenseNumber { get; set; }
+
+    // Chỉ mang tính hiển thị/tham khảo cho Sales - KHÔNG có logic enforce nào (hệ thống vẫn 100% trả
+    // trước qua PayOS, không có công nợ thật). Đừng dùng field này để chặn/giới hạn bất cứ luồng nào.
+    public decimal? CreditLimit { get; set; }
+
+    // Gán Sales phụ trách DÀI HẠN cho tài khoản khách hàng - khác OrderRequest.AssignedToUserId vốn là
+    // gán theo TỪNG ĐƠN (có thể đổi người phụ trách khác nhau qua từng đơn của cùng 1 khách).
+    public Guid? AssignedSalesRepUserId { get; set; }
+    public AppUser? AssignedSalesRepUser { get; set; }
+
+    // SSH Key lưu theo tài khoản (Đợt 3, Phần 12) - xem CustomerSshKey.cs.
+    public ICollection<CustomerSshKey> SshKeys { get; set; } = new List<CustomerSshKey>();
 }

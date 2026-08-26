@@ -10,6 +10,9 @@ public class NewsArticleDetailDto
     public string? ThumbnailUrl { get; init; }
     public DateTime PublishedAt { get; init; }
     public int ViewCount { get; init; }
+    public bool IsFeatured { get; init; }
+    public string AuthorName { get; init; } = string.Empty;
+    public int WordCount { get; init; }
     public string CategoryName { get; init; } = string.Empty;
     public string CategorySlug { get; init; } = string.Empty;
     public List<string> Tags { get; init; } = new();

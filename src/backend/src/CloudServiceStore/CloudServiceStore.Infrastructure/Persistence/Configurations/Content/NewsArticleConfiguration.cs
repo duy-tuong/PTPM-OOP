@@ -21,6 +21,7 @@ public class NewsArticleConfiguration : IEntityTypeConfiguration<NewsArticle>
         builder.HasIndex(x => x.Slug).IsUnique();
         builder.HasIndex(x => new { x.IsPublished, x.PublishedAt });
         builder.HasIndex(x => new { x.NewsCategoryId, x.IsPublished });
+        builder.HasIndex(x => new { x.IsFeatured, x.IsPublished, x.PublishedAt });
 
         builder.HasOne(x => x.Author)
             .WithMany()
@@ -45,6 +46,7 @@ public class NewsArticleConfiguration : IEntityTypeConfiguration<NewsArticle>
             Summary = "Giảm giá đến 10% cho các gói VPS SSD trong tháng 1/2026.",
             Content = "Nhân dịp đầu năm 2026, CloudServiceStore triển khai chương trình ưu đãi giảm giá lên đến 10% cho toàn bộ gói VPS SSD. Chương trình áp dụng cho khách hàng đăng ký mới trong suốt năm 2026.",
             ViewCount = 0,
+            IsFeatured = false,
             IsPublished = true,
             PublishedAt = new DateTime(2026, 8, 10, 0, 0, 0, DateTimeKind.Utc),
             IsDeleted = false,

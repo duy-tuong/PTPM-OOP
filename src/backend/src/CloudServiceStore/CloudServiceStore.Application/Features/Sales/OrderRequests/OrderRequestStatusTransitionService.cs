@@ -1,6 +1,7 @@
 using CloudServiceStore.Application.Common.Exceptions;
 using CloudServiceStore.Application.Common.Interfaces;
 using CloudServiceStore.Application.Common.Services;
+using CloudServiceStore.Domain.Entities.Catalog;
 using CloudServiceStore.Domain.Entities.Sales;
 using CloudServiceStore.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -96,6 +97,38 @@ public class OrderRequestStatusTransitionService : IOrderRequestStatusTransition
 
         foreach (var item in order.Items)
         {
+            // Đổi gói (Upgrade có phụ thu) - item này là "biên lai đổi gói" (xem PlanChangeService),
+            // ServicePlanId/PlanPriceId của nó là gói ĐÍCH. Áp dụng đổi gói lên item GỐC: đổi
+            // ServicePlanId/PlanPriceId/UnitPrice/LineTotal theo giá ĐẦY ĐỦ của gói đích (không phải
+            // UnitPrice của item này - đó là số tiền phụ thu proration), GIỮ NGUYÊN ExpiresAt.
+            if (item.ChangesFromItemId is not null)
+            {
+                var original = await itemRepository.Query()
+                    .FirstOrDefaultAsync(i => i.Id == item.ChangesFromItemId, cancellationToken);
+
+                if (original is not null && item.PlanPriceId is not null)
+                {
+                    var newPrice = await _unitOfWork.Repository<PlanPrice, int>().GetByIdAsync(item.PlanPriceId.Value, cancellationToken);
+                    if (newPrice is not null)
+                    {
+                        var newUnitPrice = newPrice.PromotionalPrice ?? newPrice.Price;
+                        original.ServicePlanId = item.ServicePlanId;
+                        original.PlanPriceId = item.PlanPriceId;
+                        original.UnitPrice = newUnitPrice;
+                        original.LineTotal = newUnitPrice * original.Quantity;
+                        // Dunning (Phần 8) - khách vừa trả tiền đổi gói, khôi phục dịch vụ nếu đang bị
+                        // tạm khóa/cảnh báo (PlanChangeService.ValidateAndComputeAsync đã chặn đổi gói
+                        // khi TerminatedAt != null nên không cần reset field đó ở đây).
+                        original.SuspendedAt = null;
+                        original.TerminationWarningSentAt = null;
+                        itemRepository.Update(original);
+                    }
+                }
+
+                item.ProvisionedAt = now;
+                continue;
+            }
+
             if (item.RenewsFromItemId is not null)
             {
                 var original = await itemRepository.Query()
@@ -107,6 +140,11 @@ public class OrderRequestStatusTransitionService : IOrderRequestStatusTransition
                     original.ExpiresAt = item.ServicePlanId is not null
                         ? extendFrom.AddMonths(item.PeriodMonths ?? 0)
                         : extendFrom.AddYears(item.Quantity);
+                    // Dunning (Phần 8) - khách vừa trả tiền gia hạn, khôi phục dịch vụ nếu đang bị tạm
+                    // khóa/cảnh báo (OrderRequestService.CreateRenewalAsync đã chặn gia hạn khi
+                    // TerminatedAt != null nên không cần reset field đó ở đây).
+                    original.SuspendedAt = null;
+                    original.TerminationWarningSentAt = null;
                     itemRepository.Update(original);
                 }
 
@@ -116,7 +154,7 @@ public class OrderRequestStatusTransitionService : IOrderRequestStatusTransition
 
             if (item.ServicePlanId is not null)
             {
-                var (ipAddress, rootPassword) = _fakeProvisioningGenerator.GenerateServerCredentials();
+                var (ipAddress, rootPassword) = _fakeProvisioningGenerator.GenerateServerCredentials(hasSshKey: item.SshPublicKeySnapshot is not null);
                 item.ProvisionedIpAddress = ipAddress;
                 item.ProvisionedRootPassword = rootPassword;
                 item.ExpiresAt = now.AddMonths(item.PeriodMonths ?? 0);

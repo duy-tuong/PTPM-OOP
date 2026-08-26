@@ -27,6 +27,8 @@ public class OrderRequestConfiguration : IEntityTypeConfiguration<OrderRequest>
         builder.Property(x => x.PayOsQrCode).HasMaxLength(1000);
         builder.Property(x => x.PayOsPaymentLinkId).HasMaxLength(100);
 
+        builder.Property(x => x.FlagReason).HasMaxLength(500);
+
         builder.HasIndex(x => x.OrderCode).IsUnique();
         builder.HasIndex(x => new { x.Status, x.CreatedAt });
         builder.HasIndex(x => x.CustomerId);

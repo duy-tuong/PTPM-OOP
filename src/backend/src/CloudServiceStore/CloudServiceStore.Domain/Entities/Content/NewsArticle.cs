@@ -19,6 +19,7 @@ public class NewsArticle : ISoftDelete
     public string Content { get; set; } = string.Empty;
     public string? ThumbnailUrl { get; set; }
     public int ViewCount { get; set; }
+    public bool IsFeatured { get; set; }
     public bool IsPublished { get; set; } = true;
     public DateTime PublishedAt { get; set; } = DateTime.UtcNow;
     public bool IsDeleted { get; set; }

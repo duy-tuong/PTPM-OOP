@@ -14,6 +14,9 @@ export interface NewsArticleQueryParams extends PaginationParams {
   categorySlug?: string;
   tagSlug?: string;
   search?: string;
+  featured?: boolean;
+  // "latest" (mặc định) | "oldest" | "popular"
+  sort?: string;
 }
 
 export interface NewsArticleListItemDto {
@@ -24,6 +27,10 @@ export interface NewsArticleListItemDto {
   thumbnailUrl?: string | null;
   publishedAt: string;
   viewCount: number;
+  isFeatured: boolean;
+  authorName: string;
+  // Số từ trong Content - dùng để tính "X phút đọc" qua estimateReadingMinutes() (lib/utils.ts).
+  wordCount: number;
   categoryName: string;
   categorySlug: string;
   tags: string[];
@@ -38,9 +45,20 @@ export interface NewsArticleDetailDto {
   thumbnailUrl?: string | null;
   publishedAt: string;
   viewCount: number;
+  isFeatured: boolean;
+  authorName: string;
+  wordCount: number;
   categoryName: string;
   categorySlug: string;
   tags: string[];
+}
+
+// Khớp Application/Features/Content/NewsTags/Dtos/NewsTagDto.cs (Đợt 6) - "Chủ đề phổ biến".
+export interface NewsTagDto {
+  id: number;
+  name: string;
+  slug: string;
+  articleCount: number;
 }
 
 // Khớp Application/Features/Content/NewsComments/Dtos/NewsCommentDto.cs - AuthorEmail KHÔNG lộ ra

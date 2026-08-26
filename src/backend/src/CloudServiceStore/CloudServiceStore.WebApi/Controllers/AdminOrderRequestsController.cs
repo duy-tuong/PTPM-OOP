@@ -34,6 +34,13 @@ public class AdminOrderRequestsController : ControllerBase
         return Ok(await _service.UpdateStatusAsync(id, dto, GetUserId(), cancellationToken));
     }
 
+    // itemId là OrderRequestItem.Id (không phải id đơn hàng) - Dunning Automation (Phần 8).
+    [HttpPost("items/{itemId:int}/lift-suspension")]
+    public async Task<ActionResult<AdminOrderRequestDto>> LiftSuspension(int itemId, CancellationToken cancellationToken)
+    {
+        return Ok(await _service.LiftSuspensionAsync(itemId, cancellationToken));
+    }
+
     // Xuất Excel chỉ dành cho Admin (mục 3.2.7 đề bài), khác quyền mặc định Admin,Editor của cả controller.
     [HttpGet("export")]
     [Authorize(Roles = "Admin")]

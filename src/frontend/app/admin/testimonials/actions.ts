@@ -25,7 +25,7 @@ export async function createTestimonialAction(
   try {
     const data = await createAdminTestimonial(getApiUrl(), dto, await getToken());
     revalidatePath("/admin/testimonials");
-    revalidateTag("testimonials");
+    revalidateTag("testimonials", "max");
     return { success: true, data };
   } catch (error) {
     if (error instanceof ApiError) return { success: false, message: error.message };
@@ -40,7 +40,7 @@ export async function updateTestimonialAction(
   try {
     const data = await updateAdminTestimonial(getApiUrl(), id, dto, await getToken());
     revalidatePath("/admin/testimonials");
-    revalidateTag("testimonials");
+    revalidateTag("testimonials", "max");
     return { success: true, data };
   } catch (error) {
     if (error instanceof ApiError) return { success: false, message: error.message };
@@ -52,7 +52,7 @@ export async function deleteTestimonialAction(id: number): Promise<{ success: bo
   try {
     await deleteAdminTestimonial(getApiUrl(), id, await getToken());
     revalidatePath("/admin/testimonials");
-    revalidateTag("testimonials");
+    revalidateTag("testimonials", "max");
     return { success: true };
   } catch (error) {
     if (error instanceof ApiError) return { success: false, message: error.message };

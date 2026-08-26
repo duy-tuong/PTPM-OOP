@@ -24,6 +24,8 @@ public class UpdateNewsArticleDto
 
     public bool IsPublished { get; set; }
 
+    public bool IsFeatured { get; set; }
+
     public DateTime? PublishedAt { get; set; }
 
     public List<string> TagNames { get; set; } = new();

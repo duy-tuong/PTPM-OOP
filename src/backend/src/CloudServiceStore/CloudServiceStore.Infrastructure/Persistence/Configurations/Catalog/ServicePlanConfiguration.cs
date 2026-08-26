@@ -1,4 +1,5 @@
 using CloudServiceStore.Domain.Entities.Catalog;
+using CloudServiceStore.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -13,19 +14,34 @@ public class ServicePlanConfiguration : IEntityTypeConfiguration<ServicePlan>
 
         builder.Property(x => x.Name).HasMaxLength(100).IsRequired();
         builder.Property(x => x.Slug).HasMaxLength(120).IsRequired();
+        builder.Property(x => x.Sku).HasMaxLength(64);
         builder.Property(x => x.ShortDescription).HasMaxLength(500);
         // QrCodeUrl lưu base64 data URI (data:image/png;base64,...) chứ không phải URL thường —
         // dài hơn nhiều so với 500 ký tự ban đầu, cần nvarchar(max).
         builder.Property(x => x.QrCodeUrl).HasColumnType("nvarchar(max)");
         builder.Property(x => x.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+        // Lưu enum dạng chuỗi (khớp OrderRequestConfiguration.Status) - dễ đọc thẳng trong DB hơn số.
+        builder.Property(x => x.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
+        builder.Property(x => x.PackageType).HasConversion<string>().HasMaxLength(20).IsRequired();
+        builder.Property(x => x.PricePerVcpuPerMonth).HasColumnType("decimal(18,2)");
+        builder.Property(x => x.PricePerRamGbPerMonth).HasColumnType("decimal(18,2)");
+        builder.Property(x => x.PricePerDiskGbPerMonth).HasColumnType("decimal(18,2)");
 
         builder.HasIndex(x => x.Slug).IsUnique();
-        builder.HasIndex(x => new { x.CategoryId, x.IsActive });
+        builder.HasIndex(x => x.Sku).IsUnique().HasFilter("[Sku] IS NOT NULL");
+        builder.HasIndex(x => new { x.CategoryId, x.Status });
 
         builder.HasOne(x => x.Category)
             .WithMany(x => x.Plans)
             .HasForeignKey(x => x.CategoryId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // SetNull (không Restrict/Cascade) - Region chỉ trang trí, nếu sau này có UI xoá Region thì
+        // plan liên quan chỉ mất badge hiển thị chứ không nên bị chặn xoá hay xoá dây chuyền theo.
+        builder.HasOne(x => x.Region)
+            .WithMany()
+            .HasForeignKey(x => x.RegionId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasQueryFilter(x => !x.IsDeleted);
 
@@ -41,7 +57,10 @@ public class ServicePlanConfiguration : IEntityTypeConfiguration<ServicePlan>
                 ShortDescription = "Khởi đầu tiết kiệm cho website/app nhỏ.",
                 Description = "Gói VPS SSD Starter phù hợp cho website cá nhân, blog, ứng dụng nhỏ cần tài nguyên vừa phải.",
                 IsFeatured = false,
-                IsActive = true,
+                Status = ServicePlanStatus.Active,
+                AllowGrandfatheredRenewal = true,
+                AllowDowngrade = true,
+                PackageType = ServicePlanPackageType.Fixed,
                 DisplayOrder = 1,
                 IsDeleted = false,
                 CreatedAt = seedCreatedAt
@@ -55,7 +74,10 @@ public class ServicePlanConfiguration : IEntityTypeConfiguration<ServicePlan>
                 ShortDescription = "Hiệu năng cao cho doanh nghiệp.",
                 Description = "Gói VPS SSD Business dành cho ứng dụng doanh nghiệp cần hiệu năng ổn định, tài nguyên lớn.",
                 IsFeatured = true,
-                IsActive = true,
+                Status = ServicePlanStatus.Active,
+                AllowGrandfatheredRenewal = true,
+                AllowDowngrade = true,
+                PackageType = ServicePlanPackageType.Fixed,
                 DisplayOrder = 2,
                 IsDeleted = false,
                 CreatedAt = seedCreatedAt

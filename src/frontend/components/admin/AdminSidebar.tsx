@@ -4,7 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
+  LineChart,
   Package,
+  PackagePlus,
   FolderTree,
   ShoppingCart,
   MessageSquare,
@@ -19,6 +21,7 @@ import {
   Quote,
   Building2,
   Globe,
+  Monitor,
   Users,
   UserCog,
   Settings,
@@ -49,6 +52,8 @@ const NAV_GROUPS: { section?: string; items: NavItem[] }[] = [
     items: [
       { href: "/admin/service-plans", label: "Dịch vụ", icon: Package, adminOnly: true },
       { href: "/admin/service-categories", label: "Danh mục dịch vụ", icon: FolderTree, adminOnly: true },
+      { href: "/admin/addons", label: "Tiện ích mua kèm", icon: PackagePlus, adminOnly: true },
+      { href: "/admin/os-images", label: "Hệ điều hành", icon: Monitor, adminOnly: true },
       { href: "/admin/tld-pricing", label: "Bảng giá tên miền", icon: Globe, adminOnly: true },
       { href: "/admin/promotions", label: "Khuyến mãi", icon: Tag, adminOnly: true },
     ],
@@ -68,6 +73,7 @@ const NAV_GROUPS: { section?: string; items: NavItem[] }[] = [
   {
     section: "Kinh doanh",
     items: [
+      { href: "/admin/revenue", label: "Doanh thu", icon: LineChart, adminOnly: true },
       { href: "/admin/order-requests", label: "Đơn hàng", icon: ShoppingCart },
       { href: "/admin/consultation-requests", label: "Yêu cầu tư vấn", icon: MessageSquare },
       { href: "/admin/affiliate-applications", label: "Đăng ký affiliate", icon: Handshake },

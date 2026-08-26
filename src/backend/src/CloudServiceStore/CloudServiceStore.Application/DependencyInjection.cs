@@ -14,11 +14,15 @@ using CloudServiceStore.Application.Features.Admin.Content.Testimonials;
 using CloudServiceStore.Application.Features.Admin.Marketing.Promotions;
 using CloudServiceStore.Application.Features.Admin.Reporting.AuditLogs;
 using CloudServiceStore.Application.Features.Admin.Reporting.DashboardStats;
+using CloudServiceStore.Application.Features.Admin.Reporting.RevenueAnalytics;
 using CloudServiceStore.Application.Features.Admin.Sales.AffiliateApplications;
 using CloudServiceStore.Application.Features.Admin.Sales.ConsultationRequests;
 using CloudServiceStore.Application.Features.Admin.Sales.OrderRequests;
 using CloudServiceStore.Application.Features.Admin.System.SiteSettings;
 using CloudServiceStore.Application.Features.Auth;
+using CloudServiceStore.Application.Features.Admin.Catalog.Addons;
+using CloudServiceStore.Application.Features.Admin.Catalog.OsImages;
+using CloudServiceStore.Application.Features.Catalog.Regions;
 using CloudServiceStore.Application.Features.Catalog.ServiceCategories;
 using CloudServiceStore.Application.Features.Catalog.ServicePlans;
 using CloudServiceStore.Application.Features.Catalog.TldPricings;
@@ -27,9 +31,11 @@ using CloudServiceStore.Application.Features.Content.Faqs;
 using CloudServiceStore.Application.Features.Content.NewsArticles;
 using CloudServiceStore.Application.Features.Content.NewsCategories;
 using CloudServiceStore.Application.Features.Content.NewsComments;
+using CloudServiceStore.Application.Features.Content.NewsTags;
 using CloudServiceStore.Application.Features.Content.Partners;
 using CloudServiceStore.Application.Features.Content.Testimonials;
 using CloudServiceStore.Application.Features.Customers.Auth;
+using CloudServiceStore.Application.Features.Customers.SshKeys;
 using CloudServiceStore.Application.Features.Marketing.Promotions;
 using CloudServiceStore.Application.Features.Sales.AffiliateApplications;
 using CloudServiceStore.Application.Features.Sales.ConsultationRequests;
@@ -44,16 +50,19 @@ public static class DependencyInjection
     {
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICustomerAuthService, CustomerAuthService>();
+        services.AddScoped<ICustomerSshKeyService, CustomerSshKeyService>();
         services.AddScoped<OrderStatusNotifier>();
         services.AddScoped<IOrderRequestStatusTransitionService, OrderRequestStatusTransitionService>();
         services.AddScoped<IPaymentWebhookService, PaymentWebhookService>();
 
         services.AddScoped<IServiceCategoryService, ServiceCategoryService>();
         services.AddScoped<IServicePlanService, ServicePlanService>();
+        services.AddScoped<IRegionService, RegionService>();
         services.AddScoped<ITldPricingService, TldPricingService>();
         services.AddScoped<IPromotionService, PromotionService>();
         services.AddScoped<INewsCategoryService, NewsCategoryService>();
         services.AddScoped<INewsArticleService, NewsArticleService>();
+        services.AddScoped<INewsTagService, NewsTagService>();
         services.AddScoped<INewsCommentService, NewsCommentService>();
         services.AddScoped<IFaqService, FaqService>();
         services.AddScoped<ITestimonialService, TestimonialService>();
@@ -61,11 +70,14 @@ public static class DependencyInjection
         services.AddScoped<IContentPageService, ContentPageService>();
 
         services.AddScoped<IOrderRequestService, OrderRequestService>();
+        services.AddScoped<IPlanChangeService, PlanChangeService>();
         services.AddScoped<IConsultationRequestService, ConsultationRequestService>();
         services.AddScoped<IAffiliateApplicationService, AffiliateApplicationService>();
 
         services.AddScoped<IAdminServiceCategoryService, AdminServiceCategoryService>();
         services.AddScoped<IAdminServicePlanService, AdminServicePlanService>();
+        services.AddScoped<IAdminAddonService, AdminAddonService>();
+        services.AddScoped<IAdminOsImageService, AdminOsImageService>();
         services.AddScoped<IAdminTldPricingService, AdminTldPricingService>();
         services.AddScoped<IAdminPromotionService, AdminPromotionService>();
 
@@ -87,6 +99,7 @@ public static class DependencyInjection
         services.AddScoped<IAdminSiteSettingService, AdminSiteSettingService>();
 
         services.AddScoped<IDashboardStatsService, DashboardStatsService>();
+        services.AddScoped<IRevenueAnalyticsService, RevenueAnalyticsService>();
         services.AddScoped<IAdminAuditLogService, AdminAuditLogService>();
 
         return services;

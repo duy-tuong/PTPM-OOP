@@ -68,6 +68,7 @@ public static class DependencyInjection
         services.AddSingleton<IFakeProvisioningGenerator, FakeProvisioningGenerator>();
         services.AddHostedService<OrderAutoProvisioningBackgroundService>();
         services.AddHostedService<RenewalReminderBackgroundService>();
+        services.AddHostedService<DunningBackgroundService>();
 
         return services;
     }

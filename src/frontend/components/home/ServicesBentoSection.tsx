@@ -3,20 +3,9 @@ import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { getServiceCategories } from "@/lib/api/catalog";
 import { safeFetch } from "@/lib/api/safe";
 import { ScrollReveal } from "@/components/home/ScrollReveal";
-import { SpotlightCard } from "@/components/home/SpotlightCard";
 import { getCategoryIcon } from "@/lib/constants/serviceCategoryIcons";
 import { cn } from "@/lib/utils";
 
-// Section 3/9 của Trang chủ (pivot 2 - theme "Cloudverse"). Thay 4 ô "Cloud Compute/Quantum
-// Storage/Global Edge/Cyber Security" giả (sản phẩm hư cấu) bằng ServiceCategory thật của hệ thống.
-// Icon map dùng chung với /dich-vu - xem lib/constants/serviceCategoryIcons.ts.
-
-// Bento 9-ô: VPS (hero, 2x2) + 5 danh mục còn lại đều 1x1 - toán khớp CHÍNH XÁC cho 6 danh mục
-// (4 ô hero + 5 ô = 9 ô, lấp đầy 3x3 không dư/thiếu). Nếu số danh mục thay đổi (Admin thêm/bớt qua
-// /admin/service-categories), toán này không còn khớp - hàng cuối sẽ để trống 1-2 ô dở dang. Vì vậy
-// CHỈ áp Bento bất đối xứng khi categories.length === 6 đúng như lúc thiết kế; khác 6 thì rơi về lưới
-// đều (uniform grid) như bản gốc trước khi nâng cấp - an toàn tuyệt đối với mọi N, không bao giờ để
-// hàng cuối trống dở dang.
 const HERO_SLUG = "vps";
 const BENTO_CATEGORY_COUNT = 6;
 
@@ -30,22 +19,19 @@ export async function ServicesBentoSection() {
   const useBentoLayout = categories.length === BENTO_CATEGORY_COUNT;
 
   return (
-    <section className="relative w-full border-y border-border/10 bg-secondary/20 py-8">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <ScrollReveal className="mb-10 flex flex-col gap-4 text-center">
-          <h2 className="font-heading text-3xl font-bold text-balance sm:text-4xl">Danh Mục Dịch Vụ</h2>
-          <p className="mx-auto max-w-[600px] text-lg text-muted-foreground">
-            Hệ sinh thái hạ tầng đám mây toàn diện cho mọi nhu cầu doanh nghiệp.
+    <section className="relative w-full border-y border-border/50 bg-muted/10 py-12 sm:py-16">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <ScrollReveal className="mb-12 flex flex-col gap-4 text-center">
+          <h2 className="font-heading text-3xl font-extrabold text-foreground sm:text-4xl">Danh mục dịch vụ</h2>
+          <p className="mx-auto max-w-2xl text-base text-muted-foreground sm:text-lg">
+            Hệ sinh thái hạ tầng đám mây toàn diện, bảo mật và hiệu suất cao dành riêng cho doanh nghiệp.
           </p>
         </ScrollReveal>
 
-        {/* group/bento: phạm vi hiệu ứng "peer dimming" - hover 1 thẻ làm mờ các thẻ còn lại. Tách biệt
-            với group/card (đặt trên từng <Link>) - phạm vi micro-interaction riêng của từng thẻ (icon
-            nhích lên, chữ/mũi tên đổi màu) để không bị lan sang thẻ khác khi chỉ hover 1 thẻ. */}
         <div
           className={cn(
-            "group/bento grid grid-cols-1 gap-4",
-            useBentoLayout ? "md:grid-cols-3 md:auto-rows-[220px]" : "md:grid-cols-2 lg:grid-cols-3",
+            "grid grid-cols-1 gap-5",
+            useBentoLayout ? "md:grid-cols-3 md:auto-rows-[200px]" : "md:grid-cols-2 lg:grid-cols-3",
           )}
         >
           {categories.map((category, index) => {
@@ -54,47 +40,42 @@ export async function ServicesBentoSection() {
 
             return (
               <ScrollReveal key={category.id} delay={index * 0.08} className={isHero ? "md:col-span-2 md:row-span-2" : undefined}>
-                <SpotlightCard className="glass-card h-full rounded-3xl transition-all duration-500 group-hover/bento:opacity-50 hover:!opacity-100 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10">
-                  <Link
-                    href={`/dich-vu/${category.slug}`}
-                    className={cn(
-                      "group/card relative flex h-full flex-col justify-between overflow-hidden rounded-3xl",
-                      isHero ? "p-10" : "p-6",
-                    )}
-                  >
-                    {isHero && (
-                      <div
-                        aria-hidden
-                        className="pointer-events-none absolute right-0 bottom-0 size-48 opacity-40 [mask-image:radial-gradient(circle_at_bottom_right,black,transparent_70%)]"
-                        style={{
-                          backgroundImage:
-                            "radial-gradient(color-mix(in oklch, var(--primary) 60%, transparent) 1px, transparent 1px)",
-                          backgroundSize: "16px 16px",
-                        }}
-                      />
-                    )}
-
+                <Link
+                  href={`/dich-vu/${category.slug}`}
+                  className={cn(
+                    "group/card flex h-full flex-col justify-between overflow-hidden rounded-[20px] bg-card border border-border shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/40 hover:shadow-md",
+                    isHero ? "p-8 sm:p-10" : "p-6 sm:p-8"
+                  )}
+                >
+                  <div>
                     <div
                       className={cn(
-                        "relative w-fit rounded-lg border border-border bg-foreground/5 transition-all duration-300 group-hover/card:-translate-y-0.5 group-hover/card:bg-primary/10",
-                        isHero ? "p-4" : "p-3",
+                        "mb-5 inline-flex items-center justify-center rounded-xl bg-muted/60 transition-colors duration-300 group-hover/card:bg-blue-50 dark:group-hover/card:bg-blue-900/20",
+                        isHero ? "size-14" : "size-12"
                       )}
                     >
-                      <Icon className={isHero ? "size-9 text-primary" : "size-7 text-primary"} weight="fill" />
+                      <Icon 
+                        className={cn(
+                          "text-foreground transition-colors duration-300 group-hover/card:text-blue-600 dark:group-hover/card:text-blue-400",
+                          isHero ? "size-7" : "size-6"
+                        )} 
+                        weight="fill" 
+                      />
                     </div>
+                    
+                    <h3 className={cn("font-bold text-foreground tracking-tight mb-2", isHero ? "text-2xl sm:text-3xl" : "text-xl")}>
+                      {category.name}
+                    </h3>
+                    <p className={cn("text-muted-foreground leading-relaxed", isHero ? "text-base sm:text-lg max-w-md" : "text-sm line-clamp-3")}>
+                      {category.description}
+                    </p>
+                  </div>
 
-                    <div className="relative mt-6">
-                      <h3 className={cn("font-heading mb-2", isHero ? "text-2xl" : "text-lg")}>{category.name}</h3>
-                      <p className={cn("mb-6 text-muted-foreground", isHero ? "text-base" : "text-sm line-clamp-2")}>
-                        {category.description}
-                      </p>
-                      <span className="flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors duration-300 group-hover/card:text-primary">
-                        Tìm hiểu thêm
-                        <ArrowRight className="size-4 transition-transform duration-300 group-hover/card:translate-x-1" />
-                      </span>
-                    </div>
-                  </Link>
-                </SpotlightCard>
+                  <div className="mt-8 flex items-center gap-1.5 text-sm font-semibold text-blue-600 dark:text-blue-400 opacity-80 transition-opacity duration-300 group-hover/card:opacity-100">
+                    {isHero ? "Khám phá VPS" : "Tìm hiểu thêm"}
+                    <ArrowRight className="size-4 transition-transform duration-300 group-hover/card:translate-x-1" weight="bold" />
+                  </div>
+                </Link>
               </ScrollReveal>
             );
           })}

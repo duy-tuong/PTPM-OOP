@@ -22,6 +22,230 @@ namespace CloudServiceStore.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("CloudServiceStore.Domain.Entities.Catalog.Addon", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BillingType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("PricePerMonth")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Sku")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("UnitName")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Sku")
+                        .IsUnique();
+
+                    b.ToTable("Addons", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            BillingType = "PerUnit",
+                            CreatedAt = new DateTime(2026, 8, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            Name = "IPv4 phụ",
+                            PricePerMonth = 30000m,
+                            Sku = "ADDON-IP-V4",
+                            Type = "Ip",
+                            UnitName = "IP"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            BillingType = "PerUnit",
+                            CreatedAt = new DateTime(2026, 8, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            Name = "Ổ đĩa NVMe bổ sung",
+                            PricePerMonth = 2000m,
+                            Sku = "ADDON-DISK-NVME",
+                            Type = "Disk",
+                            UnitName = "GB"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            BillingType = "FlatFee",
+                            CreatedAt = new DateTime(2026, 8, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            Name = "Sao lưu tự động hàng ngày",
+                            PricePerMonth = 50000m,
+                            Sku = "ADDON-AUTOBACKUP",
+                            Type = "ManagedService"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            BillingType = "FlatFee",
+                            CreatedAt = new DateTime(2026, 8, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            Name = "Bản quyền Windows Server",
+                            PricePerMonth = 250000m,
+                            Sku = "ADDON-LIC-WINDOWS",
+                            Type = "License"
+                        });
+                });
+
+            modelBuilder.Entity("CloudServiceStore.Domain.Entities.Catalog.OsImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Family")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("WindowsLicenseFeePerMonth")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.ToTable("OsImages", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedAt = new DateTime(2026, 8, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DisplayOrder = 1,
+                            Family = "Linux",
+                            IsActive = true,
+                            Name = "Ubuntu 24.04 LTS",
+                            Slug = "ubuntu-24-04"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CreatedAt = new DateTime(2026, 8, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DisplayOrder = 2,
+                            Family = "Linux",
+                            IsActive = true,
+                            Name = "Ubuntu 22.04 LTS",
+                            Slug = "ubuntu-22-04"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CreatedAt = new DateTime(2026, 8, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DisplayOrder = 3,
+                            Family = "Linux",
+                            IsActive = true,
+                            Name = "Debian 12",
+                            Slug = "debian-12"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CreatedAt = new DateTime(2026, 8, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DisplayOrder = 4,
+                            Family = "Linux",
+                            IsActive = true,
+                            Name = "AlmaLinux 9",
+                            Slug = "almalinux-9"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            CreatedAt = new DateTime(2026, 8, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DisplayOrder = 5,
+                            Family = "Linux",
+                            IsActive = true,
+                            Name = "Rocky Linux 9",
+                            Slug = "rocky-linux-9"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            CreatedAt = new DateTime(2026, 8, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DisplayOrder = 6,
+                            Family = "Windows",
+                            IsActive = true,
+                            Name = "Windows Server 2022 Standard",
+                            Slug = "windows-server-2022",
+                            WindowsLicenseFeePerMonth = 350000m
+                        },
+                        new
+                        {
+                            Id = 7,
+                            CreatedAt = new DateTime(2026, 8, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DisplayOrder = 7,
+                            Family = "Windows",
+                            IsActive = true,
+                            Name = "Windows Server 2019 Standard",
+                            Slug = "windows-server-2019",
+                            WindowsLicenseFeePerMonth = 300000m
+                        });
+                });
+
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.Catalog.PlanFeature", b =>
                 {
                     b.Property<int>("Id")
@@ -162,7 +386,21 @@ namespace CloudServiceStore.Infrastructure.Migrations
                         .HasMaxLength(3)
                         .HasColumnType("nvarchar(3)");
 
+                    b.Property<decimal?>("DiscountPercent")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<DateTime>("EffectiveFrom")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<DateTime?>("EffectiveTo")
+                        .HasColumnType("datetime2");
+
                     b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsCurrent")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsDefault")
@@ -183,7 +421,12 @@ namespace CloudServiceStore.Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("PlanId", "IsCurrent");
 
                     b.HasIndex("PlanId", "PeriodMonths", "IsActive");
 
@@ -195,46 +438,113 @@ namespace CloudServiceStore.Infrastructure.Migrations
                             Id = 1,
                             CreatedAt = new DateTime(2026, 8, 10, 0, 0, 0, 0, DateTimeKind.Utc),
                             Currency = "VND",
+                            EffectiveFrom = new DateTime(2026, 8, 10, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
+                            IsCurrent = true,
                             IsDefault = true,
                             PeriodMonths = 1,
                             PlanId = 1,
-                            Price = 99000m
+                            Price = 99000m,
+                            Version = 1
                         },
                         new
                         {
                             Id = 2,
                             CreatedAt = new DateTime(2026, 8, 10, 0, 0, 0, 0, DateTimeKind.Utc),
                             Currency = "VND",
+                            EffectiveFrom = new DateTime(2026, 8, 10, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
+                            IsCurrent = true,
                             IsDefault = false,
                             PeriodMonths = 12,
                             PlanId = 1,
                             Price = 1069000m,
-                            PromotionalPrice = 990000m
+                            PromotionalPrice = 990000m,
+                            Version = 1
                         },
                         new
                         {
                             Id = 3,
                             CreatedAt = new DateTime(2026, 8, 10, 0, 0, 0, 0, DateTimeKind.Utc),
                             Currency = "VND",
+                            EffectiveFrom = new DateTime(2026, 8, 10, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
+                            IsCurrent = true,
                             IsDefault = true,
                             PeriodMonths = 1,
                             PlanId = 2,
-                            Price = 299000m
+                            Price = 299000m,
+                            Version = 1
                         },
                         new
                         {
                             Id = 4,
                             CreatedAt = new DateTime(2026, 8, 10, 0, 0, 0, 0, DateTimeKind.Utc),
                             Currency = "VND",
+                            EffectiveFrom = new DateTime(2026, 8, 10, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
+                            IsCurrent = true,
                             IsDefault = false,
                             PeriodMonths = 12,
                             PlanId = 2,
                             Price = 3229000m,
-                            PromotionalPrice = 2990000m
+                            PromotionalPrice = 2990000m,
+                            Version = 1
+                        });
+                });
+
+            modelBuilder.Entity("CloudServiceStore.Domain.Entities.Catalog.Region", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("CountryCode")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("nvarchar(2)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Regions", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "vn-han-1",
+                            City = "Hà Nội",
+                            CountryCode = "VN",
+                            IsActive = true,
+                            Name = "Hà Nội DC"
+                        },
+                        new
+                        {
+                            Id = "vn-sgn-1",
+                            City = "TP. Hồ Chí Minh",
+                            CountryCode = "VN",
+                            IsActive = true,
+                            Name = "TP.HCM DC"
+                        },
+                        new
+                        {
+                            Id = "sg-sin-1",
+                            City = "Singapore",
+                            CountryCode = "SG",
+                            IsActive = true,
+                            Name = "Singapore DC"
                         });
                 });
 
@@ -353,6 +663,12 @@ namespace CloudServiceStore.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("AllowDowngrade")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("AllowGrandfatheredRenewal")
+                        .HasColumnType("bit");
+
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
@@ -370,41 +686,97 @@ namespace CloudServiceStore.Infrastructure.Migrations
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsFeatured")
                         .HasColumnType("bit");
 
+                    b.Property<int?>("MaxDiskGb")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MaxRamMb")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MaxVcpu")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MinDiskGb")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MinRamMb")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MinVcpu")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("PackageType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<decimal?>("PricePerDiskGbPerMonth")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("PricePerRamGbPerMonth")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("PricePerVcpuPerMonth")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("QrCodeUrl")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RegionId")
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<string>("ShortDescription")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Sku")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("Slug")
                         .IsRequired()
                         .HasMaxLength(120)
                         .HasColumnType("nvarchar(120)");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int?>("StepDiskGb")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("StepRamMb")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("StepVcpu")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("RegionId");
+
+                    b.HasIndex("Sku")
+                        .IsUnique()
+                        .HasFilter("[Sku] IS NOT NULL");
+
                     b.HasIndex("Slug")
                         .IsUnique();
 
-                    b.HasIndex("CategoryId", "IsActive");
+                    b.HasIndex("CategoryId", "Status");
 
                     b.ToTable("ServicePlans", (string)null);
 
@@ -412,31 +784,73 @@ namespace CloudServiceStore.Infrastructure.Migrations
                         new
                         {
                             Id = 1,
+                            AllowDowngrade = true,
+                            AllowGrandfatheredRenewal = true,
                             CategoryId = 1,
                             CreatedAt = new DateTime(2026, 8, 10, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Gói VPS SSD Starter phù hợp cho website cá nhân, blog, ứng dụng nhỏ cần tài nguyên vừa phải.",
                             DisplayOrder = 1,
-                            IsActive = true,
                             IsDeleted = false,
                             IsFeatured = false,
                             Name = "VPS SSD Starter",
+                            PackageType = "Fixed",
                             ShortDescription = "Khởi đầu tiết kiệm cho website/app nhỏ.",
-                            Slug = "vps-ssd-starter"
+                            Slug = "vps-ssd-starter",
+                            Status = "Active"
                         },
                         new
                         {
                             Id = 2,
+                            AllowDowngrade = true,
+                            AllowGrandfatheredRenewal = true,
                             CategoryId = 1,
                             CreatedAt = new DateTime(2026, 8, 10, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Gói VPS SSD Business dành cho ứng dụng doanh nghiệp cần hiệu năng ổn định, tài nguyên lớn.",
                             DisplayOrder = 2,
-                            IsActive = true,
                             IsDeleted = false,
                             IsFeatured = true,
                             Name = "VPS SSD Business",
+                            PackageType = "Fixed",
                             ShortDescription = "Hiệu năng cao cho doanh nghiệp.",
-                            Slug = "vps-ssd-business"
+                            Slug = "vps-ssd-business",
+                            Status = "Active"
                         });
+                });
+
+            modelBuilder.Entity("CloudServiceStore.Domain.Entities.Catalog.ServicePlanAddon", b =>
+                {
+                    b.Property<int>("PlanId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("AddonId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxQuantity")
+                        .HasColumnType("int");
+
+                    b.HasKey("PlanId", "AddonId");
+
+                    b.HasIndex("AddonId");
+
+                    b.ToTable("ServicePlanAddons", (string)null);
+                });
+
+            modelBuilder.Entity("CloudServiceStore.Domain.Entities.Catalog.ServicePlanOsImage", b =>
+                {
+                    b.Property<int>("PlanId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OsImageId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
+                    b.HasKey("PlanId", "OsImageId");
+
+                    b.HasIndex("OsImageId");
+
+                    b.ToTable("ServicePlanOsImages", (string)null);
                 });
 
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.Catalog.TldPricing", b =>
@@ -670,6 +1084,9 @@ namespace CloudServiceStore.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsFeatured")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsPublished")
                         .HasColumnType("bit");
 
@@ -716,6 +1133,8 @@ namespace CloudServiceStore.Infrastructure.Migrations
 
                     b.HasIndex("NewsCategoryId", "IsPublished");
 
+                    b.HasIndex("IsFeatured", "IsPublished", "PublishedAt");
+
                     b.ToTable("NewsArticles", (string)null);
 
                     b.HasData(
@@ -726,6 +1145,7 @@ namespace CloudServiceStore.Infrastructure.Migrations
                             Content = "Nhân dịp đầu năm 2026, CloudServiceStore triển khai chương trình ưu đãi giảm giá lên đến 10% cho toàn bộ gói VPS SSD. Chương trình áp dụng cho khách hàng đăng ký mới trong suốt năm 2026.",
                             CreatedAt = new DateTime(2026, 8, 10, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsDeleted = false,
+                            IsFeatured = false,
                             IsPublished = true,
                             NewsCategoryId = 1,
                             PublishedAt = new DateTime(2026, 8, 10, 0, 0, 0, 0, DateTimeKind.Utc),
@@ -1161,6 +1581,17 @@ namespace CloudServiceStore.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("AssignedSalesRepUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("BillingAddress")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("BusinessLicenseNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("CompanyName")
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
@@ -1169,6 +1600,9 @@ namespace CloudServiceStore.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<decimal?>("CreditLimit")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("CustomerType")
                         .HasColumnType("int");
@@ -1201,6 +1635,10 @@ namespace CloudServiceStore.Infrastructure.Migrations
 
                     b.Property<bool>("IsEmailVerified")
                         .HasColumnType("bit");
+
+                    b.Property<string>("LegalRepresentativeName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -1241,12 +1679,47 @@ namespace CloudServiceStore.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AssignedSalesRepUserId");
+
                     b.HasIndex("Email")
                         .IsUnique();
 
                     b.HasIndex("RoleId");
 
                     b.ToTable("Customers", (string)null);
+                });
+
+            modelBuilder.Entity("CloudServiceStore.Domain.Entities.Identity.CustomerSshKey", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("PublicKey")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.ToTable("CustomerSshKeys", (string)null);
                 });
 
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.Marketing.Promotion", b =>
@@ -1266,6 +1739,11 @@ namespace CloudServiceStore.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int>("CustomerEligibility")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
@@ -1327,6 +1805,7 @@ namespace CloudServiceStore.Infrastructure.Migrations
                             Id = 1,
                             Code = "WELCOME2026",
                             CreatedAt = new DateTime(2026, 8, 10, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CustomerEligibility = 1,
                             Description = "Giảm giá cho khách hàng đăng ký mới trong năm 2026.",
                             DiscountType = 1,
                             DiscountValue = 10m,
@@ -1563,6 +2042,13 @@ namespace CloudServiceStore.Infrastructure.Migrations
                     b.Property<int>("CustomerType")
                         .HasColumnType("int");
 
+                    b.Property<string>("FlagReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsFlaggedForReview")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Note")
                         .HasColumnType("nvarchar(max)");
 
@@ -1638,6 +2124,18 @@ namespace CloudServiceStore.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("ChangesFromItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ChosenDiskGb")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ChosenRamMb")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ChosenVcpu")
+                        .HasColumnType("int");
+
                     b.Property<string>("DomainName")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -1645,13 +2143,30 @@ namespace CloudServiceStore.Infrastructure.Migrations
                     b.Property<DateTime?>("ExpiresAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Hostname")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<decimal>("LineTotal")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("OrderRequestId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("OsImageId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OsImageName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal?>("OsLicenseFee")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<int?>("PeriodMonths")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PlanPriceId")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("ProvisionedAt")
@@ -1681,6 +2196,23 @@ namespace CloudServiceStore.Infrastructure.Migrations
                     b.Property<int?>("ServicePlanId")
                         .HasColumnType("int");
 
+                    b.Property<string>("SshPublicKeySnapshot")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime?>("SuspendedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Tags")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("TerminatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("TerminationWarningSentAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<int?>("TldPricingId")
                         .HasColumnType("int");
 
@@ -1689,7 +2221,13 @@ namespace CloudServiceStore.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ChangesFromItemId");
+
                     b.HasIndex("OrderRequestId");
+
+                    b.HasIndex("OsImageId");
+
+                    b.HasIndex("PlanPriceId");
 
                     b.HasIndex("RenewsFromItemId");
 
@@ -1698,6 +2236,38 @@ namespace CloudServiceStore.Infrastructure.Migrations
                     b.HasIndex("TldPricingId");
 
                     b.ToTable("OrderRequestItems", (string)null);
+                });
+
+            modelBuilder.Entity("CloudServiceStore.Domain.Entities.Sales.OrderRequestItemAddon", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AddonId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("LineTotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("OrderRequestItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AddonId");
+
+                    b.HasIndex("OrderRequestItemId");
+
+                    b.ToTable("OrderRequestItemAddons", (string)null);
                 });
 
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.System.AuditLog", b =>
@@ -1826,7 +2396,52 @@ namespace CloudServiceStore.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("CloudServiceStore.Domain.Entities.Catalog.Region", "Region")
+                        .WithMany()
+                        .HasForeignKey("RegionId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Category");
+
+                    b.Navigation("Region");
+                });
+
+            modelBuilder.Entity("CloudServiceStore.Domain.Entities.Catalog.ServicePlanAddon", b =>
+                {
+                    b.HasOne("CloudServiceStore.Domain.Entities.Catalog.Addon", "Addon")
+                        .WithMany("PlanAddons")
+                        .HasForeignKey("AddonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CloudServiceStore.Domain.Entities.Catalog.ServicePlan", "Plan")
+                        .WithMany("PlanAddons")
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Addon");
+
+                    b.Navigation("Plan");
+                });
+
+            modelBuilder.Entity("CloudServiceStore.Domain.Entities.Catalog.ServicePlanOsImage", b =>
+                {
+                    b.HasOne("CloudServiceStore.Domain.Entities.Catalog.OsImage", "OsImage")
+                        .WithMany("PlanOsImages")
+                        .HasForeignKey("OsImageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CloudServiceStore.Domain.Entities.Catalog.ServicePlan", "Plan")
+                        .WithMany("PlanOsImages")
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("OsImage");
+
+                    b.Navigation("Plan");
                 });
 
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.Catalog.TldPricing", b =>
@@ -1954,13 +2569,31 @@ namespace CloudServiceStore.Infrastructure.Migrations
 
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.Identity.Customer", b =>
                 {
+                    b.HasOne("CloudServiceStore.Domain.Entities.Identity.AppUser", "AssignedSalesRepUser")
+                        .WithMany()
+                        .HasForeignKey("AssignedSalesRepUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("CloudServiceStore.Domain.Entities.Identity.AppRole", "Role")
                         .WithMany("Customers")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.Navigation("AssignedSalesRepUser");
+
                     b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("CloudServiceStore.Domain.Entities.Identity.CustomerSshKey", b =>
+                {
+                    b.HasOne("CloudServiceStore.Domain.Entities.Identity.Customer", "Customer")
+                        .WithMany("SshKeys")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
                 });
 
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.Marketing.PromotionScope", b =>
@@ -2055,11 +2688,26 @@ namespace CloudServiceStore.Infrastructure.Migrations
 
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.Sales.OrderRequestItem", b =>
                 {
+                    b.HasOne("CloudServiceStore.Domain.Entities.Sales.OrderRequestItem", "ChangesFromItem")
+                        .WithMany()
+                        .HasForeignKey("ChangesFromItemId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("CloudServiceStore.Domain.Entities.Sales.OrderRequest", "OrderRequest")
                         .WithMany("Items")
                         .HasForeignKey("OrderRequestId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("CloudServiceStore.Domain.Entities.Catalog.OsImage", "OsImage")
+                        .WithMany()
+                        .HasForeignKey("OsImageId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("CloudServiceStore.Domain.Entities.Catalog.PlanPrice", "PlanPrice")
+                        .WithMany()
+                        .HasForeignKey("PlanPriceId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("CloudServiceStore.Domain.Entities.Sales.OrderRequestItem", "RenewsFromItem")
                         .WithMany()
@@ -2076,13 +2724,38 @@ namespace CloudServiceStore.Infrastructure.Migrations
                         .HasForeignKey("TldPricingId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.Navigation("ChangesFromItem");
+
                     b.Navigation("OrderRequest");
+
+                    b.Navigation("OsImage");
+
+                    b.Navigation("PlanPrice");
 
                     b.Navigation("RenewsFromItem");
 
                     b.Navigation("ServicePlan");
 
                     b.Navigation("TldPricing");
+                });
+
+            modelBuilder.Entity("CloudServiceStore.Domain.Entities.Sales.OrderRequestItemAddon", b =>
+                {
+                    b.HasOne("CloudServiceStore.Domain.Entities.Catalog.Addon", "Addon")
+                        .WithMany()
+                        .HasForeignKey("AddonId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CloudServiceStore.Domain.Entities.Sales.OrderRequestItem", "OrderRequestItem")
+                        .WithMany("Addons")
+                        .HasForeignKey("OrderRequestItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Addon");
+
+                    b.Navigation("OrderRequestItem");
                 });
 
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.System.AuditLog", b =>
@@ -2105,6 +2778,16 @@ namespace CloudServiceStore.Infrastructure.Migrations
                     b.Navigation("UpdatedByUser");
                 });
 
+            modelBuilder.Entity("CloudServiceStore.Domain.Entities.Catalog.Addon", b =>
+                {
+                    b.Navigation("PlanAddons");
+                });
+
+            modelBuilder.Entity("CloudServiceStore.Domain.Entities.Catalog.OsImage", b =>
+                {
+                    b.Navigation("PlanOsImages");
+                });
+
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.Catalog.ServiceCategory", b =>
                 {
                     b.Navigation("Plans");
@@ -2113,6 +2796,10 @@ namespace CloudServiceStore.Infrastructure.Migrations
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.Catalog.ServicePlan", b =>
                 {
                     b.Navigation("Features");
+
+                    b.Navigation("PlanAddons");
+
+                    b.Navigation("PlanOsImages");
 
                     b.Navigation("Prices");
                 });
@@ -2151,6 +2838,11 @@ namespace CloudServiceStore.Infrastructure.Migrations
                     b.Navigation("UserRoles");
                 });
 
+            modelBuilder.Entity("CloudServiceStore.Domain.Entities.Identity.Customer", b =>
+                {
+                    b.Navigation("SshKeys");
+                });
+
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.Marketing.Promotion", b =>
                 {
                     b.Navigation("Scopes");
@@ -2159,6 +2851,11 @@ namespace CloudServiceStore.Infrastructure.Migrations
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.Sales.OrderRequest", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("CloudServiceStore.Domain.Entities.Sales.OrderRequestItem", b =>
+                {
+                    b.Navigation("Addons");
                 });
 #pragma warning restore 612, 618
         }

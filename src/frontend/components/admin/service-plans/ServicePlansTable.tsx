@@ -3,7 +3,7 @@ import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/admin/DataTable";
-import { StatusBadge } from "@/components/admin/StatusBadge";
+import { ServicePlanStatusBadge } from "@/components/admin/ServicePlanStatusBadge";
 import { ConfirmDeleteButton } from "@/components/admin/ConfirmDeleteButton";
 import { deleteServicePlanAction } from "@/app/admin/service-plans/actions";
 import { formatCurrency } from "@/lib/utils";
@@ -29,7 +29,7 @@ export function ServicePlansTable({ plans, categoryNameById }: ServicePlansTable
       cell: (row) => (
         <div className="flex flex-col">
           <span className="font-medium text-zinc-900">{row.name}</span>
-          <span className="text-xs text-zinc-500">{row.slug}</span>
+          <span className="text-xs text-zinc-500">{row.sku ? `${row.slug} · ${row.sku}` : row.slug}</span>
         </div>
       ),
     },
@@ -60,7 +60,7 @@ export function ServicePlansTable({ plans, categoryNameById }: ServicePlansTable
     {
       key: "status",
       header: "Trạng thái",
-      cell: (row) => <StatusBadge isActive={row.isActive} />,
+      cell: (row) => <ServicePlanStatusBadge status={row.status} />,
     },
     {
       key: "actions",

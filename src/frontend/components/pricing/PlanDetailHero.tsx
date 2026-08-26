@@ -29,8 +29,15 @@ export function PlanDetailHero({ plan }: { plan: ServicePlanDetailDto }) {
           <span className="text-foreground">{plan.name}</span>
         </nav>
 
-        <span className="text-xs font-medium tracking-widest text-primary uppercase">{plan.categoryName}</span>
-        <h1 className="mt-2 font-heading text-5xl font-bold text-foreground sm:text-6xl">{plan.name}</h1>
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-xs font-medium tracking-widest text-primary uppercase">{plan.categoryName}</span>
+          {plan.regionName && (
+            <span className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+              📍 {plan.regionName}
+            </span>
+          )}
+        </div>
+        <h1 className="mt-2 font-heading text-3xl font-bold text-foreground sm:text-4xl">{plan.name}</h1>
 
         {(plan.description ?? plan.shortDescription) && (
           <p className="mt-6 max-w-2xl text-lg text-muted-foreground">{plan.description ?? plan.shortDescription}</p>

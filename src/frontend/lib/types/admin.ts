@@ -1,12 +1,19 @@
 import type { PaginationParams } from "./common";
-import type { PlanFeatureDto, PlanPriceDto } from "./catalog";
+import type { PlanFeatureDto, PlanPriceDto, PlanAddonDto, PlanOsImageDto, ServicePlanCustomConfigFields } from "./catalog";
 import type { OrderRequestItemDto } from "./sales";
 import type {
+  AddonBillingType,
+  AddonType,
   AffiliateApplicationStatus,
   ConsultationStatus,
+  CustomerType,
   DiscountType,
   OrderRequestStatus,
+  OsFamily,
+  PromotionCustomerEligibility,
   ScopeType,
+  ServicePlanPackageType,
+  ServicePlanStatus,
 } from "./enums";
 
 // ---- Admin Catalog: Service Categories ----
@@ -34,19 +41,31 @@ export type UpdateServiceCategoryDto = CreateServiceCategoryDto;
 
 // ---- Admin Catalog: Service Plans ----
 // Khớp Application/Features/Admin/Catalog/ServicePlans/Dtos/*.cs
-export interface AdminServicePlanDto {
+export interface AdminServicePlanDto extends ServicePlanCustomConfigFields {
   id: number;
   categoryId: number;
   name: string;
   slug: string;
+  sku?: string | null;
   shortDescription?: string | null;
   description?: string | null;
   isFeatured: boolean;
-  isActive: boolean;
+  // string (không phải enum) - response đã map sẵn thành tên chuỗi (vd "Active"), khớp
+  // AdminServicePlanDto.cs. Dùng cùng SERVICE_PLAN_STATUS_LABELS ở lib/types/enums.ts để hiển thị.
+  status: string;
+  // Price Versioning & Grandfathering - Admin gia hạn cùng chu kỳ có được giữ giá cũ hay luôn tính
+  // giá sống hiện hành.
+  allowGrandfatheredRenewal: boolean;
+  // Đổi gói (Phần 6) - có cho khách HẠ CẤP xuống gói này hay không (nâng cấp luôn được phép nếu Active).
+  allowDowngrade: boolean;
+  regionId?: string | null;
+  regionName?: string | null;
   displayOrder: number;
   qrCodeUrl?: string | null;
   features: PlanFeatureDto[];
   prices: PlanPriceDto[];
+  addons: PlanAddonDto[];
+  osImages: PlanOsImageDto[];
 }
 
 export interface PlanFeatureInputDto {
@@ -66,22 +85,108 @@ export interface PlanPriceInputDto {
   currency: string;
   isDefault: boolean;
   isActive: boolean;
+  // Chỉ có ý nghĩa khi ServicePlan.packageType = Custom - % giảm giá theo chu kỳ này (price bị bỏ qua).
+  discountPercent?: number;
+}
+
+export interface PlanAddonInputDto {
+  addonId: number;
+  maxQuantity: number;
+}
+
+export interface PlanOsImageInputDto {
+  osImageId: number;
+  isDefault: boolean;
 }
 
 export interface CreateServicePlanDto {
   categoryId: number;
   name: string;
   slug: string;
+  sku?: string;
   shortDescription?: string;
   description?: string;
   isFeatured: boolean;
-  isActive: boolean;
+  // enum thật (không phải string) - request body backend chưa có JsonStringEnumConverter, phải gửi
+  // số nguyên khớp CloudServiceStore.Domain.Enums.ServicePlanStatus (xem ghi chú đầu file này).
+  status: ServicePlanStatus;
+  allowGrandfatheredRenewal: boolean;
+  allowDowngrade: boolean;
+  regionId?: string;
+  // enum thật (không phải string), cùng lý do với status - xem ghi chú đầu file. Fixed = giá cố định
+  // (dùng khối Prices bên dưới); Custom = kéo thanh trượt, dùng khối Min/Max/Step/PricePerUnit,
+  // Prices[].price bị bỏ qua (chỉ discountPercent có ý nghĩa).
+  packageType: ServicePlanPackageType;
+  minVcpu?: number;
+  maxVcpu?: number;
+  stepVcpu?: number;
+  minRamMb?: number;
+  maxRamMb?: number;
+  stepRamMb?: number;
+  minDiskGb?: number;
+  maxDiskGb?: number;
+  stepDiskGb?: number;
+  pricePerVcpuPerMonth?: number;
+  pricePerRamGbPerMonth?: number;
+  pricePerDiskGbPerMonth?: number;
   displayOrder: number;
   features: PlanFeatureInputDto[];
   prices: PlanPriceInputDto[];
+  addons: PlanAddonInputDto[];
+  osImages: PlanOsImageInputDto[];
 }
 
 export type UpdateServicePlanDto = CreateServicePlanDto;
+
+// ---- Admin Catalog: Addons ----
+// Khớp Application/Features/Admin/Catalog/Addons/Dtos/*.cs
+export interface AdminAddonDto {
+  id: number;
+  name: string;
+  sku: string;
+  // string (không phải enum) - khớp convention response DTO khác trong dự án.
+  type: string;
+  billingType: string;
+  unitName?: string | null;
+  pricePerMonth: number;
+  isActive: boolean;
+}
+
+export interface CreateAddonDto {
+  name: string;
+  sku: string;
+  type: AddonType;
+  billingType: AddonBillingType;
+  unitName?: string;
+  pricePerMonth: number;
+  isActive: boolean;
+}
+
+export type UpdateAddonDto = CreateAddonDto;
+
+// ---- Admin Catalog: OS Images ----
+// Khớp Application/Features/Admin/Catalog/OsImages/Dtos/*.cs (Đợt 3, Phần 11)
+export interface AdminOsImageDto {
+  id: number;
+  name: string;
+  slug: string;
+  // string (không phải enum) - khớp convention response DTO khác trong dự án.
+  family: string;
+  windowsLicenseFeePerMonth?: number | null;
+  isActive: boolean;
+  displayOrder: number;
+}
+
+export interface CreateOsImageDto {
+  name: string;
+  slug: string;
+  family: OsFamily;
+  windowsLicenseFeePerMonth?: number;
+  isActive: boolean;
+  displayOrder: number;
+}
+
+export type UpdateOsImageDto = CreateOsImageDto;
 
 // ---- Admin Marketing: Promotions ----
 // Khớp Application/Features/Admin/Marketing/Promotions/Dtos/*.cs
@@ -113,6 +218,7 @@ export interface AdminPromotionDto {
   usageLimit?: number | null;
   usageCount: number;
   isActive: boolean;
+  customerEligibility: string;
   scopes: PromotionScopeDto[];
 }
 
@@ -128,6 +234,7 @@ export interface CreatePromotionDto {
   endDate: string;
   usageLimit?: number;
   isActive: boolean;
+  customerEligibility: PromotionCustomerEligibility;
   scopes: PromotionScopeInputDto[];
 }
 
@@ -213,6 +320,7 @@ export interface AdminNewsArticleDto {
   content: string;
   thumbnailUrl?: string | null;
   isPublished: boolean;
+  isFeatured: boolean;
   publishedAt: string;
   viewCount: number;
   authorId: string;
@@ -227,6 +335,7 @@ export interface CreateNewsArticleDto {
   content: string;
   thumbnailUrl?: string;
   isPublished: boolean;
+  isFeatured: boolean;
   publishedAt?: string;
   tagNames: string[];
 }
@@ -237,6 +346,8 @@ export type UpdateNewsArticleDto = CreateNewsArticleDto;
 export interface AdminServicePlanQueryParams extends PaginationParams {
   categorySlug?: string;
   isFeatured?: boolean;
+  status?: ServicePlanStatus;
+  regionId?: string;
 }
 
 export interface AdminNewsArticleQueryParams extends PaginationParams {
@@ -263,10 +374,15 @@ export interface AdminOrderRequestDto {
   assignedToUserName?: string | null;
   source?: string | null;
   createdAt: string;
+  // Fraud Review (Đợt 2, Phần 9) - xem OrderRequestService.EvaluateFraudRiskAsync (backend).
+  isFlaggedForReview: boolean;
+  flagReason?: string | null;
 }
 
 export interface OrderRequestQueryParams extends PaginationParams {
   status?: OrderRequestStatus;
+  // Fraud Review (Đợt 2, Phần 9) - true = chỉ đơn bị gắn cờ nghi vấn.
+  flaggedOnly?: boolean;
 }
 
 export interface UpdateOrderRequestStatusDto {
@@ -335,6 +451,39 @@ export interface DashboardStatsDto {
   pendingOrderRequests: number;
   monthlyStats: MonthlyRequestStatDto[];
   topServicePlans: TopServicePlanStatDto[];
+}
+
+// Khớp Application/Features/Admin/Reporting/RevenueAnalytics/Dtos/*.cs (Đợt 2 - Kinh doanh, Phần 7)
+export interface RevenueAnalyticsSummaryDto {
+  mrr: number;
+  arr: number;
+  newMrr: number;
+  churnedMrr: number;
+  netNewMrr: number;
+  arpu: number;
+  churnRatePercent: number;
+  ltv: number;
+}
+
+export interface MrrTrendPointDto {
+  month: string;
+  newMrrBookings: number;
+}
+
+export interface RevenueByProductLineDto {
+  productLine: string;
+  revenue: number;
+}
+
+export interface RevenueByRegionDto {
+  regionName: string;
+  revenue: number;
+}
+
+export interface ArAgingBucketDto {
+  bucketLabel: string;
+  amount: number;
+  orderCount: number;
 }
 
 // Khớp Application/Features/Admin/Reporting/AuditLogs/Dtos/*.cs
@@ -461,10 +610,30 @@ export interface AdminCustomerDto {
   isEmailVerified: boolean;
   isActive: boolean;
   createdAt: string;
+  // CRM: Hồ sơ B2B & Sales Rep (Đợt 2, Phần 10).
+  billingAddress?: string | null;
+  legalRepresentativeName?: string | null;
+  businessLicenseNumber?: string | null;
+  creditLimit?: number | null;
+  assignedSalesRepUserId?: string | null;
+  assignedSalesRepUserName?: string | null;
+}
+
+// Khớp Application/Features/Admin/Identity/Customers/Dtos/UpdateCustomerDto.cs - PUT ghi đè toàn bộ
+// field, assignedSalesRepUserId=null nghĩa là "bỏ gán" (không phải "không đổi").
+export interface UpdateCustomerDto {
+  billingAddress?: string | null;
+  legalRepresentativeName?: string | null;
+  businessLicenseNumber?: string | null;
+  creditLimit?: number | null;
+  assignedSalesRepUserId?: string | null;
 }
 
 export interface CustomerQueryParams extends PaginationParams {
   search?: string;
+  // CRM: Hồ sơ B2B & Sales Rep (Đợt 2, Phần 10).
+  customerType?: CustomerType;
+  assignedSalesRepUserId?: string;
 }
 
 export interface UpdateCustomerActiveStatusDto {

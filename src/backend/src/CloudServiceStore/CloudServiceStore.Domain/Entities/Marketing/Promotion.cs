@@ -18,6 +18,7 @@ public class Promotion : ISoftDelete
     public int? UsageLimit { get; set; }
     public int UsageCount { get; set; }
     public bool IsActive { get; set; } = true;
+    public PromotionCustomerEligibility CustomerEligibility { get; set; } = PromotionCustomerEligibility.All;
     public bool IsDeleted { get; set; }
     public DateTime? DeletedAt { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

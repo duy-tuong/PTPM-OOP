@@ -2,10 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-// Đếm ngược thật tới `targetIso` (Promotion.endDate thật, không phải giờ:phút:giây bịa như bản Stitch
-// tham khảo). Tách Ngày/Giờ/Phút thành 3 khối vuông riêng (kiểu Bento nhỏ) thay vì 1 chuỗi text liền -
-// state ban đầu để null và chỉ tính trong useEffect để tránh lệch giữa SSR và lần render đầu trên
-// client (hydration mismatch).
 interface TimeParts {
   days: number;
   hours: number;
@@ -23,9 +19,11 @@ function computeParts(ms: number): TimeParts {
 
 function TimeBlock({ value, label }: { value: number; label: string }) {
   return (
-    <div className="flex min-w-14 flex-col items-center gap-1 rounded-xl border border-primary/20 bg-primary/10 px-3 py-2">
-      <span className="font-mono text-2xl font-bold text-primary tabular-nums">{String(value).padStart(2, "0")}</span>
-      <span className="text-[10px] font-medium tracking-wider text-muted-foreground uppercase">{label}</span>
+    <div className="flex min-w-[56px] flex-col items-center justify-center gap-0.5 rounded-lg border border-blue-200/60 bg-white/60 px-2 py-1.5 shadow-sm dark:border-blue-800/50 dark:bg-blue-950/50">
+      <span className="font-mono text-xl font-extrabold text-blue-700 tabular-nums dark:text-blue-400">
+        {String(value).padStart(2, "0")}
+      </span>
+      <span className="text-[9px] font-bold tracking-widest text-muted-foreground uppercase">{label}</span>
     </div>
   );
 }
@@ -43,7 +41,7 @@ export function CountdownBadge({ targetIso }: { targetIso: string }) {
   }, [targetIso]);
 
   if (remainingMs !== null && remainingMs <= 0) {
-    return <span className="font-mono text-sm text-muted-foreground">Đã kết thúc</span>;
+    return <span className="font-mono text-sm font-medium text-muted-foreground">Đã kết thúc</span>;
   }
 
   const parts = remainingMs === null ? { days: 0, hours: 0, minutes: 0 } : computeParts(remainingMs);
@@ -51,9 +49,9 @@ export function CountdownBadge({ targetIso }: { targetIso: string }) {
   return (
     <div className="flex items-center gap-2">
       <TimeBlock value={parts.days} label="Ngày" />
-      <span className="font-mono text-xl text-muted-foreground">:</span>
+      <span className="font-mono text-lg font-bold text-blue-300 dark:text-blue-800/50">:</span>
       <TimeBlock value={parts.hours} label="Giờ" />
-      <span className="font-mono text-xl text-muted-foreground">:</span>
+      <span className="font-mono text-lg font-bold text-blue-300 dark:text-blue-800/50">:</span>
       <TimeBlock value={parts.minutes} label="Phút" />
     </div>
   );

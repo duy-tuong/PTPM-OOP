@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LockKey, Receipt, HardDrives, Headset, SquaresFour } from "@phosphor-icons/react";
+import { LockKey, Receipt, HardDrives, Headset, SquaresFour, Key } from "@phosphor-icons/react";
 import { readCustomerSessionCookie, CUSTOMER_SESSION_CHANGED_EVENT } from "@/lib/auth/customerSessionClient";
 
 const LINKS = [
   { href: "/khach-hang", label: "Tổng quan", icon: SquaresFour },
   { href: "/khach-hang/doi-mat-khau", label: "Đổi mật khẩu", icon: LockKey },
+  { href: "/khach-hang/ssh-keys", label: "SSH Key", icon: Key },
   { href: "/khach-hang/don-hang", label: "Lịch sử đơn hàng", icon: Receipt },
   { href: "/khach-hang/dich-vu", label: "Dịch vụ của tôi", icon: HardDrives },
   { href: "/khach-hang/yeu-cau-tu-van", label: "Yêu cầu tư vấn", icon: Headset },

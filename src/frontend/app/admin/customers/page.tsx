@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { getApiUrl } from "@/lib/api/config";
 import { getAdminCustomers } from "@/lib/api/admin/customers";
+import { getAdminUsers } from "@/lib/api/admin/users";
 import { ADMIN_ACCESS_TOKEN_COOKIE } from "@/lib/auth/adminAuthCookies";
 import { getAdminSession } from "@/lib/auth/adminSession";
 import { AccessDenied } from "@/components/admin/AccessDenied";
+import { CustomerType } from "@/lib/types/enums";
 import {
   Pagination,
   PaginationContent,
@@ -22,7 +24,7 @@ export const metadata: Metadata = {
 };
 
 interface AdminCustomersPageProps {
-  searchParams: Promise<{ page?: string; search?: string }>;
+  searchParams: Promise<{ page?: string; search?: string; customerType?: string; salesRepUserId?: string }>;
 }
 
 export default async function AdminCustomersPage({ searchParams }: AdminCustomersPageProps) {
@@ -38,15 +40,29 @@ export default async function AdminCustomersPage({ searchParams }: AdminCustomer
   const token = cookieStore.get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
   const baseUrl = getApiUrl();
 
-  const customers = await getAdminCustomers(
-    baseUrl,
-    { pageNumber, pageSize: 20, search: params.search || undefined },
-    token,
-  );
+  const [customers, salesReps] = await Promise.all([
+    getAdminCustomers(
+      baseUrl,
+      {
+        pageNumber,
+        pageSize: 20,
+        search: params.search || undefined,
+        customerType: params.customerType
+          ? CustomerType[params.customerType as keyof typeof CustomerType]
+          : undefined,
+        assignedSalesRepUserId: params.salesRepUserId || undefined,
+      },
+      token,
+    ),
+    // Nguồn cho select filter "Sales phụ trách" - tái dùng nguyên GET /admin/users.
+    getAdminUsers(baseUrl, token),
+  ]);
 
   function buildPageHref(page: number) {
     const search = new URLSearchParams();
     if (params.search) search.set("search", params.search);
+    if (params.customerType) search.set("customerType", params.customerType);
+    if (params.salesRepUserId) search.set("salesRepUserId", params.salesRepUserId);
     search.set("page", String(page));
     return `/admin/customers?${search.toString()}`;
   }
@@ -61,7 +77,12 @@ export default async function AdminCustomersPage({ searchParams }: AdminCustomer
 
         <div className="overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
           <div className="border-b border-zinc-100 bg-zinc-50/30 p-4">
-            <CustomersFilterBar currentSearch={params.search} />
+            <CustomersFilterBar
+              currentSearch={params.search}
+              currentCustomerType={params.customerType}
+              currentSalesRepUserId={params.salesRepUserId}
+              salesReps={salesReps}
+            />
           </div>
           <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0">
             <CustomersTable customers={customers.items} />

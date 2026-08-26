@@ -17,7 +17,7 @@ export function AboutHero({ description }: { description?: string | null }) {
       />
       <div className="relative mx-auto max-w-7xl px-4 py-12 text-center sm:px-6 lg:px-8 lg:py-12">
 
-        <h1 className="font-heading text-5xl font-bold text-foreground sm:text-6xl">Giới thiệu</h1>
+        <h1 className="font-heading text-3xl font-bold text-foreground sm:text-4xl">Giới thiệu</h1>
 
         {description && (
           <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">{description}</p>

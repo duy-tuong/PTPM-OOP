@@ -1,3 +1,5 @@
+using CloudServiceStore.Application.Features.Sales.OrderRequests;
+
 namespace CloudServiceStore.Application.Features.Sales.OrderRequests.Dtos;
 
 // Tier 4 "vòng đời gia hạn" - dùng cho GET /order-requests/mine/services. Khác MyOrderRequestDto: đây
@@ -8,11 +10,22 @@ public class MyServiceItemDto
     public int ItemId { get; init; }
     public string OrderCode { get; init; } = string.Empty;
     public string OrderStatus { get; init; } = string.Empty;
+    public int? ServicePlanId { get; init; }
     public string? ServicePlanName { get; init; }
+    // Chỉ có ý nghĩa khi ServicePlanId != null - client dùng để: (1) ẩn nút "Đổi gói" khi Custom (Phần
+    // 6 chỉ hỗ trợ đổi giữa 2 gói Fixed), (2) fetch danh sách gói cùng danh mục làm gói đích.
+    public string? ServicePlanCategorySlug { get; init; }
+    public string? ServicePlanPackageType { get; init; }
     public string? DomainName { get; init; }
     public string? TldName { get; init; }
     public int? PeriodMonths { get; init; }
     public DateTime? ExpiresAt { get; init; }
+    // "Active" | "Overdue" | "Suspended" | "Terminated" - xem DunningPolicy.ComputeLifecycleStatus.
+    public string LifecycleStatus { get; init; } = DunningPolicy.StatusActive;
+    // Hệ điều hành đã chọn lúc mua (Đợt 3, Phần 11) - null nếu không chọn.
+    public string? OsImageName { get; init; }
+    // Hostname bàn giao (Đợt 3, Phần 12) - null nếu không nhập.
+    public string? Hostname { get; init; }
     public string? ProvisionedIpAddress { get; init; }
     public string? ProvisionedRootPassword { get; init; }
     public string? ProvisionedNameservers { get; init; }

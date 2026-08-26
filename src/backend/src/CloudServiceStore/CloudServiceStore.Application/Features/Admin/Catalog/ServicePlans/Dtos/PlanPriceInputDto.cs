@@ -18,4 +18,9 @@ public class PlanPriceInputDto
     public bool IsDefault { get; set; }
 
     public bool IsActive { get; set; } = true;
+
+    // Chỉ có ý nghĩa khi ServicePlan.PackageType = Custom (bỏ qua Price ở trên) - % giảm giá theo chu
+    // kỳ so với giá tháng cơ sở, xem PlanPrice.cs.
+    [Range(typeof(decimal), "0", "100")]
+    public decimal? DiscountPercent { get; set; }
 }

@@ -16,6 +16,7 @@ public class PromotionConfiguration : IEntityTypeConfiguration<Promotion>
         builder.Property(x => x.Name).HasMaxLength(200).IsRequired();
         builder.Property(x => x.Description).HasMaxLength(1000);
         builder.Property(x => x.DiscountType).HasConversion<int>();
+        builder.Property(x => x.CustomerEligibility).HasConversion<int>().HasDefaultValue(PromotionCustomerEligibility.All);
         builder.Property(x => x.DiscountValue).HasColumnType("decimal(18,2)");
         builder.Property(x => x.MaxDiscountAmount).HasColumnType("decimal(18,2)");
         builder.Property(x => x.MinOrderValue).HasColumnType("decimal(18,2)");
@@ -42,6 +43,7 @@ public class PromotionConfiguration : IEntityTypeConfiguration<Promotion>
             UsageLimit = null,
             UsageCount = 0,
             IsActive = true,
+            CustomerEligibility = PromotionCustomerEligibility.All,
             IsDeleted = false,
             CreatedAt = new DateTime(2026, 8, 10, 0, 0, 0, DateTimeKind.Utc)
         });

@@ -24,13 +24,24 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.Property(x => x.CustomerType).HasConversion<int>();
         builder.Property(x => x.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
 
+        builder.Property(x => x.BillingAddress).HasMaxLength(255);
+        builder.Property(x => x.LegalRepresentativeName).HasMaxLength(100);
+        builder.Property(x => x.BusinessLicenseNumber).HasMaxLength(50);
+        builder.Property(x => x.CreditLimit).HasColumnType("decimal(18,2)");
+
         builder.HasIndex(x => x.Email).IsUnique();
         builder.HasIndex(x => x.RoleId);
+        builder.HasIndex(x => x.AssignedSalesRepUserId);
 
         builder.HasOne(x => x.Role)
             .WithMany(x => x.Customers)
             .HasForeignKey(x => x.RoleId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(x => x.AssignedSalesRepUser)
+            .WithMany()
+            .HasForeignKey(x => x.AssignedSalesRepUserId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasQueryFilter(x => !x.IsDeleted);
     }

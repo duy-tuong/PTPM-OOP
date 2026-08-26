@@ -58,6 +58,13 @@ export function extractHeadings(markdown: string): ArticleHeading[] {
   });
 }
 
+// Đợt 6 - ước tính thời gian đọc từ wordCount backend trả (NewsArticleListItemDto/DetailDto.wordCount),
+// không cần content đầy đủ. Dùng chung cho NewsCard.tsx (danh sách) và tin-tuc/[slug]/page.tsx (chi
+// tiết) - trước đây logic này chỉ inline riêng ở trang chi tiết.
+export function estimateReadingMinutes(wordCount: number, wordsPerMinute = 200): number {
+  return Math.max(1, Math.round(wordCount / wordsPerMinute));
+}
+
 // Dùng cho ExportButton (Phase 6.9) - trigger tải file nhị phân (vd .xlsx) từ 1 Blob đã fetch sẵn.
 export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);

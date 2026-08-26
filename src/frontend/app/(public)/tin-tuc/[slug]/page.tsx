@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getNewsArticleBySlug, getNewsArticles, getNewsComments } from "@/lib/api/content";
-import { safeFetch, emptyPagedResult } from "@/lib/api/safe";
+import { getNewsArticleBySlug, getNewsRelatedArticles, getNewsComments } from "@/lib/api/content";
+import { safeFetch } from "@/lib/api/safe";
 import { ApiError } from "@/lib/api/http";
-import { extractHeadings } from "@/lib/utils";
+import { estimateReadingMinutes, extractHeadings } from "@/lib/utils";
 import { NewsArticleDetail } from "@/components/news/NewsArticleDetail";
 import type { NewsArticleDetailDto } from "@/lib/types/content";
-
-const RELATED_ARTICLES_COUNT = 3;
 
 // Fetch theo slug KHÔNG bọc safeFetch (khác các fetch phụ bên dưới - bình luận/bài liên quan) - xem
 // comment lib/api/safe.ts: trang chi tiết theo slug phải báo lỗi rõ ràng (notFound cho 404 thật), không
@@ -55,20 +53,14 @@ export default async function NewsArticleDetailPage({ params }: { params: Promis
   const article = await loadArticle(slug);
 
   const headings = extractHeadings(article.content);
-  const readingMinutes = Math.max(1, Math.round(article.content.split(/\s+/).filter(Boolean).length / 200));
+  const readingMinutes = estimateReadingMinutes(article.wordCount);
 
-  const [comments, relatedResult] = await Promise.all([
+  const [comments, relatedArticles] = await Promise.all([
     safeFetch(() => getNewsComments(article.id, { revalidate: 60 }), []),
-    safeFetch(
-      () =>
-        getNewsArticles(
-          { categorySlug: article.categorySlug, pageSize: RELATED_ARTICLES_COUNT + 1 },
-          { revalidate: 900 },
-        ),
-      emptyPagedResult(RELATED_ARTICLES_COUNT + 1),
-    ),
+    // Backend chấm điểm category+tag trùng (NewsArticleService.GetRelatedAsync, Đợt 6) - thay cho cách
+    // filter/slice thủ công theo category cũ, không phân biệt được số tag trùng.
+    safeFetch(() => getNewsRelatedArticles(article.slug, 3, { revalidate: 900 }), []),
   ]);
-  const relatedArticles = relatedResult.items.filter((a) => a.id !== article.id).slice(0, RELATED_ARTICLES_COUNT);
 
   return (
     <NewsArticleDetail

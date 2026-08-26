@@ -19,6 +19,7 @@ public class AppDbContext : DbContext
     public DbSet<AppUser> AppUsers => Set<AppUser>();
     public DbSet<AppUserRole> AppUserRoles => Set<AppUserRole>();
     public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<CustomerSshKey> CustomerSshKeys => Set<CustomerSshKey>();
 
     // System
     public DbSet<SiteSetting> SiteSettings => Set<SiteSetting>();
@@ -30,6 +31,11 @@ public class AppDbContext : DbContext
     public DbSet<PlanFeature> PlanFeatures => Set<PlanFeature>();
     public DbSet<PlanPrice> PlanPrices => Set<PlanPrice>();
     public DbSet<TldPricing> TldPricings => Set<TldPricing>();
+    public DbSet<Region> Regions => Set<Region>();
+    public DbSet<Addon> Addons => Set<Addon>();
+    public DbSet<ServicePlanAddon> ServicePlanAddons => Set<ServicePlanAddon>();
+    public DbSet<OsImage> OsImages => Set<OsImage>();
+    public DbSet<ServicePlanOsImage> ServicePlanOsImages => Set<ServicePlanOsImage>();
 
     // Marketing
     public DbSet<Promotion> Promotions => Set<Promotion>();
@@ -38,6 +44,7 @@ public class AppDbContext : DbContext
     // Sales
     public DbSet<OrderRequest> OrderRequests => Set<OrderRequest>();
     public DbSet<OrderRequestItem> OrderRequestItems => Set<OrderRequestItem>();
+    public DbSet<OrderRequestItemAddon> OrderRequestItemAddons => Set<OrderRequestItemAddon>();
     public DbSet<ConsultationRequest> ConsultationRequests => Set<ConsultationRequest>();
     public DbSet<AffiliateApplication> AffiliateApplications => Set<AffiliateApplication>();
 

@@ -2,20 +2,32 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ServicePlanStatus, SERVICE_PLAN_STATUS_LABELS } from "@/lib/types/enums";
 import type { AdminServiceCategoryDto } from "@/lib/types/admin";
+import type { RegionDto } from "@/lib/types/catalog";
 
 interface ServicePlansFilterBarProps {
   categories: AdminServiceCategoryDto[];
+  regions: RegionDto[];
   currentCategorySlug?: string;
   currentIsFeatured?: string;
+  currentStatus?: string;
+  currentRegionId?: string;
 }
+
+const STATUS_FILTER_OPTIONS = Object.entries(ServicePlanStatus)
+  .filter(([, value]) => typeof value === "number")
+  .map(([key, value]) => ({ value: String(value), label: SERVICE_PLAN_STATUS_LABELS[key] ?? key }));
 
 // Điều khiển filter qua URL search params (giống quy ước Pagination đã chốt ở Design System) - giữ
 // state ở URL để back-button/refresh hoạt động đúng, không dùng client state riêng.
 export function ServicePlansFilterBar({
   categories,
+  regions,
   currentCategorySlug,
   currentIsFeatured,
+  currentStatus,
+  currentRegionId,
 }: ServicePlansFilterBarProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -70,6 +82,45 @@ export function ServicePlansFilterBar({
         <SelectContent alignItemWithTrigger={false}>
           <SelectItem value="all-plans">Tất cả gói</SelectItem>
           <SelectItem value="featured">Chỉ gói nổi bật</SelectItem>
+        </SelectContent>
+      </Select>
+
+      <Select
+        items={[{ value: "all-status", label: "Mọi trạng thái" }, ...STATUS_FILTER_OPTIONS]}
+        value={currentStatus ?? "all-status"}
+        onValueChange={(value) => updateParam("status", value === "all-status" ? null : value)}
+      >
+        <SelectTrigger className="w-[180px] rounded-full bg-white border-zinc-200/60 shadow-none ring-1 ring-zinc-950/5 hover:bg-zinc-50">
+          <SelectValue placeholder="Mọi trạng thái" />
+        </SelectTrigger>
+        <SelectContent alignItemWithTrigger={false}>
+          <SelectItem value="all-status">Mọi trạng thái</SelectItem>
+          {STATUS_FILTER_OPTIONS.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select
+        items={[
+          { value: "all-regions", label: "Mọi khu vực" },
+          ...regions.map((region) => ({ value: region.id, label: `${region.name} (${region.city})` })),
+        ]}
+        value={currentRegionId ?? "all-regions"}
+        onValueChange={(value) => updateParam("regionId", value === "all-regions" ? null : value)}
+      >
+        <SelectTrigger className="w-[200px] rounded-full bg-white border-zinc-200/60 shadow-none ring-1 ring-zinc-950/5 hover:bg-zinc-50">
+          <SelectValue placeholder="Mọi khu vực" />
+        </SelectTrigger>
+        <SelectContent alignItemWithTrigger={false}>
+          <SelectItem value="all-regions">Mọi khu vực</SelectItem>
+          {regions.map((region) => (
+            <SelectItem key={region.id} value={region.id}>
+              {region.name} ({region.city})
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </div>

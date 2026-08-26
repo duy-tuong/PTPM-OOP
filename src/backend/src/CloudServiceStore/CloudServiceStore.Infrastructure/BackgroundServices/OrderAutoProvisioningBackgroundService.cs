@@ -67,10 +67,13 @@ public class OrderAutoProvisioningBackgroundService : BackgroundService
 
         // IsDue() bên dưới là bản pure-function tương đương để unit-test - LINQ-to-Entities không dịch
         // được lời gọi hàm C# tuỳ ý trong .Where(), nên điều kiện ở đây phải viết lại dạng biểu thức.
+        // IsFlaggedForReview (Fraud Review, Phần 9) - đơn nghi vấn KHÔNG được tự động chuyển
+        // Paid->Provisioning, phải chờ Admin duyệt tay qua AdminOrderRequestService.UpdateStatusAsync.
         var duePaidOrderIds = await repository.Query()
             .Where(o => o.Status == OrderRequestStatus.Paid
                 && o.PaidAt != null
-                && o.PaidAt <= now.AddSeconds(-_appSettings.ProvisioningDelaySeconds))
+                && o.PaidAt <= now.AddSeconds(-_appSettings.ProvisioningDelaySeconds)
+                && !o.IsFlaggedForReview)
             .Select(o => o.Id)
             .ToListAsync(cancellationToken);
 

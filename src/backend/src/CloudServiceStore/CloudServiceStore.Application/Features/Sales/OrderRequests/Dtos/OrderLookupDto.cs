@@ -6,6 +6,16 @@ public class OrderLookupItemDto
     public int Quantity { get; init; }
     public decimal UnitPrice { get; init; }
     public decimal LineTotal { get; init; }
+    public int? ChosenVcpu { get; init; }
+    public int? ChosenRamMb { get; init; }
+    public int? ChosenDiskGb { get; init; }
+    // Hệ điều hành đã chọn lúc mua (Đợt 3, Phần 11) - null nếu không chọn.
+    public string? OsImageName { get; init; }
+    // "New" | "Renewal" | "PlanChange" - xem ghi chú ở OrderRequestItemDto.ItemKind. Đặc biệt quan
+    // trọng ở trang /thanh-toan: đơn "PlanChange" chỉ thu đúng phần PHỤ THU proration, không phải giá
+    // đầy đủ của ProductName - không gắn nhãn dễ khiến khách tưởng nhầm đang mua nguyên gói giá rẻ.
+    public string ItemKind { get; init; } = "New";
+    public List<OrderItemAddonDto> Addons { get; init; } = new();
 }
 
 // Endpoint tra cứu công khai (GET /order-requests/by-code/{code}), không xác thực - cố tình KHÔNG

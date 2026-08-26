@@ -8,7 +8,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
   return (
     <CartProvider>
       <SmoothScrollProvider>
-        <div className="flex min-h-full flex-1 flex-col">
+        <div className="flex min-h-screen flex-col">
           <ParticleNetworkBackground />
           <Navbar />
           <main className="flex-1 pt-24">{children}</main>

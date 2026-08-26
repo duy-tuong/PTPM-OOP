@@ -3,6 +3,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ArticleToc } from "@/components/news/ArticleToc";
 import { ArticleSidebar } from "@/components/news/ArticleSidebar";
+import { ArticleViewTracker } from "@/components/news/ArticleViewTracker";
 import { ReadingProgressBar } from "@/components/news/ReadingProgressBar";
 import { CommentSection } from "@/components/news/CommentSection";
 import { NewsCard } from "@/components/news/NewsCard";
@@ -31,6 +32,7 @@ export function NewsArticleDetail({
 }) {
   return (
     <div className="relative">
+      <ArticleViewTracker articleId={article.id} slug={article.slug} />
       <ReadingProgressBar />
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-x-12 gap-y-10 px-4 py-12 sm:px-6 lg:grid-cols-[1fr_3fr_1fr] lg:px-8">
         <ArticleToc headings={headings} />
@@ -51,7 +53,7 @@ export function NewsArticleDetail({
           <span className="w-fit rounded bg-muted px-3 py-1 text-xs font-medium text-foreground uppercase">
             {article.categoryName}
           </span>
-          <h1 className="mt-4 font-heading text-4xl font-bold text-foreground sm:text-5xl">{article.title}</h1>
+          <h1 className="mt-4 font-heading text-3xl font-bold text-foreground sm:text-4xl">{article.title}</h1>
           <p className="mt-4 text-sm text-muted-foreground">
             {formatDate(article.publishedAt)} • {readingMinutes} phút đọc • {article.viewCount} lượt xem
           </p>
@@ -65,7 +67,7 @@ export function NewsArticleDetail({
           <CommentSection articleId={article.id} comments={comments} />
         </article>
 
-        <ArticleSidebar tags={article.tags} />
+        <ArticleSidebar tags={article.tags} authorName={article.authorName} />
       </div>
 
       {relatedArticles.length > 0 && (

@@ -4,16 +4,8 @@ import { getPromotions } from "@/lib/api/catalog";
 import { safeFetch } from "@/lib/api/safe";
 import { CountdownBadge } from "@/components/home/CountdownBadge";
 import { ScrollReveal } from "@/components/home/ScrollReveal";
-import { MagneticButton } from "@/components/shared/MagneticButton";
 import { Button } from "@/components/ui/button";
 
-// Section 5/9 của Trang chủ (pivot 2 - theme "Cloudverse"). Chỉ render nếu có khuyến mãi đang hiệu lực
-// thật (getPromotions() đã lọc IsActive+trong khoảng ngày ở backend, sắp theo EndDate tăng dần) - bỏ
-// hẳn section nếu không có, không bịa khuyến mãi.
-//
-// Nâng cấp "Floating Glass Card" (thay banner tràn viền cũ): dùng lại .glass-card/.text-gradient-primary/
-// .animate-ambient-blob/.btn-shine + màu glow đã có sẵn (mirror đúng shadow CTA của Hero ở Navbar.tsx),
-// không hardcode màu mới - giữ đúng "khoá 1 palette" đã áp dụng xuyên suốt site.
 export async function PromotionBannerSection() {
   const promotions = await safeFetch(() => getPromotions({ revalidate: 300 }), []);
 
@@ -21,40 +13,32 @@ export async function PromotionBannerSection() {
     return null;
   }
 
-  const promotion = promotions[0];
+  const activePromotion = promotions[0];
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
+    <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
       <ScrollReveal>
-        <div className="glass-card relative overflow-hidden rounded-3xl border border-border bg-card p-8 md:p-14">
-          {/* Subtle radial glow ở một góc, thay vì primary gradient mạnh */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -top-16 -left-16 size-72 rounded-full bg-indigo-500/15 blur-3xl dark:bg-indigo-500/10"
-          />
+        <div className="relative overflow-hidden rounded-[20px] border border-blue-100 bg-gradient-to-br from-[#EFF6FF] to-[#ECFEFF] p-6 shadow-sm dark:border-blue-900/50 dark:from-blue-950/40 dark:to-cyan-950/20 md:px-10 md:py-8">
 
-          <div className="relative flex flex-col items-center gap-10 md:flex-row md:items-center md:justify-between">
-            <ScrollReveal direction="left" delay={0.2} className="flex flex-col items-center gap-3 text-center md:items-start md:text-left">
-              <span className="flex items-center gap-2 text-xs font-medium tracking-widest text-primary uppercase">
+          <div className="relative flex flex-col items-center gap-8 md:flex-row md:items-center md:justify-between">
+            <ScrollReveal direction="left" delay={0.1} className="flex flex-col items-center gap-2 text-center md:items-start md:text-left">
+              <span className="flex items-center gap-1.5 text-xs font-bold tracking-widest text-blue-600 dark:text-blue-400 uppercase">
                 <Lightning className="size-4" weight="fill" />
-                Ưu Đãi Có Hạn
+                Ưu đãi có hạn
               </span>
-              <h2 className="font-heading max-w-[520px] text-3xl font-bold text-foreground text-balance sm:text-4xl md:text-5xl">
-                {promotion.name}
+              <h2 className="font-heading text-2xl font-extrabold text-foreground sm:text-3xl">
+                {activePromotion.name}
               </h2>
-              {promotion.description && <p className="max-w-[500px] text-muted-foreground">{promotion.description}</p>}
             </ScrollReveal>
 
-            <ScrollReveal direction="right" delay={0.2} className="flex flex-col items-center gap-6">
-              <CountdownBadge targetIso={promotion.endDate} />
-              <MagneticButton>
-                <Button
-                  size="lg"
-                  nativeButton={false}
-                  className="btn-shine px-10 shadow-[0_0_20px_color-mix(in_oklch,var(--primary)_40%,transparent)]"
-                  render={<Link href={`/lien-he?promotionCode=${promotion.code}`}>Đặt dịch vụ</Link>}
-                />
-              </MagneticButton>
+            <ScrollReveal direction="right" delay={0.1} className="flex flex-col items-center gap-6 sm:flex-row sm:gap-8">
+              <CountdownBadge targetIso={activePromotion.endDate} />
+              <Button
+                size="lg"
+                nativeButton={false}
+                className="h-12 rounded-xl bg-blue-600 px-8 font-semibold text-white shadow-sm transition-all hover:bg-blue-700 hover:shadow-md"
+                render={<Link href={`/lien-he?promotionCode=${activePromotion.code}`}>Đặt dịch vụ</Link>}
+              />
             </ScrollReveal>
           </div>
         </div>

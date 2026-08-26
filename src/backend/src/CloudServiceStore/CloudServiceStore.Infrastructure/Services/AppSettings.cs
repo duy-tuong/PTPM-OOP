@@ -15,6 +15,14 @@ public class AppSettings : IAppSettings
     public int ProvisioningDelaySeconds { get; }
     public int ProvisioningCompletionDelaySeconds { get; }
     public int RenewalReminderLeadDays { get; }
+    public int DunningSuspendAfterDays { get; }
+    public int DunningTerminationWarningAfterDays { get; }
+    public int DunningTerminateAfterDays { get; }
+
+    public int FraudMaxQuantityPerLine { get; }
+    public int FraudMaxOrdersPerWindow { get; }
+    public int FraudOrderWindowMinutes { get; }
+    public decimal FraudNewCustomerHighValueThreshold { get; }
 
     public string PayOsClientId { get; }
     public string PayOsApiKey { get; }
@@ -40,6 +48,18 @@ public class AppSettings : IAppSettings
         // Số ngày trước khi hết hạn thì RenewalReminderBackgroundService gửi email nhắc gia hạn (Tier 4)
         // - mặc định 7 ngày, đủ sớm để khách kịp gia hạn trước khi dịch vụ gián đoạn.
         RenewalReminderLeadDays = int.TryParse(configuration["App:RenewalReminderLeadDays"], out var leadDays) ? leadDays : 7;
+        // Dunning Automation (Đợt 2, Phần 8) - số ngày kể từ ExpiresAt tới từng mốc xử lý nợ cước, mặc
+        // định 3/7/14 ngày (tạm khóa/cảnh báo cuối/hủy hẳn) - xem DunningBackgroundService.
+        DunningSuspendAfterDays = int.TryParse(configuration["App:DunningSuspendAfterDays"], out var suspendDays) ? suspendDays : 3;
+        DunningTerminationWarningAfterDays = int.TryParse(configuration["App:DunningTerminationWarningAfterDays"], out var warningDays) ? warningDays : 7;
+        DunningTerminateAfterDays = int.TryParse(configuration["App:DunningTerminateAfterDays"], out var terminateDays) ? terminateDays : 14;
+
+        // Fraud Review (Đợt 2, Phần 9) - ngưỡng 3 rule cấu hình được, mặc định khớp mô tả nghiệp vụ đã
+        // chốt với người dùng - xem OrderRequestService.EvaluateFraudRiskAsync.
+        FraudMaxQuantityPerLine = int.TryParse(configuration["App:FraudMaxQuantityPerLine"], out var maxQty) ? maxQty : 5;
+        FraudMaxOrdersPerWindow = int.TryParse(configuration["App:FraudMaxOrdersPerWindow"], out var maxOrders) ? maxOrders : 3;
+        FraudOrderWindowMinutes = int.TryParse(configuration["App:FraudOrderWindowMinutes"], out var windowMinutes) ? windowMinutes : 10;
+        FraudNewCustomerHighValueThreshold = decimal.TryParse(configuration["App:FraudNewCustomerHighValueThreshold"], out var highValue) ? highValue : 10000000m;
 
         // Khoá PayOS/Resend - để rỗng trong appsettings.json committed, giá trị thật injected qua .env
         // lúc deploy (xem docker-compose.yml). Rỗng = PayOsPaymentGatewayService/ResendEmailService coi

@@ -1,16 +1,11 @@
-import { Quotes, Star } from "@phosphor-icons/react/dist/ssr";
+import { Star } from "@phosphor-icons/react/dist/ssr";
 import { getTestimonials } from "@/lib/api/content";
 import { safeFetch } from "@/lib/api/safe";
 import { FallbackImage } from "@/components/shared/FallbackImage";
+import { ScrollReveal } from "@/components/home/ScrollReveal";
 import { Marquee } from "@/components/shared/Marquee";
-import { Reveal } from "@/components/shared/Reveal";
 import type { TestimonialDto } from "@/lib/types/content";
 
-// Section 6/9 của Trang chủ - phong cách "Minimalist SaaS" (tuyệt đối không gradient): băng chuyền
-// cuộn ngang vô hạn (Marquee dùng chung, đã có sẵn mask-fade 2 mép), pause khi hover, thẻ nền solid
-// trung tính (bg-muted/border-border, khác .glass-card translucent dùng ở các section khác - chủ đích
-// tương phản, không phải lỗi thiếu nhất quán) - dùng token thay vì zinc-900/zinc-800 hardcode để tự đổi
-// theo Light/Dark theme (xem ThemeToggle.tsx). Dữ liệu thật từ getTestimonials(), không bịa.
 export async function TestimonialsGridSection() {
   const testimonials = await safeFetch(() => getTestimonials({ revalidate: 3600 }), []);
 
@@ -18,66 +13,59 @@ export async function TestimonialsGridSection() {
     return null;
   }
 
-  const shouldMarquee = testimonials.length > 1;
-
   return (
-    <section className="py-12">
+    <section className="border-y border-border/50 bg-muted/10 py-12 sm:py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <Reveal className="mb-10 flex flex-col gap-4 text-center">
-          <h2 className="font-heading text-3xl font-bold text-balance sm:text-4xl">Lòng Tin Từ Cộng Đồng</h2>
-          <p className="mx-auto max-w-[600px] text-lg text-muted-foreground">
-            Lắng nghe chia sẻ từ những khách hàng đang xây dựng hạ tầng cùng Cloudverse.
+        <ScrollReveal className="mb-12 flex flex-col gap-4 text-center">
+          <h2 className="font-heading text-3xl font-extrabold text-foreground sm:text-4xl">Lòng tin từ cộng đồng</h2>
+          <p className="mx-auto max-w-2xl text-base text-muted-foreground sm:text-lg">
+            Hàng ngàn doanh nghiệp Việt Nam đang tin tưởng và xây dựng hạ tầng số cùng Cloudverse.
           </p>
-        </Reveal>
+        </ScrollReveal>
 
-        {shouldMarquee ? (
-          <Marquee pauseOnHover gapClassName="gap-8 pr-8">
+        <div className="-mx-4 sm:mx-0">
+          <Marquee pauseOnHover gapClassName="gap-6 pr-6">
             {testimonials.map((testimonial) => (
-              <TestimonialCard key={testimonial.id} testimonial={testimonial} />
+              <div key={testimonial.id} className="w-[320px] shrink-0 sm:w-[400px]">
+                <TestimonialCard testimonial={testimonial} />
+              </div>
             ))}
           </Marquee>
-        ) : (
-          <div className="flex justify-center">
-            <TestimonialCard testimonial={testimonials[0]} />
-          </div>
-        )}
+        </div>
       </div>
     </section>
   );
 }
 
 function TestimonialCard({ testimonial }: { testimonial: TestimonialDto }) {
+  const rating = testimonial.rating ?? 5;
+
   return (
-    <div className="group relative flex h-full w-[380px] shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card p-8 transition-colors duration-300 hover:border-primary">
-      <Quotes className="pointer-events-none absolute -top-4 -right-4 size-24 text-muted-foreground/20" weight="fill" />
+    <div className="group flex h-full flex-col justify-between rounded-[20px] border border-border bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/30 hover:shadow-md">
+      {/* Rating */}
+      <div className="mb-6 flex gap-1">
+        {Array.from({ length: 5 }, (_, i) => (
+          <Star key={i} className="size-4 text-amber-500" weight={i < rating ? "fill" : "regular"} />
+        ))}
+      </div>
 
-      {testimonial.rating != null && (
-        <div className="mb-4 flex gap-1">
-          {Array.from({ length: 5 }, (_, i) => (
-            <Star
-              key={i}
-              className="size-4 text-primary"
-              weight={i < Math.round(testimonial.rating!) ? "fill" : "regular"}
-            />
-          ))}
-        </div>
-      )}
+      {/* Quote */}
+      <p className="mb-6 flex-1 text-base font-medium leading-relaxed text-foreground">
+        &ldquo;{testimonial.content}&rdquo;
+      </p>
 
-      <p className="relative z-10 mb-8 flex-1 text-sm text-muted-foreground italic">&ldquo;{testimonial.content}&rdquo;</p>
-
-      <div className="flex items-center gap-4">
-        <div className="size-12 shrink-0 overflow-hidden rounded-full border border-primary/20 bg-primary/10">
-          <FallbackImage
-            src={testimonial.avatarUrl}
-            alt={testimonial.displayName}
-            className="h-full w-full object-cover"
-            fallbackClassName="flex h-full w-full items-center justify-center text-sm font-medium text-primary"
-          />
-        </div>
+      {/* Author Info */}
+      <div className="flex items-center gap-4 border-t border-border/50 pt-6">
+        <FallbackImage
+          src={testimonial.avatarUrl}
+          alt={testimonial.displayName}
+          className="size-12 shrink-0 rounded-full object-cover"
+          fallbackClassName="flex size-12 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700 dark:bg-blue-900/40 dark:text-blue-400"
+        />
         <div>
-          <h4 className="text-sm font-semibold">{testimonial.displayName}</h4>
+          <h4 className="text-sm font-bold text-foreground">{testimonial.displayName}</h4>
           {testimonial.companyName && (
-            <p className="text-xs text-muted-foreground/70">{testimonial.companyName}</p>
+            <p className="text-xs font-medium text-muted-foreground mt-0.5">{testimonial.companyName}</p>
           )}
         </div>
       </div>

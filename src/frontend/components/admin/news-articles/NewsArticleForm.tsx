@@ -50,6 +50,7 @@ export function NewsArticleForm({ mode, initialData, categories }: NewsArticleFo
   const [thumbnailUrl, setThumbnailUrl] = useState(initialData?.thumbnailUrl ?? "");
   const [content, setContent] = useState(initialData?.content ?? "");
   const [isPublished, setIsPublished] = useState(initialData?.isPublished ?? true);
+  const [isFeatured, setIsFeatured] = useState(initialData?.isFeatured ?? false);
   const [publishedAt, setPublishedAt] = useState(initialData ? toDateInputValue(initialData.publishedAt) : "");
   const [tagNames, setTagNames] = useState<string[]>(initialData?.tags ?? []);
   const [tagInput, setTagInput] = useState("");
@@ -107,6 +108,7 @@ export function NewsArticleForm({ mode, initialData, categories }: NewsArticleFo
         content,
         thumbnailUrl: thumbnailUrl.trim() || undefined,
         isPublished,
+        isFeatured,
         publishedAt: publishedAt ? new Date(publishedAt).toISOString() : undefined,
         tagNames,
       };
@@ -270,6 +272,24 @@ export function NewsArticleForm({ mode, initialData, categories }: NewsArticleFo
               <div className="absolute left-0.5 top-0.5 size-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-4" />
             </div>
             Xuất bản bài viết
+          </label>
+
+          <label
+            htmlFor="article-featured"
+            className="flex w-fit cursor-pointer items-center gap-3 text-sm font-medium text-zinc-700"
+          >
+            <div className="relative flex items-center">
+              <input
+                id="article-featured"
+                type="checkbox"
+                checked={isFeatured}
+                onChange={(e) => setIsFeatured(e.target.checked)}
+                className="peer sr-only"
+              />
+              <div className="h-5 w-9 rounded-full bg-zinc-200 transition-colors peer-checked:bg-emerald-600 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-600/20" />
+              <div className="absolute left-0.5 top-0.5 size-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-4" />
+            </div>
+            Bài viết nổi bật
           </label>
         </FieldGroup>
       </div>

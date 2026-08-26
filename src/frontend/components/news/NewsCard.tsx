@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { FallbackImage } from "@/components/shared/FallbackImage";
-import { formatDate } from "@/lib/utils";
+import { estimateReadingMinutes, formatDate } from "@/lib/utils";
 import type { NewsArticleListItemDto } from "@/lib/types/content";
 
 // Tách từ NewsSplitScreen.tsx - dùng chung cho lưới danh sách (/tin-tuc) và section "Bài viết liên quan"
@@ -25,8 +25,9 @@ export function NewsCard({ article }: { article: NewsArticleListItemDto }) {
         </span>
         <h3 className="font-heading line-clamp-2 text-base font-semibold text-foreground">{article.title}</h3>
         {article.summary && <p className="line-clamp-3 text-sm text-muted-foreground">{article.summary}</p>}
+        {article.authorName && <span className="text-xs text-muted-foreground">{article.authorName}</span>}
         <span className="mt-auto pt-2 text-xs text-muted-foreground/70">
-          {formatDate(article.publishedAt)} • {article.viewCount} lượt xem
+          {formatDate(article.publishedAt)} • {estimateReadingMinutes(article.wordCount)} phút đọc • {article.viewCount} lượt xem
         </span>
       </div>
     </Link>

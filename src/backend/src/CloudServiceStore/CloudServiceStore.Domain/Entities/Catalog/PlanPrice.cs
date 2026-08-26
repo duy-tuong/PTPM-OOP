@@ -13,6 +13,24 @@ public class PlanPrice
     public string Currency { get; set; } = "VND";
     public bool IsDefault { get; set; }
     public bool IsActive { get; set; } = true;
+
+    // Chỉ có ý nghĩa khi ServicePlan.PackageType = Custom - lúc đó Price/PromotionalPrice ở trên BỊ
+    // BỎ QUA, DiscountPercent thay thế cho ý nghĩa "chu kỳ này giảm bao nhiêu % so với giá tháng cơ
+    // sở" (giá cơ sở tính từ ServicePlan.PricePerVcpuPerMonth... - xem
+    // OrderRequestService.BuildServicePlanItemAsync). Tái dùng đúng 1 bảng/1 UI editor cho cả 2 loại
+    // gói thay vì tạo bảng giá song song cho Custom.
+    public decimal? DiscountPercent { get; set; }
+
+    // Price Versioning & Grandfathering: sửa giá cho 1 PeriodMonths đã có KHÔNG ghi đè row này - đóng
+    // row (IsCurrent=false, EffectiveTo=now) rồi tạo row mới Version+1 (xem
+    // AdminServicePlanService.UpdateAsync). Row cũ vẫn giữ trong DB (không xoá) để
+    // OrderRequestItem.PlanPriceId của khách đã mua trước có thể tiếp tục trỏ tới khi gia hạn -
+    // xem OrderRequestService.BuildServicePlanItemAsync.
+    public int Version { get; set; } = 1;
+    public bool IsCurrent { get; set; } = true;
+    public DateTime EffectiveFrom { get; set; } = DateTime.UtcNow;
+    public DateTime? EffectiveTo { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
 }

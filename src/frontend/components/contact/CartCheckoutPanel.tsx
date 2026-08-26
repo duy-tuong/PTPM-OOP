@@ -100,6 +100,14 @@ export function CartCheckoutPanel({ promotion }: { promotion: PromotionDto | nul
           domainName: item.domainName,
           periodMonths: item.periodMonths,
           quantity: item.quantity,
+          addons: item.addons?.map((a) => ({ addonId: a.addonId, quantity: a.quantity })),
+          chosenVcpu: item.chosenVcpu,
+          chosenRamMb: item.chosenRamMb,
+          chosenDiskGb: item.chosenDiskGb,
+          osImageId: item.osImageId,
+          sshPublicKeyId: item.sshPublicKeyId,
+          hostname: item.hostname,
+          tags: item.tags,
         })),
       };
 
@@ -141,6 +149,22 @@ export function CartCheckoutPanel({ promotion }: { promotion: PromotionDto | nul
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium text-foreground">{item.label}</p>
                   <p className="text-muted-foreground">{formatCurrency(item.unitPriceDisplay)} / đơn vị</p>
+                  {item.chosenVcpu != null && item.chosenRamMb != null && item.chosenDiskGb != null && (
+                    <p className="text-xs text-muted-foreground">
+                      {item.chosenVcpu} vCPU - {(item.chosenRamMb / 1024).toFixed(item.chosenRamMb % 1024 === 0 ? 0 : 1)} GB RAM - {item.chosenDiskGb} GB Disk
+                    </p>
+                  )}
+                  {item.osImageName && <p className="text-xs text-muted-foreground">OS: {item.osImageName}</p>}
+                  {item.hostname && <p className="text-xs text-muted-foreground">Hostname: {item.hostname}</p>}
+                  {item.addons && item.addons.length > 0 && (
+                    <ul className="mt-1 flex flex-col gap-0.5">
+                      {item.addons.map((addon) => (
+                        <li key={addon.addonId} className="text-xs text-muted-foreground">
+                          + {addon.label} x{addon.quantity} ({formatCurrency(addon.priceDisplay)})
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
                 <Input
                   type="number"

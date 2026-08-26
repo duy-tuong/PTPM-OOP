@@ -155,7 +155,11 @@ export function TldPricingDialog({ open, onOpenChange, item, categories }: TldPr
             </div>
 
             <Field>
-              <Label htmlFor="tld-category">Danh mục dịch vụ</Label>
+              <Label htmlFor="tld-category">Danh mục áp dụng khuyến mãi</Label>
+              <p className="text-xs text-zinc-500">
+                Chỉ dùng để mã giảm giá theo danh mục áp dụng được cho tên miền này - không ảnh hưởng vị
+                trí hiển thị (tên miền luôn nằm trong tab &quot;Domain&quot; ở trang Bảng giá).
+              </p>
               <Select
                 items={[
                   { value: NO_CATEGORY_VALUE, label: "Không thuộc danh mục" },

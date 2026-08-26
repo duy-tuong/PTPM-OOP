@@ -7,6 +7,16 @@ export const CART_STORAGE_KEY = "cloudverse-cart";
 // Giỏ hàng chỉ lưu thông tin hiển thị (label, đơn giá hiển thị) song song ID sản phẩm - giá hiển thị
 // chỉ để UI, giá thật luôn được backend tính lại từ ServicePlanId/TldPricingId lúc đặt hàng (đúng
 // nguyên tắc "không tin giá từ client" đã áp dụng xuyên suốt dự án).
+export interface CartAddonSelection {
+  addonId: number;
+  quantity: number;
+  label: string;
+  // Tổng tiền addon này CHO CẢ DÒNG (đã nhân quantity*periodMonths) - không nhân thêm lần nữa với
+  // CartItem.quantity (addon gắn theo dòng, không nhân theo số lượng gói - xem
+  // OrderRequestService.BuildOrderItemAddonsAsync ở backend).
+  priceDisplay: number;
+}
+
 export interface CartItem {
   key: string;
   servicePlanId?: number;
@@ -16,6 +26,21 @@ export interface CartItem {
   quantity: number;
   label: string;
   unitPriceDisplay: number;
+  addons?: CartAddonSelection[];
+  // Chỉ có giá trị khi mua từ gói Custom (packageType === "Custom") - cấu hình khách đã chọn trên
+  // thanh trượt, gửi kèm lúc đặt hàng để backend tính lại giá thật (xem CustomPlanSliderConfigurator).
+  chosenVcpu?: number;
+  chosenRamMb?: number;
+  chosenDiskGb?: number;
+  // Hệ điều hành đã chọn (Đợt 3, Phần 11) - osImageName chỉ để hiển thị tóm tắt trong giỏ, giá thật
+  // (phí bản quyền Windows nếu có) luôn do backend tính lại từ osImageId lúc đặt hàng.
+  osImageId?: number;
+  osImageName?: string;
+  // Xác thực & bàn giao (Đợt 3, Phần 12) - sshPublicKeyId chỉ để backend snapshot lại nội dung key
+  // lúc đặt hàng, hostname/tags là text tự do hiển thị trực tiếp, không qua tính toán giá.
+  sshPublicKeyId?: number;
+  hostname?: string;
+  tags?: string;
 }
 
 interface CartContextValue {
@@ -76,7 +101,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems([]);
   }
 
-  const subtotalDisplay = items.reduce((sum, item) => sum + item.unitPriceDisplay * item.quantity, 0);
+  const subtotalDisplay = items.reduce(
+    (sum, item) =>
+      sum + item.unitPriceDisplay * item.quantity + (item.addons?.reduce((s, a) => s + a.priceDisplay, 0) ?? 0),
+    0,
+  );
 
   return (
     <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clear, subtotalDisplay }}>

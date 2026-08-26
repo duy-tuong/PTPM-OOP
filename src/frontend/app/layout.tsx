@@ -71,12 +71,12 @@ export default function RootLayout({
     <html
       lang="vi"
       suppressHydrationWarning
-      className={`${bodyFont.variable} ${displayFont.variable} ${monoFont.variable} h-full antialiased`}
+      className={`${bodyFont.variable} ${displayFont.variable} ${monoFont.variable} antialiased`}
     >
       <head>
         <Script id="theme-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-screen flex flex-col">
         {children}
         <Toaster />
       </body>

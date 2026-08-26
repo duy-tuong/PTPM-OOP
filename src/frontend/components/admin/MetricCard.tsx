@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 import { ArrowUp, ArrowDown } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 
 type MetricCardAccent = "neutral" | "blue" | "violet" | "amber" | "rose";
 
@@ -22,11 +22,21 @@ interface MetricCardProps {
   // Màu nền nhạt cho khối icon, tương ứng tính chất từng chỉ số - mặc định "neutral" (giữ nguyên màu
   // trắng/zinc-700 cũ) để 2 lệnh gọi trong EditorDashboardView (không truyền prop này) không đổi.
   accentColor?: MetricCardAccent;
+  // "number" (mặc định, giữ nguyên hành vi cũ - .toLocaleString) | "currency" (định dạng VNĐ, dùng cho
+  // các chỉ số tiền tệ ở RevenueAnalyticsView - MRR/ARR/ARPU/LTV) | "percent" (thêm hậu tố %, dùng cho
+  // Churn Rate).
+  format?: "number" | "currency" | "percent";
 }
 
-export function MetricCard({ label, value, icon: Icon, growthPercent, accentColor = "neutral" }: MetricCardProps) {
+export function MetricCard({ label, value, icon: Icon, growthPercent, accentColor = "neutral", format = "number" }: MetricCardProps) {
   const hasGrowth = growthPercent !== undefined && Number.isFinite(growthPercent);
   const isPositive = hasGrowth && growthPercent >= 0;
+  const formattedValue =
+    format === "currency"
+      ? formatCurrency(value)
+      : format === "percent"
+        ? `${value.toLocaleString("vi-VN")}%`
+        : value.toLocaleString("vi-VN");
 
   return (
     <div className="group relative rounded-[24px] bg-white p-1.5 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.02)] ring-1 ring-zinc-950/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.05)]">
@@ -40,7 +50,7 @@ export function MetricCard({ label, value, icon: Icon, growthPercent, accentColo
 
         <div className="mt-5 flex items-baseline justify-between">
           <span className="font-heading text-4xl font-semibold tracking-tight text-zinc-900 tabular-nums">
-            {value.toLocaleString("vi-VN")}
+            {formattedValue}
           </span>
 
           {hasGrowth && (

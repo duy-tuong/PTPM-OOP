@@ -10,6 +10,7 @@ public class AdminNewsArticleDto
     public string Content { get; init; } = string.Empty;
     public string? ThumbnailUrl { get; init; }
     public bool IsPublished { get; init; }
+    public bool IsFeatured { get; init; }
     public DateTime PublishedAt { get; init; }
     public int ViewCount { get; init; }
     public Guid AuthorId { get; init; }

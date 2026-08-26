@@ -27,4 +27,19 @@ public class NewsArticlesController : ControllerBase
     {
         return Ok(await _service.GetBySlugAsync(slug, cancellationToken));
     }
+
+    // Tách khỏi GetBySlug (trước đây tăng ViewCount ngay trong đó, không dedup) - dedup thật sự xảy ra
+    // ở Route Handler Next.js (cookie httpOnly), endpoint này chỉ đơn thuần +1 mỗi lần được gọi.
+    [HttpPost("{slug}/view")]
+    public async Task<IActionResult> IncrementView(string slug, CancellationToken cancellationToken)
+    {
+        await _service.IncrementViewCountAsync(slug, cancellationToken);
+        return NoContent();
+    }
+
+    [HttpGet("{slug}/related")]
+    public async Task<ActionResult<List<NewsArticleListItemDto>>> GetRelated(string slug, [FromQuery] int take = 3, CancellationToken cancellationToken = default)
+    {
+        return Ok(await _service.GetRelatedAsync(slug, take, cancellationToken));
+    }
 }

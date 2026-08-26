@@ -16,7 +16,7 @@ export function PartnerHero() {
       />
       <div className="relative mx-auto max-w-7xl px-4 py-12 text-center sm:px-6 lg:px-8 lg:py-12">
 
-        <h1 className="font-heading text-5xl font-bold text-foreground sm:text-6xl">Trở thành Đối tác</h1>
+        <h1 className="font-heading text-3xl font-bold text-foreground sm:text-4xl">Trở thành Đối tác</h1>
 
         <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
           Cùng Cloudverse mở rộng hệ sinh thái hạ tầng Cloud - giới thiệu khách hàng, nhận hoa hồng cho
