@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { List, ShoppingCart } from "@phosphor-icons/react";
+import { List, ShoppingCart, User } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import {
@@ -97,6 +97,7 @@ export function Navbar() {
 
   async function handleLogout() {
     await fetch("/api/customer-auth/logout", { method: "POST" });
+    cart.clear();
     notifyCustomerSessionChanged();
     router.push("/");
   }
@@ -112,11 +113,11 @@ export function Navbar() {
       )}
     >
       <div className="relative mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <div className="relative z-10 flex items-center">
+        <div className="relative z-10 flex flex-1 items-center justify-start">
           <Logo />
         </div>
 
-        <nav className="absolute inset-0 hidden items-center justify-center gap-8 lg:flex z-0 pointer-events-none">
+        <nav className="hidden items-center justify-center gap-6 lg:gap-8 lg:flex">
           {NAV_LINKS.map((link) => {
             const isActive = pathname === link.href || (link.href !== '/' && pathname?.startsWith(link.href));
             
@@ -125,7 +126,7 @@ export function Navbar() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "pointer-events-auto text-[14px] font-medium transition-colors hover:text-foreground",
+                  "text-[14px] font-medium transition-colors hover:text-foreground",
                   isActive ? "text-foreground" : "text-muted-foreground"
                 )}
               >
@@ -135,67 +136,70 @@ export function Navbar() {
           })}
         </nav>
 
-        <div className="relative z-10 hidden items-center gap-4 lg:flex">
-          <Link
-            href="/lien-he"
-            aria-label={cartCount > 0 ? `Giỏ hàng, ${cartCount} sản phẩm` : "Giỏ hàng"}
-            className="relative inline-flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            <ShoppingCart className="size-5" />
-            {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] leading-none font-bold text-white">
-                {cartCount}
-              </span>
-            )}
-          </Link>
+        <div className="relative z-10 hidden flex-1 items-center justify-end gap-3 lg:gap-4 lg:flex">
+          <div className="flex items-center gap-1">
+            <Link
+              href="/lien-he"
+              aria-label={cartCount > 0 ? `Giỏ hàng, ${cartCount} sản phẩm` : "Giỏ hàng"}
+              className="relative inline-flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <ShoppingCart className="size-5" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] leading-none font-bold text-white">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
 
-          <ThemeToggle />
+            <ThemeToggle className="rounded-full" />
+
+            {session ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  className="group ml-1 rounded-full outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <Avatar className="size-9 transition-transform group-hover:scale-105 border border-border/50">
+                    <AvatarFallback className="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 font-medium text-xs">
+                      {getInitials(session.fullName)}
+                    </AvatarFallback>
+                  </Avatar>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56" sideOffset={12}>
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{session.fullName}</p>
+                      </div>
+                    </DropdownMenuLabel>
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem render={<Link href="/khach-hang" />} className="cursor-pointer">
+                    Bảng điều khiển
+                  </DropdownMenuItem>
+                  <DropdownMenuItem render={<Link href="/khach-hang/don-hang" />} className="cursor-pointer">
+                    Lịch sử đơn hàng
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive"
+                  >
+                    Đăng xuất
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link
+                href="/login"
+                aria-label="Đăng nhập"
+                className="relative inline-flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <User className="size-5" />
+              </Link>
+            )}
+          </div>
 
           <div className="mx-1 h-5 w-px bg-border/60" />
-
-          {session ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                className="group rounded-full outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <Avatar className="size-9 transition-transform group-hover:scale-105 border border-border/50">
-                  <AvatarFallback className="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 font-medium text-xs">
-                    {getInitials(session.fullName)}
-                  </AvatarFallback>
-                </Avatar>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56" sideOffset={12}>
-                <DropdownMenuGroup>
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{session.fullName}</p>
-                    </div>
-                  </DropdownMenuLabel>
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem render={<Link href="/khach-hang" />} className="cursor-pointer">
-                  Bảng điều khiển
-                </DropdownMenuItem>
-                <DropdownMenuItem render={<Link href="/khach-hang/don-hang" />} className="cursor-pointer">
-                  Lịch sử đơn hàng
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={handleLogout}
-                  className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive"
-                >
-                  Đăng xuất
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <Link
-              href="/login"
-              className="text-[14px] font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Đăng nhập
-            </Link>
-          )}
 
           <MagneticButton>
             <Button
