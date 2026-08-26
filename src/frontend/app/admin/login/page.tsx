@@ -12,7 +12,15 @@ export const metadata: Metadata = {
 // tokens của shadcn, không tái dùng .glass-card/.text-gradient-primary (thiết kế cho nền tối nhiều lớp
 // trang trí, trên nền sáng phẳng sẽ gần như vô hình/xám xịt). Bố cục tối giản, không blob nền/Parallax
 // như AuthPageShell của Customer - Admin cần cảm giác "công cụ làm việc", không phải landing page.
-export default function AdminLoginPage() {
+import { redirect } from "next/navigation";
+import { getAdminSession } from "@/lib/auth/adminSession";
+
+export default async function AdminLoginPage() {
+  const session = await getAdminSession();
+  if (session) {
+    redirect("/admin/dashboard");
+  }
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-8 bg-muted/30 px-4 py-16">
       <Logo />

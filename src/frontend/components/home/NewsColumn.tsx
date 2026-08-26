@@ -30,14 +30,14 @@ export function NewsColumn({ articles }: { articles: NewsArticleListItemDto[] })
       className="flex flex-col gap-6"
     >
       <h2 className="font-heading text-2xl font-bold text-foreground">Tin tức mới</h2>
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-4">
         {articles.map((article) => (
           <motion.div key={article.id} variants={itemVariants}>
             <Link
               href={`/tin-tuc/${article.slug}`}
-              className="group flex gap-5 border-b border-border/50 py-5 transition-colors duration-300 hover:bg-slate-50 dark:hover:bg-slate-800/30 px-2 -mx-2 rounded-lg"
+              className="group flex gap-5 rounded-xl border border-blue-200/60 bg-white/50 p-4 shadow-sm transition-all duration-300 hover:bg-white hover:shadow-md dark:border-blue-900/50 dark:bg-zinc-900/40 dark:hover:bg-zinc-900/80"
             >
-              <div className="h-20 w-28 shrink-0 overflow-hidden rounded-md border border-border/30">
+              <div className="h-20 w-28 shrink-0 overflow-hidden rounded-md border border-blue-100 dark:border-blue-900/30">
                 <FallbackImage
                   src={article.thumbnailUrl}
                   alt={article.title}

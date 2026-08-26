@@ -26,8 +26,9 @@ export function PlanComparisonTable({ plans, period }: { plans: ServicePlanListI
   });
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border">
-      <Table>
+    <div className="relative overflow-hidden rounded-[20px] border border-blue-100 bg-gradient-to-br from-[#EFF6FF] to-[#ECFEFF] p-6 shadow-sm dark:border-blue-900/50 dark:from-blue-950/40 dark:to-cyan-950/20 md:p-12">
+      <div className="overflow-hidden rounded-xl border border-blue-200/60 bg-white/50 shadow-sm dark:border-blue-900/50 dark:bg-zinc-900/40">
+        <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
             <TableHead>Tính năng</TableHead>
@@ -69,6 +70,7 @@ export function PlanComparisonTable({ plans, period }: { plans: ServicePlanListI
           ))}
         </TableBody>
       </Table>
+      </div>
     </div>
   );
 }

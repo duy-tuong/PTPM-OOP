@@ -30,7 +30,7 @@ export function FaqColumn({ faqs }: { faqs: FaqDto[] }) {
       className="flex flex-col gap-6"
     >
       <h2 className="font-heading text-2xl font-bold text-foreground">Câu hỏi thường gặp</h2>
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-4">
         {faqs.map((faq) => (
           <motion.div key={faq.id} variants={itemVariants}>
             <FaqBlockItem faq={faq} />
@@ -45,7 +45,7 @@ function FaqBlockItem({ faq }: { faq: FaqDto }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="border-b border-border/50 py-5">
+    <div className="rounded-xl border border-blue-200/60 bg-white/50 p-5 shadow-sm transition-all duration-300 hover:bg-white hover:shadow-md dark:border-blue-900/50 dark:bg-zinc-900/40 dark:hover:bg-zinc-900/80">
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}

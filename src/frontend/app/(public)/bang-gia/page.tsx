@@ -7,7 +7,6 @@ import { RegionAvailabilityStrip } from "@/components/pricing/RegionAvailability
 import { ServiceWhyChooseFeatures } from "@/components/services/ServiceWhyChooseFeatures";
 import { PromotionBannerSection } from "@/components/home/PromotionBannerSection";
 import { FaqColumn } from "@/components/home/FaqColumn";
-import { FinalCtaSection } from "@/components/home/FinalCtaSection";
 
 export const metadata: Metadata = {
   title: "Bảng giá",
@@ -70,8 +69,6 @@ export default async function PricingPage() {
           <FaqColumn faqs={faqs} />
         </div>
       )}
-
-      <FinalCtaSection />
     </>
   );
 }

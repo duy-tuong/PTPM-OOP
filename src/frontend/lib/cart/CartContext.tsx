@@ -84,7 +84,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [items, hydrated]);
 
   function addItem(item: Omit<CartItem, "key">) {
-    setItems((prev) => [...prev, { ...item, key: crypto.randomUUID() }]);
+    const key = typeof crypto !== "undefined" && crypto.randomUUID 
+      ? crypto.randomUUID() 
+      : Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+    setItems((prev) => [...prev, { ...item, key }]);
   }
 
   function removeItem(key: string) {
