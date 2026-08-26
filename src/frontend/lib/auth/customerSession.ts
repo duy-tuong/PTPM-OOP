@@ -22,28 +22,21 @@ export function applyCustomerAuthCookies(
 ): void {
   const persistent = options.persistent ?? true;
   const accessTokenMaxAge = CUSTOMER_REFRESH_TOKEN_MAX_AGE_SECONDS;
-  const isSecure = process.env.NODE_ENV === "production";
-
-
-
   response.cookies.set(CUSTOMER_ACCESS_TOKEN_COOKIE, result.accessToken, {
     httpOnly: true,
     sameSite: "lax",
-    secure: isSecure,
     path: "/",
     maxAge: accessTokenMaxAge,
   });
   response.cookies.set(CUSTOMER_REFRESH_TOKEN_COOKIE, result.refreshToken, {
     httpOnly: true,
     sameSite: "lax",
-    secure: isSecure,
     path: "/",
     ...(persistent ? { maxAge: CUSTOMER_REFRESH_TOKEN_MAX_AGE_SECONDS } : {}),
   });
   response.cookies.set(CUSTOMER_SESSION_COOKIE, JSON.stringify({ fullName: result.fullName }), {
     httpOnly: false,
     sameSite: "lax",
-    secure: isSecure,
     path: "/",
     ...(persistent ? { maxAge: CUSTOMER_REFRESH_TOKEN_MAX_AGE_SECONDS } : {}),
   });
