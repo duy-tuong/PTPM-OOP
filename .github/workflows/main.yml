@@ -43,7 +43,56 @@ jobs:
         with:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USERNAME }}
-          key: ${{ secrets.VM_SSH_KEY }}
+          key: |
+            -----BEGIN OPENSSH PRIVATE KEY-----
+            b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAACFwAAAAdzc2gtcn
+            NhAAAAAwEAAQAAAgEAoKcgOjPpwJjQQ3ByfeV1lfHDQGGOwUzwmprfSd2C8i5L7ohCfr+A
+            eRnsOCWwJNZY7gnOHJLnn23S1fkiOA/FfWAOPaDmN8epJh7oMbcSkYCV/UBYdbRUqYBsrJ
+            2wsYjsu539vbj+ulDSbKFvz8FVKNl6NMnQQaoeXQKWZWoPi9CcMRn/fuVU6SyFk1O1wpmM
+            S2j+vYdZnq0gyBAG0EEzTpynXCtiUdVJq7KQxrc+/3XlN89IO41vAnJJlBeffE/aF5Ijmn
+            nirmic1PkbnVlcnLdF4xffOp3oQGeRNVVBK4Af2otpxe2pJ+C6sDRjOre28LHM4h+UKiP3
+            zPoq37+rhzxNhC3+yQDVVxxjiX1C2VfNuXBGHXCnQo6jAQHqqLBZAeBo1nmTQR/JgHbcfZ
+            JpiuocHZnTfU/XVv/rkHDrbq602Vni8BlF1MVPIBSDyuJgtdF+lw9H3QntBoeMLDJOBOqc
+            1zHuoWwoGzYkQdOvpFlwWYf98atDv5ErNOs9KCi9DkxwIO+hT8oNx3MeHg3ciD5ZF7NP9N
+            y2R/k+g8rkzYv6LbS2zEsk/PmjeeU2OWNHJDs7lMOi+nb43DPaLfF9r5dqGwzVHMS8mCii
+            2gBs5xZd8CTbuydEGIizLnc5J2MVECoxfsdMUf3tPesbJvhk6mevV9a+P0C7r8IbHQgRmu
+            UAAAdYCW2upwltrqcAAAAHc3NoLXJzYQAAAgEAoKcgOjPpwJjQQ3ByfeV1lfHDQGGOwUzw
+            mprfSd2C8i5L7ohCfr+AeRnsOCWwJNZY7gnOHJLnn23S1fkiOA/FfWAOPaDmN8epJh7oMb
+            cSkYCV/UBYdbRUqYBsrJ2wsYjsu539vbj+ulDSbKFvz8FVKNl6NMnQQaoeXQKWZWoPi9Cc
+            MRn/fuVU6SyFk1O1wpmMS2j+vYdZnq0gyBAG0EEzTpynXCtiUdVJq7KQxrc+/3XlN89IO4
+            1vAnJJlBeffE/aF5Ijmnnirmic1PkbnVlcnLdF4xffOp3oQGeRNVVBK4Af2otpxe2pJ+C6
+            sDRjOre28LHM4h+UKiP3zPoq37+rhzxNhC3+yQDVVxxjiX1C2VfNuXBGHXCnQo6jAQHqqL
+            BZAeBo1nmTQR/JgHbcfZJpiuocHZnTfU/XVv/rkHDrbq602Vni8BlF1MVPIBSDyuJgtdF+
+            lw9H3QntBoeMLDJOBOqc1zHuoWwoGzYkQdOvpFlwWYf98atDv5ErNOs9KCi9DkxwIO+hT8
+            oNx3MeHg3ciD5ZF7NP9Ny2R/k+g8rkzYv6LbS2zEsk/PmjeeU2OWNHJDs7lMOi+nb43DPa
+            LfF9r5dqGwzVHMS8mCii2gBs5xZd8CTbuydEGIizLnc5J2MVECoxfsdMUf3tPesbJvhk6m
+            evV9a+P0C7r8IbHQgRmuUAAAADAQABAAACAAEQ4CRdYtAofhKXJOipRJdK7tuMVNOl1zTX
+            Zo2JaYyCJSEp3fMUVzML1Sbm4nJ5dPFDYbmLz1Cd/Gz3WwmZ2oVt7+TrHovr3bdHM42Hju
+            57NsONkT4FWnMeIIUhWLec1naaN5byKsfWsHFlvXsDPTWTrSgQ12UQJA/EQXYzzB2b3pAZ
+            gY9N0JCUKeC5M0wIE8e4+ckNJFmVVtHXqraSsCyghSBrQ0WSujXoQztQ95s0pOGIFQ0cGk
+            qfB9ZH39gweXHNl5c3TCXnGMn1oIAcmdeKWcLbeNuH3690YHYaS4qRLjpCJuCte9asEDZf
+            apx29UDx6mTtBmEkiEjft2LGVUos4pYAnxcK1bjsm0YfjmR+JUAEyuQwoqlxWVIJ2cwuRh
+            30K4ACps8dmNMeRxeD1mpsU/aCbLq/2+3ApMyxwtd2Ox5TUYFvrZjcK9H8RIMOgtoBTK4i
+            AZdfR0WV5Yr3slSvGIO7heiOBsZcmuPJ7h7qZE/XVtFnoPq25yvjJTevBtTfn35di8TFpY
+            MRXvLxMwkDmHrgIar1Y8W7hFMVTKv9vlv1mhiZAGbyq+VZQ80aRpOLBIBVSgIYkOiyscNo
+            w30Td9eI8Lkcy8MKFjgcaXcBQn3cBdrOkKdIDVI55+KrBvDjgWyhzINAQ5XIyMbOndWQMt
+            yralYaK69AqysAQktzAAABABtPxJMtF2aAR3Ymv4plZc+6vVbxK0NSmQ8xknXFyQJhsbMf
+            t2u8TWwxC+yV+6yvv90+QGsReOYLzfWe45QBUkmsMz/xVPvphx9PJzlnxASWYCxeBm2uYC
+            ISpN+HgWlMe8kBo4ulaybdQhnGX9cGBDy31dWuVP0ZSfA2TQQP/ryf9pNHRYpJN2uDnfwL
+            qYb5l2DE3mX0xJtuNq2HDbeorv65+OalB+Jcdtq5QIwd1g0UWORAsVQbWm0/kXszdOT7nr
+            y2pZxA4DCRlo7ljun8NXqgP5nLi7RaA+OPMukqOiDB+cRDfxnbPKN6ZRtiOAcAOBriBI/c
+            AtlhirMSOtmNuwwAAAEBANpurbno2t5YKd1bPlFv89x2IfB6namqArKRSN09sgzjGKQuBr
+            C4bszRBkJS1j1eKeMU60Pqzzefi4t+/Y37TGax5RH2MGa2B3Umr0Wx5/nvUGFo39Nj+FVb
+            jn2ilTIApn96F/IgLoTeVeTNWkt8HjIO+p5Xn1cPjsGIJUhtsG8O2bmuhABXaEsDBxfkkZ
+            r4moTPzB3v9L4Ju8INhvabvHE2B/4vAb1m4kmhmikk2nmeeOgGwXuQiiswfbS/3XH1wkpn
+            WnT/KcSA6WBBxDWL+m4a8XmRv4U8cQFf2jj2e6kUzZxIMokPG3WyC0OEVP2Bvlzwo4gB1v
+            7U4KGZHtKrB2MAAAEBALxIe6qvZQEq/or1zz7AhM8xCAUY7XY5WiZjhWlb/otX8q6qwr5E
+            DBM5/oLpWK4U8IjP85qNOd27BCBmrwMArvICbi9+aHUFCQJv+jmT+g0YrzwRu4ooWx326K
+            58Q44CxLRp/I2h2wyTn87JksM5y+k7wEJCF/pLV3E2dyoPDZwjB3bFi3Iat3dq4fuk5+i/
+            f3Tz32M1jwyuC7OsqQ7pB9UwD1009PujpBzqm3H+51riX54lNrRLth13XHkj3pATWrtyN4
+            wB4HHViWOm7fnVl1rxlOKaDXCyrFBRGs5vE5dMvxo80REdr777SsV6/3kvZ65Cj0AcwKlA
+            V2gV3GZJmxcAAAAhcWhheTAxNDVAaW5zdGFuY2UtMjAyNjA4MjEtMDUxNDMyAQI=
+            -----END OPENSSH PRIVATE KEY-----
           port: 22
           script: |
             echo "==== Starting Auto-Deploy Process on VM ===="
