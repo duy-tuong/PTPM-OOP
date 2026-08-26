@@ -19,10 +19,12 @@ export async function NewsFaqSection() {
   }
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
-        {articles.length > 0 && <NewsColumn articles={articles} />}
-        {faqs.length > 0 && <FaqColumn faqs={faqs} />}
+    <section className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <div className="relative overflow-hidden rounded-[20px] border border-blue-100 bg-gradient-to-br from-[#EFF6FF] to-[#ECFEFF] p-6 shadow-sm dark:border-blue-900/50 dark:from-blue-950/40 dark:to-cyan-950/20 md:p-12">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
+          {articles.length > 0 && <NewsColumn articles={articles} />}
+          {faqs.length > 0 && <FaqColumn faqs={faqs} />}
+        </div>
       </div>
     </section>
   );
