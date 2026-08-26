@@ -137,13 +137,8 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Không redirect sang HTTPS khi Development: frontend Next.js (Server Component fetch + form public)
-// gọi thẳng http://localhost:5137 theo đúng .env.local/.env.example - redirect sang cổng HTTPS dùng
-// dev cert tự ký sẽ khiến fetch phía Node (undici) báo lỗi DEPTH_ZERO_SELF_SIGNED_CERT.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-}
+// Nginx handles SSL termination on port 443 and proxies HTTP to backend port 5000.
+// HttpsRedirection is not needed in containerized backend behind reverse proxy.
 
 // Phục vụ ảnh đã upload - PhysicalFileProvider trỏ đúng uploadsPath đã chốt ở trên (không dùng wwwroot
 // mặc định của UseStaticFiles() để tránh lệch đường dẫn). <img src> load thẳng GET không qua
