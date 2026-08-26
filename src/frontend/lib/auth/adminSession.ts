@@ -14,9 +14,7 @@ export { ADMIN_ACCESS_TOKEN_COOKIE, ADMIN_REFRESH_TOKEN_COOKIE, ADMIN_SESSION_CO
 // thật) + 1 cookie thường (admin_session, chỉ để hiển thị UI - {fullName, roles}), mirror
 // lib/auth/customerSession.ts#applyCustomerAuthCookies.
 export function applyAdminAuthCookies(response: NextResponse, result: LoginResponse): void {
-  const expiresStr = result.expiresAtUtc.endsWith("Z") ? result.expiresAtUtc : result.expiresAtUtc + "Z";
-  const rawDiff = Math.round((new Date(expiresStr).getTime() - Date.now()) / 1000);
-  const accessTokenMaxAge = Number.isFinite(rawDiff) && rawDiff > 0 ? rawDiff : ADMIN_REFRESH_TOKEN_MAX_AGE_SECONDS;
+  const accessTokenMaxAge = ADMIN_REFRESH_TOKEN_MAX_AGE_SECONDS;
   const isSecure = process.env.NODE_ENV === "production";
 
 
