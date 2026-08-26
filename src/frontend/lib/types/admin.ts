@@ -320,6 +320,7 @@ export interface AdminNewsArticleDto {
   content: string;
   thumbnailUrl?: string | null;
   isPublished: boolean;
+  isFeatured: boolean;
   publishedAt: string;
   viewCount: number;
   authorId: string;
@@ -334,6 +335,7 @@ export interface CreateNewsArticleDto {
   content: string;
   thumbnailUrl?: string;
   isPublished: boolean;
+  isFeatured: boolean;
   publishedAt?: string;
   tagNames: string[];
 }

@@ -3,6 +3,7 @@ import { getTestimonials } from "@/lib/api/content";
 import { safeFetch } from "@/lib/api/safe";
 import { FallbackImage } from "@/components/shared/FallbackImage";
 import { ScrollReveal } from "@/components/home/ScrollReveal";
+import { Marquee } from "@/components/shared/Marquee";
 import type { TestimonialDto } from "@/lib/types/content";
 
 export async function TestimonialsGridSection() {
@@ -22,12 +23,14 @@ export async function TestimonialsGridSection() {
           </p>
         </ScrollReveal>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-8">
-          {testimonials.map((testimonial, index) => (
-            <ScrollReveal key={testimonial.id} delay={index * 0.1}>
-              <TestimonialCard testimonial={testimonial} />
-            </ScrollReveal>
-          ))}
+        <div className="-mx-4 sm:mx-0">
+          <Marquee pauseOnHover gapClassName="gap-6 pr-6">
+            {testimonials.map((testimonial) => (
+              <div key={testimonial.id} className="w-[320px] shrink-0 sm:w-[400px]">
+                <TestimonialCard testimonial={testimonial} />
+              </div>
+            ))}
+          </Marquee>
         </div>
       </div>
     </section>

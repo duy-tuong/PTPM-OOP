@@ -33,7 +33,6 @@ export function PlanPricingGrid({ plans }: { plans: ServicePlanListItemDto[] }) 
     return percents.length > 0 ? Math.max(...percents) : 0;
   }, [plans, hasAnnualPricing]);
 
-  const highlightIndex = plans.length >= 3 ? 1 : -1;
   const selectedPeriod = isAnnual ? ANNUAL_PERIOD_MONTHS : MONTHLY_PERIOD_MONTHS;
 
   return (
@@ -74,7 +73,7 @@ export function PlanPricingGrid({ plans }: { plans: ServicePlanListItemDto[] }) 
       )}>
         {plans.map((plan, index) => (
           <ScrollReveal key={plan.id} delay={index * 0.1}>
-            <PlanCard plan={plan} highlighted={index === highlightIndex} period={selectedPeriod} />
+            <PlanCard plan={plan} highlighted={plan.isFeatured} period={selectedPeriod} />
           </ScrollReveal>
         ))}
       </div>

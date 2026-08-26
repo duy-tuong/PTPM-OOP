@@ -79,6 +79,7 @@ public class AdminNewsArticleService : IAdminNewsArticleService
             ThumbnailUrl = dto.ThumbnailUrl,
             ViewCount = 0,
             IsPublished = dto.IsPublished,
+            IsFeatured = dto.IsFeatured,
             PublishedAt = dto.PublishedAt ?? DateTime.UtcNow,
             IsDeleted = false,
             CreatedAt = DateTime.UtcNow,
@@ -114,6 +115,7 @@ public class AdminNewsArticleService : IAdminNewsArticleService
         entity.Content = dto.Content;
         entity.ThumbnailUrl = dto.ThumbnailUrl;
         entity.IsPublished = dto.IsPublished;
+        entity.IsFeatured = dto.IsFeatured;
         entity.PublishedAt = dto.PublishedAt ?? entity.PublishedAt;
         entity.UpdatedAt = DateTime.UtcNow;
 
@@ -210,6 +212,7 @@ public class AdminNewsArticleService : IAdminNewsArticleService
             Content = article.Content,
             ThumbnailUrl = article.ThumbnailUrl,
             IsPublished = article.IsPublished,
+            IsFeatured = article.IsFeatured,
             PublishedAt = article.PublishedAt,
             ViewCount = article.ViewCount,
             AuthorId = article.AuthorId,

@@ -37,7 +37,7 @@ export function PlanDetailHero({ plan }: { plan: ServicePlanDetailDto }) {
             </span>
           )}
         </div>
-        <h1 className="mt-2 font-heading text-5xl font-bold text-foreground sm:text-6xl">{plan.name}</h1>
+        <h1 className="mt-2 font-heading text-4xl font-bold text-foreground sm:text-5xl">{plan.name}</h1>
 
         {(plan.description ?? plan.shortDescription) && (
           <p className="mt-6 max-w-2xl text-lg text-muted-foreground">{plan.description ?? plan.shortDescription}</p>

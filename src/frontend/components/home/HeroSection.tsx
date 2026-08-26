@@ -10,7 +10,7 @@ import { AnimatedNumber } from "@/components/shared/AnimatedNumber";
 
 export function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
-  
+
   // Track scroll position of this section
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -23,9 +23,9 @@ export function HeroSection() {
   const y = useTransform(scrollYProgress, [0, 1], [0, 60]);
 
   return (
-    <section ref={sectionRef} className="relative flex min-h-screen flex-col items-center pt-28 pb-12 overflow-hidden px-4 sm:px-6 lg:px-8">
-      
-      <motion.div 
+    <section ref={sectionRef} className="relative flex min-h-screen flex-col items-center pt-32 pb-16 overflow-hidden px-4 sm:px-6 lg:px-8">
+
+      <motion.div
         style={{ opacity, scale, y }}
         className="relative z-10 flex w-full max-w-5xl flex-col items-center text-center gap-6"
       >
@@ -42,11 +42,11 @@ export function HeroSection() {
           <br />
           <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">cho doanh nghiệp Việt</span>
         </h1>
-        
+
         <p className="mx-auto max-w-[50ch] text-base leading-relaxed text-muted-foreground sm:text-lg">
           Một nền tảng cho VPS, Hosting, Domain, Email doanh nghiệp, SSL và Firewall chống DDoS. Triển khai chỉ trong vài phút.
         </p>
-        
+
         <div className="mt-2 flex flex-col gap-4 sm:flex-row">
           <MagneticButton>
             <Button
@@ -105,7 +105,7 @@ export function HeroSection() {
                 <span className="text-xs font-medium text-emerald-500">All systems operational</span>
               </div>
             </div>
-            
+
             {/* Body */}
             <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-3 sm:gap-6 sm:p-6">
               {/* Metric 1 */}
@@ -116,15 +116,15 @@ export function HeroSection() {
                   <span className="text-xs font-medium text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">-<AnimatedNumber value={2.4} decimals={1} />%</span>
                 </div>
                 <div className="mt-3 h-1.5 w-full rounded-full bg-muted overflow-hidden">
-                  <motion.div 
+                  <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: "12%" }}
                     transition={{ duration: 1, delay: 0.5 }}
-                    className="h-full rounded-full bg-blue-500" 
+                    className="h-full rounded-full bg-blue-500"
                   />
                 </div>
               </div>
-              
+
               {/* Metric 2 */}
               <div className="flex flex-col gap-2 rounded-lg border border-border/50 bg-background/50 p-4">
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Memory Allocation</span>
@@ -133,11 +133,11 @@ export function HeroSection() {
                   <span className="text-xs font-medium text-muted-foreground">/ 16 GB</span>
                 </div>
                 <div className="mt-3 h-1.5 w-full rounded-full bg-muted overflow-hidden">
-                  <motion.div 
+                  <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: "26%" }}
                     transition={{ duration: 1, delay: 0.7 }}
-                    className="h-full rounded-full bg-cyan-500" 
+                    className="h-full rounded-full bg-cyan-500"
                   />
                 </div>
               </div>
@@ -151,8 +151,8 @@ export function HeroSection() {
                 {/* Mini chart mock */}
                 <div className="mt-3 flex h-4 w-full items-end gap-1">
                   {[40, 25, 60, 30, 80, 45, 90, 50, 65, 85].map((val, i) => (
-                    <motion.div 
-                      key={i} 
+                    <motion.div
+                      key={i}
                       initial={{ height: 0 }}
                       animate={{ height: `${val}%` }}
                       transition={{ duration: 0.5, delay: 0.8 + (i * 0.05) }}

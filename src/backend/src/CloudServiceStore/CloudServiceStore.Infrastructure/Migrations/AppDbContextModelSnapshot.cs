@@ -1084,6 +1084,9 @@ namespace CloudServiceStore.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsFeatured")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsPublished")
                         .HasColumnType("bit");
 
@@ -1130,6 +1133,8 @@ namespace CloudServiceStore.Infrastructure.Migrations
 
                     b.HasIndex("NewsCategoryId", "IsPublished");
 
+                    b.HasIndex("IsFeatured", "IsPublished", "PublishedAt");
+
                     b.ToTable("NewsArticles", (string)null);
 
                     b.HasData(
@@ -1140,6 +1145,7 @@ namespace CloudServiceStore.Infrastructure.Migrations
                             Content = "Nhân dịp đầu năm 2026, CloudServiceStore triển khai chương trình ưu đãi giảm giá lên đến 10% cho toàn bộ gói VPS SSD. Chương trình áp dụng cho khách hàng đăng ký mới trong suốt năm 2026.",
                             CreatedAt = new DateTime(2026, 8, 10, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsDeleted = false,
+                            IsFeatured = false,
                             IsPublished = true,
                             NewsCategoryId = 1,
                             PublishedAt = new DateTime(2026, 8, 10, 0, 0, 0, 0, DateTimeKind.Utc),

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { AnimatedCheck } from "@/components/pricing/AnimatedCheck";
 import { AnimatedPrice } from "@/components/shared/AnimatedPrice";
 import { computeCustomPlanUnitPrice } from "@/lib/pricing/customPlanPricing";
+import { CustomPlanConfiguratorCard } from "@/components/pricing/CustomPlanConfiguratorCard";
 import type { ServicePlanListItemDto } from "@/lib/types/catalog";
 
 const MONTHLY_PERIOD_MONTHS = 1;
@@ -64,38 +65,42 @@ export function PlanConfiguratorSlider({ plans, period }: { plans: ServicePlanLi
         </div>
       </div>
 
-      <div className="glass-card relative overflow-hidden rounded-2xl p-8">
-        {plan.isFeatured && (
-          <div className="mb-4 w-fit rounded-full bg-primary px-3 py-1 text-[10px] font-bold tracking-wide text-primary-foreground uppercase">
-            Phổ biến nhất
+      {plan.packageType === "Custom" ? (
+        <CustomPlanConfiguratorCard key={plan.id} plan={plan} period={period} showHeader={false} />
+      ) : (
+        <div className="glass-card relative overflow-hidden rounded-2xl p-8">
+          {plan.isFeatured && (
+            <div className="mb-4 w-fit rounded-full bg-primary px-3 py-1 text-[10px] font-bold tracking-wide text-primary-foreground uppercase">
+              Phổ biến nhất
+            </div>
+          )}
+          <p className="text-sm text-muted-foreground">Hoá đơn ước tính</p>
+          <div className="my-2 text-4xl font-bold">
+            <AnimatedPrice value={priceFor(plan, period)} />
           </div>
-        )}
-        <p className="text-sm text-muted-foreground">Hoá đơn ước tính</p>
-        <div className="my-2 text-4xl font-bold">
-          <AnimatedPrice value={priceFor(plan, period)} />
+          {plan.features.length > 0 && (
+            <ul className="my-6 flex flex-col gap-3">
+              {plan.features.map((f) => (
+                <li key={f.featureKey} className="flex items-center gap-3 text-sm">
+                  <AnimatedCheck className="size-4 shrink-0 text-primary" />
+                  {f.featureValueText ? (
+                    <span className="text-muted-foreground">
+                      {f.featureLabel}: <span className="text-foreground">{f.featureValueText}</span>
+                    </span>
+                  ) : (
+                    <span className="text-foreground">{f.featureLabel}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          <Button
+            className="w-full"
+            nativeButton={false}
+            render={<Link href={`/lien-he?planId=${plan.id}`}>Triển Khai Ngay</Link>}
+          />
         </div>
-        {plan.features.length > 0 && (
-          <ul className="my-6 flex flex-col gap-3">
-            {plan.features.map((f) => (
-              <li key={f.featureKey} className="flex items-center gap-3 text-sm">
-                <AnimatedCheck className="size-4 shrink-0 text-primary" />
-                {f.featureValueText ? (
-                  <span className="text-muted-foreground">
-                    {f.featureLabel}: <span className="text-foreground">{f.featureValueText}</span>
-                  </span>
-                ) : (
-                  <span className="text-foreground">{f.featureLabel}</span>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-        <Button
-          className="w-full"
-          nativeButton={false}
-          render={<Link href={`/lien-he?planId=${plan.id}`}>Triển Khai Ngay</Link>}
-        />
-      </div>
+      )}
     </div>
   );
 }

@@ -59,8 +59,31 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ slu
           : null
         : (defaultPrice.promotionalPrice ?? defaultPrice.price);
 
+  // Product/Offer JSON-LD (SEO) - chỉ emit khi có giá thật (tránh Offer giá 0). Không có offers.url vì
+  // dự án chưa cấu hình NEXT_PUBLIC_SITE_URL/metadataBase nào - hardcode domain sẽ sai môi trường
+  // dev/staging. Không có aggregateRating vì TestimonialDto không gắn với 1 plan cụ thể nào.
+  const productJsonLd =
+    defaultPrice && floatingPrice != null
+      ? {
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: plan.name,
+          description: plan.shortDescription ?? plan.description ?? undefined,
+          category: plan.categoryName,
+          offers: {
+            "@type": "Offer",
+            price: String(floatingPrice),
+            priceCurrency: defaultPrice.currency,
+            availability: "https://schema.org/InStock",
+          },
+        }
+      : null;
+
   return (
     <>
+      {productJsonLd && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }} />
+      )}
       <PlanDetailHero plan={plan} />
       <PlanDetailContent plan={plan} />
 

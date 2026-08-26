@@ -5,13 +5,21 @@ import { toast } from "sonner";
 import { FacebookLogo, XLogo, LinkSimple } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
-// Cột phải "Thẻ & Chia sẻ" (thay khối Tác giả - NewsArticleDetailDto không có field tác giả nào, dựng
-// đúng theo đề xuất gốc sẽ là bịa dữ liệu). Tags dùng đúng article.tags thật đã có; Chia sẻ không cần
-// dữ liệu, chỉ cần URL trang hiện tại - đọc window.location.href trong useEffect (tránh hydration
-// mismatch, cùng kiểu đã dùng cho theme/session ở nơi khác).
-export function ArticleSidebar({ tags }: { tags: string[] }) {
+// Cột phải "Tác giả & Thẻ & Chia sẻ". Khối Tác giả từng bị bỏ vì NewsArticleDetailDto chưa có field
+// author (dựng lúc đó sẽ là bịa dữ liệu) - Đợt 6 đã expose AuthorName thật (NewsArticle.Author.FullName)
+// nên phục hồi đúng vị trí này. Tags dùng đúng article.tags thật đã có; Chia sẻ không cần dữ liệu, chỉ
+// cần URL trang hiện tại - đọc window.location.href trong useEffect (tránh hydration mismatch, cùng
+// kiểu đã dùng cho theme/session ở nơi khác).
+export function ArticleSidebar({ tags, authorName }: { tags: string[]; authorName: string }) {
   return (
     <div className="hidden lg:sticky lg:top-32 lg:col-start-3 lg:flex lg:h-fit lg:flex-col lg:gap-8">
+      {authorName && (
+        <div>
+          <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">Tác giả</p>
+          <p className="mt-3 text-sm font-medium text-foreground">{authorName}</p>
+        </div>
+      )}
+
       {tags.length > 0 && (
         <div>
           <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">Thẻ</p>

@@ -8,19 +8,19 @@ export function FinalCtaSection() {
       <ScrollReveal>
         <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[32px] bg-[#0F172A] px-6 py-20 text-center shadow-2xl">
           {/* Subtle B2B gradient overlay */}
-          <div 
+          <div
             aria-hidden
-            className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue-900/40 via-transparent to-cyan-900/30" 
+            className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue-900/40 via-transparent to-cyan-900/30"
           />
-          
+
           <div className="relative z-10 mx-auto max-w-3xl flex flex-col items-center gap-6">
             <h2 className="font-heading text-4xl font-extrabold text-white sm:text-5xl md:text-6xl text-balance leading-tight">
-              Bạn đã sẵn sàng mở rộng <br className="hidden sm:block"/> hạ tầng của mình?
+              Bạn đã sẵn sàng mở rộng <br className="hidden sm:block" /> hạ tầng của mình?
             </h2>
             <p className="text-lg text-slate-300 sm:text-xl">
               Để Cloudverse đồng hành cùng bạn.
             </p>
-            
+
             <div className="mt-6 flex w-full flex-col items-center justify-center gap-4 sm:w-auto sm:flex-row">
               <Button
                 nativeButton={false}
@@ -34,7 +34,7 @@ export function FinalCtaSection() {
                 render={<Link href="/lien-he?intent=tu-van">Tư vấn miễn phí</Link>}
               />
             </div>
-            
+
             <Link
               href="/doi-tac"
               className="mt-6 text-sm font-medium text-slate-400 transition-colors hover:text-white"

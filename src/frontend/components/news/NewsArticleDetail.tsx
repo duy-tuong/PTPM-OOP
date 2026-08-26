@@ -3,6 +3,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ArticleToc } from "@/components/news/ArticleToc";
 import { ArticleSidebar } from "@/components/news/ArticleSidebar";
+import { ArticleViewTracker } from "@/components/news/ArticleViewTracker";
 import { ReadingProgressBar } from "@/components/news/ReadingProgressBar";
 import { CommentSection } from "@/components/news/CommentSection";
 import { NewsCard } from "@/components/news/NewsCard";
@@ -31,6 +32,7 @@ export function NewsArticleDetail({
 }) {
   return (
     <div className="relative">
+      <ArticleViewTracker articleId={article.id} slug={article.slug} />
       <ReadingProgressBar />
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-x-12 gap-y-10 px-4 py-12 sm:px-6 lg:grid-cols-[1fr_3fr_1fr] lg:px-8">
         <ArticleToc headings={headings} />
@@ -65,7 +67,7 @@ export function NewsArticleDetail({
           <CommentSection articleId={article.id} comments={comments} />
         </article>
 
-        <ArticleSidebar tags={article.tags} />
+        <ArticleSidebar tags={article.tags} authorName={article.authorName} />
       </div>
 
       {relatedArticles.length > 0 && (

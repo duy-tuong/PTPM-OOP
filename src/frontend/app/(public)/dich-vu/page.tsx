@@ -41,7 +41,7 @@ export default async function ServicesPage() {
   return (
     <>
       <div className="mx-auto max-w-3xl px-4 py-12 text-center sm:px-6 lg:px-8">
-        <h1 className="font-heading text-4xl font-bold sm:text-5xl">Một nền tảng. Toàn bộ hạ tầng.</h1>
+        <h1 className="font-heading text-3xl font-bold sm:text-4xl">Một nền tảng. Toàn bộ hạ tầng.</h1>
         <p className="mt-4 text-lg text-muted-foreground">
           VPS, Hosting, Domain, Email doanh nghiệp và giải pháp bảo mật — tất cả được quản lý trên một nền tảng.
         </p>
