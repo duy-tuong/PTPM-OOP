@@ -58,8 +58,7 @@ export function AdminLoginForm() {
         return;
       }
 
-      router.push("/admin/dashboard");
-      router.refresh();
+      window.location.href = "/admin/dashboard";
     } finally {
       setIsSubmitting(false);
     }
