@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Logo } from "@/components/shared/Logo";
 import { EnvelopeSimple, Phone, MapPin } from "@phosphor-icons/react/dist/ssr";
+import { getServiceCategories } from "@/lib/api/catalog";
+import { safeFetch } from "@/lib/api/safe";
 
 const FOOTER_LINKS = {
   company: {
@@ -9,17 +11,6 @@ const FOOTER_LINKS = {
       { href: "/gioi-thieu", label: "Giới thiệu" },
       { href: "/ve-chung-toi", label: "Về chúng tôi" },
       { href: "/lien-he", label: "Liên hệ" },
-    ],
-  },
-  services: {
-    title: "Dịch vụ",
-    links: [
-      { href: "/dich-vu/vps", label: "VPS" },
-      { href: "/dich-vu/hosting", label: "Hosting" },
-      { href: "/dich-vu/domain", label: "Domain" },
-      { href: "/dich-vu/email", label: "Email" },
-      { href: "/dich-vu/ssl", label: "SSL" },
-      { href: "/dich-vu/firewall", label: "Firewall" },
     ],
   },
   support: {
@@ -33,8 +24,17 @@ const FOOTER_LINKS = {
   },
 };
 
-export function Footer() {
+// Đợt 4 (nâng cấp trang Dịch vụ) - cột "Dịch vụ" trước đây hardcode 6 slug cố định (vd /dich-vu/email,
+// /dich-vu/firewall) không khớp slug thật trong DB (email-doanh-nghiep, firewall-chong-ddos) và thiếu
+// hẳn category thêm sau (vd cloud-backup) - đúng kiểu "dữ liệu nghiệp vụ giả trong navigation". Footer
+// dùng chung toàn site public (app/(public)/layout.tsx) nên chuyển thành async Server Component, fetch
+// category thật y hệt cách TrustStrip.tsx/ServicesBentoSection.tsx đang làm ở trang chủ.
+export async function Footer() {
   const year = new Date().getFullYear();
+  const categories = await safeFetch(() => getServiceCategories({ revalidate: 3600 }), []);
+  const serviceLinks = [...categories]
+    .sort((a, b) => a.displayOrder - b.displayOrder)
+    .map((category) => ({ href: `/dich-vu/${category.slug}`, label: category.name }));
 
   return (
     <footer className="relative z-10 border-t border-border/50 bg-background pt-16 pb-8">
@@ -64,18 +64,20 @@ export function Footer() {
           </div>
 
           {/* Links: Dịch vụ */}
-          <div className="lg:col-span-1">
-            <h3 className="font-heading text-sm font-bold text-foreground">{FOOTER_LINKS.services.title}</h3>
-            <ul className="mt-6 flex flex-col gap-3">
-              {FOOTER_LINKS.services.links.map((link) => (
-                <li key={link.href}>
-                  <Link href={link.href} className="text-sm font-medium text-muted-foreground transition-colors hover:text-blue-600 dark:hover:text-blue-400">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {serviceLinks.length > 0 && (
+            <div className="lg:col-span-1">
+              <h3 className="font-heading text-sm font-bold text-foreground">Dịch vụ</h3>
+              <ul className="mt-6 flex flex-col gap-3">
+                {serviceLinks.map((link) => (
+                  <li key={link.href}>
+                    <Link href={link.href} className="text-sm font-medium text-muted-foreground transition-colors hover:text-blue-600 dark:hover:text-blue-400">
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Links: Hỗ trợ */}
           <div className="lg:col-span-1">

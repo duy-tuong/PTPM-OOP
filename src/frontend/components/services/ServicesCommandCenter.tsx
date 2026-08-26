@@ -14,7 +14,15 @@ import type { ServiceCategoryDto } from "@/lib/types/catalog";
 // ScrollReveal vốn dùng whileInView của Framer Motion chỉ cho hiệu ứng xuất hiện, không đồng bộ active
 // state), cột phải là các card lớn xếp dọc. KHÔNG giới hạn số danh mục - đây chính là lý do chọn bố
 // cục này thay Zig-Zag (tự scale, không cần cắt/đổ xuống grid phụ khi Admin thêm nhiều danh mục).
-export function ServicesCommandCenter({ categories }: { categories: ServiceCategoryDto[] }) {
+export function ServicesCommandCenter({
+  categories,
+  planCountByCategory,
+}: {
+  categories: ServiceCategoryDto[];
+  // Số gói khả dụng thật theo từng danh mục (đếm từ ServicePlanListItemDto đã fetch ở page.tsx) - tuỳ
+  // chọn để component vẫn dùng được ở nơi không có sẵn dữ liệu plans (không bắt buộc phá vỡ chữ ký cũ).
+  planCountByCategory?: Map<string, number>;
+}) {
   const [activeSlug, setActiveSlug] = useState(categories[0]?.slug ?? "");
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 
@@ -105,7 +113,14 @@ export function ServicesCommandCenter({ categories }: { categories: ServiceCateg
                     className="pointer-events-none absolute -right-6 -bottom-6 size-40 text-foreground/5"
                   />
                   <div className="relative z-10 flex flex-col gap-2">
-                    <span className="text-xs font-medium text-primary">0{index + 1}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-primary">0{index + 1}</span>
+                      {!!planCountByCategory?.get(category.slug) && (
+                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                          {planCountByCategory.get(category.slug)} gói khả dụng
+                        </span>
+                      )}
+                    </div>
                     <h2 className="font-heading text-xl font-bold text-foreground sm:text-2xl">{category.name}</h2>
                     {category.description && (
                       <p className="max-w-xl text-sm text-muted-foreground">{category.description}</p>
