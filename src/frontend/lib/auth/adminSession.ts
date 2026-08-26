@@ -15,20 +15,15 @@ export { ADMIN_ACCESS_TOKEN_COOKIE, ADMIN_REFRESH_TOKEN_COOKIE, ADMIN_SESSION_CO
 // lib/auth/customerSession.ts#applyCustomerAuthCookies.
 export function applyAdminAuthCookies(response: NextResponse, result: LoginResponse): void {
   const accessTokenMaxAge = ADMIN_REFRESH_TOKEN_MAX_AGE_SECONDS;
-  const isSecure = process.env.NODE_ENV === "production";
-
-
   response.cookies.set(ADMIN_ACCESS_TOKEN_COOKIE, result.accessToken, {
     httpOnly: true,
     sameSite: "lax",
-    secure: isSecure,
     path: "/",
     maxAge: accessTokenMaxAge,
   });
   response.cookies.set(ADMIN_REFRESH_TOKEN_COOKIE, result.refreshToken, {
     httpOnly: true,
     sameSite: "lax",
-    secure: isSecure,
     path: "/",
     maxAge: ADMIN_REFRESH_TOKEN_MAX_AGE_SECONDS,
   });
@@ -38,7 +33,6 @@ export function applyAdminAuthCookies(response: NextResponse, result: LoginRespo
     {
       httpOnly: false,
       sameSite: "lax",
-      secure: isSecure,
       path: "/",
       maxAge: ADMIN_REFRESH_TOKEN_MAX_AGE_SECONDS,
     },
