@@ -34,7 +34,7 @@ export function applyCustomerAuthCookies(
     path: "/",
     ...(persistent ? { maxAge: CUSTOMER_REFRESH_TOKEN_MAX_AGE_SECONDS } : {}),
   });
-  response.cookies.set(CUSTOMER_SESSION_COOKIE, JSON.stringify({ fullName: result.fullName }), {
+  response.cookies.set(CUSTOMER_SESSION_COOKIE, encodeURIComponent(JSON.stringify({ fullName: result.fullName })), {
     httpOnly: false,
     sameSite: "lax",
     path: "/",
@@ -62,7 +62,7 @@ export async function getCustomerSession(): Promise<CustomerSessionUser | null> 
   }
 
   try {
-    const parsed = JSON.parse(raw) as CustomerSessionUser;
+    const parsed = JSON.parse(decodeURIComponent(raw)) as CustomerSessionUser;
     if (typeof parsed.fullName !== "string") {
       return null;
     }
