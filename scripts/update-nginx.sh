@@ -2,6 +2,9 @@
 set -e
 
 echo "==== Updating Nginx Reverse Proxy Config ===="
+sudo rm -f /etc/nginx/conf.d/*.conf
+sudo rm -f /etc/nginx/sites-enabled/*
+
 sudo tee /etc/nginx/sites-available/default > /dev/null << 'EOF'
 server {
     listen 80;
@@ -32,5 +35,6 @@ server {
 }
 EOF
 
+sudo ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 sudo nginx -t && sudo systemctl reload nginx || true
 echo "==== Nginx Reloaded Successfully! ===="
