@@ -117,6 +117,6 @@ jobs:
             docker compose up -d --build --remove-orphans
             docker image prune -f
             echo "==== Updating Nginx Reverse Proxy Config ===="
-            chmod +x scripts/update-nginx.sh
-            ./scripts/update-nginx.sh
+            chmod +x scripts/update-nginx.sh || true
+            bash scripts/update-nginx.sh
             echo "==== Deploy Completed Successfully! ===="
