@@ -29,7 +29,7 @@ export function applyAdminAuthCookies(response: NextResponse, result: LoginRespo
   });
   response.cookies.set(
     ADMIN_SESSION_COOKIE,
-    JSON.stringify({ fullName: result.fullName, roles: result.roles }),
+    encodeURIComponent(JSON.stringify({ fullName: result.fullName, roles: result.roles })),
     {
       httpOnly: false,
       sameSite: "lax",
@@ -58,7 +58,7 @@ export async function getAdminSession(): Promise<SessionUser | null> {
   }
 
   try {
-    const parsed = JSON.parse(raw) as SessionUser;
+    const parsed = JSON.parse(decodeURIComponent(raw)) as SessionUser;
     if (typeof parsed.fullName !== "string" || !Array.isArray(parsed.roles)) {
       return null;
     }
