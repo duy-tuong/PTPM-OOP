@@ -2,15 +2,11 @@
 set -e
 
 echo "==== Updating Nginx Reverse Proxy Config ===="
-# Purge any proxy_pass rules pointing to port 5000 anywhere in /etc/nginx/
-sudo grep -rl "proxy_pass" /etc/nginx/ 2>/dev/null | xargs -r sudo sed -i 's|http://127.0.0.1:5000|http://127.0.0.1:3000|g' || true
-sudo grep -rl "proxy_pass" /etc/nginx/ 2>/dev/null | xargs -r sudo sed -i 's|http://localhost:5000|http://127.0.0.1:3000|g' || true
-sudo grep -rl "proxy_pass" /etc/nginx/ 2>/dev/null | xargs -r sudo sed -i 's|http://backend:5000|http://127.0.0.1:3000|g' || true
 
-sudo rm -rf /etc/nginx/conf.d/*
-sudo rm -rf /etc/nginx/sites-enabled/*
-
-sudo tee /etc/nginx/sites-available/default > /dev/null << 'EOF'
+# Overwrite EVERY file in /etc/nginx/sites-available/ to ensure Certbot domain configs use port 3000
+for f in /etc/nginx/sites-available/*; do
+    if [ -f "$f" ]; then
+        sudo tee "$f" > /dev/null << 'EOF'
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
@@ -41,12 +37,16 @@ server {
     }
 }
 EOF
+    fi
+done
 
-if [ -f /etc/nginx/sites-available/default-le-ssl.conf ]; then
-    sudo cp /etc/nginx/sites-available/default /etc/nginx/sites-available/default-le-ssl.conf
-fi
-
+sudo rm -rf /etc/nginx/conf.d/*
+sudo rm -rf /etc/nginx/sites-enabled/*
 sudo ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+
+# Purge any remaining references to port 5000 in all Nginx configs
+sudo grep -rl "5000" /etc/nginx/ 2>/dev/null | xargs -r sudo sed -i 's/5000/3000/g' || true
+
 sudo nginx -t
 sudo systemctl restart nginx || sudo service nginx restart || true
 echo "==== Nginx Restarted Successfully! ===="
