@@ -136,11 +136,20 @@ jobs:
             local path="$1"
             echo "Checking ${path} ..."
             local headers
-            headers=$(curl -sS -i --max-time 15 -X POST "https://dichvucloud.duckdns.org${path}" \
-              -H "Content-Type: application/json" -d '{}')
+            # GET thay vi POST body rong: 2 route nay chi export POST, nen Next.js tu tra 405 o tang
+            # framework (truoc khi cham vao code Route Handler) - khong bao gio crash du input gi.
+            #
+            # Kiem tra header "vary: ...next-router-state-tree..." thay vi "x-powered-by: Next.js":
+            # da xac nhan qua test truc tiep (localhost, ca 2 phia) - x-powered-by CHI xuat hien tren
+            # response 200 thanh cong, KHONG co tren response 405 dieu Next.js tu tra cho method
+            # khong duoc export (van la Next.js xu ly, chi la khong qua path gan header nay). Header
+            # "vary" chua "next-router-state-tree" thi luon co mat o MOI response do Next.js phuc vu
+            # (200/405/500 deu co), va backend .NET (Kestrel) khong bao gio tu them header nay -
+            # discriminator dang tin cay hon nhieu.
+            headers=$(curl -sS -i --max-time 15 -X GET "https://dichvucloud.duckdns.org${path}")
             echo "$headers" | head -n 15
-            if ! echo "$headers" | grep -qi '^x-powered-by: *next\.js'; then
-              echo "::error::Smoke test FAILED for ${path} - missing 'x-powered-by: Next.js' header, meaning the request is being routed straight to the .NET backend instead of Next.js (this is the exact symptom of the diagnosed login-cookie bug: Nginx may have been overwritten by a Certbot renewal, bypassing the Next.js Route Handler that sets auth cookies)."
+            if ! echo "$headers" | grep -qi '^vary:.*next-router'; then
+              echo "::error::Smoke test FAILED for ${path} - missing 'vary: ...next-router-state-tree...' header, meaning the request is being routed straight to the .NET backend instead of Next.js (this is the exact symptom of the diagnosed login-cookie bug: Nginx may have been overwritten by a Certbot renewal, bypassing the Next.js Route Handler that sets auth cookies)."
               exit 1
             fi
             echo "OK: ${path} is correctly served by Next.js."
