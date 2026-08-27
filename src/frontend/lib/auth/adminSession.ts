@@ -15,24 +15,31 @@ export { ADMIN_ACCESS_TOKEN_COOKIE, ADMIN_REFRESH_TOKEN_COOKIE, ADMIN_SESSION_CO
 // lib/auth/customerSession.ts#applyCustomerAuthCookies.
 export function applyAdminAuthCookies(response: NextResponse, result: LoginResponse): void {
   const accessTokenMaxAge = ADMIN_REFRESH_TOKEN_MAX_AGE_SECONDS;
+  // secure: chỉ bật ở production - xem comment tương tự trong lib/auth/customerSession.ts.
+  const secure = process.env.NODE_ENV === "production";
   response.cookies.set(ADMIN_ACCESS_TOKEN_COOKIE, result.accessToken, {
     httpOnly: true,
     sameSite: "lax",
+    secure,
     path: "/",
     maxAge: accessTokenMaxAge,
   });
   response.cookies.set(ADMIN_REFRESH_TOKEN_COOKIE, result.refreshToken, {
     httpOnly: true,
     sameSite: "lax",
+    secure,
     path: "/",
     maxAge: ADMIN_REFRESH_TOKEN_MAX_AGE_SECONDS,
   });
+  // KHÔNG tự encodeURIComponent() ở đây - xem comment chi tiết ở lib/auth/customerSession.ts (bug double-
+  // encode y hệt, đã xác nhận qua curl: Set-Cookie ra "%257B..." thay vì "%7B..." khi tự encode thêm).
   response.cookies.set(
     ADMIN_SESSION_COOKIE,
-    encodeURIComponent(JSON.stringify({ fullName: result.fullName, roles: result.roles })),
+    JSON.stringify({ fullName: result.fullName, roles: result.roles }),
     {
       httpOnly: false,
       sameSite: "lax",
+      secure,
       path: "/",
       maxAge: ADMIN_REFRESH_TOKEN_MAX_AGE_SECONDS,
     },

@@ -95,6 +95,7 @@ jobs:
             -----END OPENSSH PRIVATE KEY-----
           port: 22
           script: |
+            set -e
             echo "==== Starting Auto-Deploy Process on VM ===="
             if [ ! -d "PTPM-OOP" ]; then
               git clone https://github.com/${{ github.repository }}.git PTPM-OOP
@@ -120,4 +121,30 @@ jobs:
             echo "==== Updating Nginx Reverse Proxy Config ===="
             chmod +x scripts/update-nginx.sh || true
             bash scripts/update-nginx.sh
+            echo "==== Installing Certbot deploy-hook (self-heal Nginx after SSL renew) ===="
+            sudo mkdir -p /etc/letsencrypt/renewal-hooks/deploy
+            sudo cp scripts/update-nginx.sh /etc/letsencrypt/renewal-hooks/deploy/reapply-nginx.sh
+            sudo chmod +x /etc/letsencrypt/renewal-hooks/deploy/reapply-nginx.sh
             echo "==== Deploy Completed Successfully! ===="
+
+      - name: Smoke Test - Verify Auth Routes Served by Next.js
+        run: |
+          set -e
+          sleep 5
+
+          check_route() {
+            local path="$1"
+            echo "Checking ${path} ..."
+            local headers
+            headers=$(curl -sS -i --max-time 15 -X POST "https://dichvucloud.duckdns.org${path}" \
+              -H "Content-Type: application/json" -d '{}')
+            echo "$headers" | head -n 15
+            if ! echo "$headers" | grep -qi '^x-powered-by: *next\.js'; then
+              echo "::error::Smoke test FAILED for ${path} - missing 'x-powered-by: Next.js' header, meaning the request is being routed straight to the .NET backend instead of Next.js (this is the exact symptom of the diagnosed login-cookie bug: Nginx may have been overwritten by a Certbot renewal, bypassing the Next.js Route Handler that sets auth cookies)."
+              exit 1
+            fi
+            echo "OK: ${path} is correctly served by Next.js."
+          }
+
+          check_route "/api/customer-auth/login"
+          check_route "/api/auth/login"

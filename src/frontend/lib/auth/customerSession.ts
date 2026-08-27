@@ -22,21 +22,36 @@ export function applyCustomerAuthCookies(
 ): void {
   const persistent = options.persistent ?? true;
   const accessTokenMaxAge = CUSTOMER_REFRESH_TOKEN_MAX_AGE_SECONDS;
+  // secure: chỉ bật ở production (Vercel/Docker build với NODE_ENV=production) - dev local vẫn chạy
+  // http://localhost nên không thể bật secure ở đó (trình duyệt sẽ âm thầm từ chối set cookie).
+  const secure = process.env.NODE_ENV === "production";
   response.cookies.set(CUSTOMER_ACCESS_TOKEN_COOKIE, result.accessToken, {
     httpOnly: true,
     sameSite: "lax",
+    secure,
     path: "/",
     maxAge: accessTokenMaxAge,
   });
   response.cookies.set(CUSTOMER_REFRESH_TOKEN_COOKIE, result.refreshToken, {
     httpOnly: true,
     sameSite: "lax",
+    secure,
     path: "/",
     ...(persistent ? { maxAge: CUSTOMER_REFRESH_TOKEN_MAX_AGE_SECONDS } : {}),
   });
-  response.cookies.set(CUSTOMER_SESSION_COOKIE, encodeURIComponent(JSON.stringify({ fullName: result.fullName })), {
+  // KHÔNG tự encodeURIComponent() giá trị JSON ở đây - NextResponse.cookies.set() (qua thư viện `cookie`
+  // Next.js dùng nội bộ) đã tự động percent-encode value khi serialize Set-Cookie. Tự encode thêm 1 lớp
+  // nữa gây double-encode: server đọc lại qua cookies() (tự động decode tương ứng) vẫn parse JSON đúng
+  // (chỉ dư 1 lớp encode CỦA CHÍNH MÌNH thêm vào, decode thủ công 1 lần ở getCustomerSession() undo đúng
+  // lớp đó) NHƯNG phía client đọc qua document.cookie (KHÔNG tự decode gì cả, khác cookies() ở server) -
+  // readCustomerSessionCookie() chỉ decodeURIComponent 1 lần nên còn dư đúng 1 lớp encode, JSON.parse
+  // luôn fail âm thầm (raw vẫn bắt đầu bằng "%7B" chứ không phải "{"), Navbar không bao giờ đọc được
+  // session dù cookie đã set đúng - bug thật, phát hiện khi thêm bước kiểm tra cookie sau login (xem
+  // components/auth/LoginForm.tsx).
+  response.cookies.set(CUSTOMER_SESSION_COOKIE, JSON.stringify({ fullName: result.fullName }), {
     httpOnly: false,
     sameSite: "lax",
+    secure,
     path: "/",
     ...(persistent ? { maxAge: CUSTOMER_REFRESH_TOKEN_MAX_AGE_SECONDS } : {}),
   });
