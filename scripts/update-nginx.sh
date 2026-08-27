@@ -2,19 +2,21 @@
 set -e
 
 echo "==== Updating Nginx Reverse Proxy Config ===="
-sudo rm -f /etc/nginx/conf.d/*.conf
-sudo rm -f /etc/nginx/sites-enabled/*
+sudo rm -rf /etc/nginx/conf.d/*
+sudo rm -rf /etc/nginx/sites-enabled/*
 
 sudo tee /etc/nginx/sites-available/default > /dev/null << 'EOF'
 server {
-    listen 80;
-    server_name dichvucloud.duckdns.org;
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name _;
     return 301 https://$host$request_uri;
 }
 
 server {
-    listen 443 ssl http2;
-    server_name dichvucloud.duckdns.org;
+    listen 443 ssl http2 default_server;
+    listen [::]:443 ssl http2 default_server;
+    server_name _;
 
     ssl_certificate /etc/letsencrypt/live/dichvucloud.duckdns.org/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/dichvucloud.duckdns.org/privkey.pem;
@@ -36,5 +38,5 @@ server {
 EOF
 
 sudo ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
-sudo nginx -t && sudo systemctl reload nginx || true
-echo "==== Nginx Reloaded Successfully! ===="
+sudo systemctl restart nginx || sudo service nginx restart || true
+echo "==== Nginx Restarted Successfully! ===="
