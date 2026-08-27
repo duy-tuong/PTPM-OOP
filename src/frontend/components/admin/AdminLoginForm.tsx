@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Field, FieldError, FieldGroup } from "@/components/ui/field";
 import { PasswordInput } from "@/components/auth/PasswordInput";
+import { readAdminSessionCookie } from "@/lib/auth/adminSessionClient";
 
 interface AdminLoginFormErrors {
   usernameOrEmail?: string;
@@ -55,6 +56,12 @@ export function AdminLoginForm() {
         } else {
           setErrors({ password: "Đăng nhập thất bại, vui lòng thử lại" });
         }
+        return;
+      }
+
+      // Phòng thủ tầng ứng dụng - xem comment tương tự trong components/auth/LoginForm.tsx.
+      if (!readAdminSessionCookie()) {
+        setErrors({ password: "Đăng nhập thất bại do lỗi hệ thống, vui lòng thử lại sau ít phút." });
         return;
       }
 

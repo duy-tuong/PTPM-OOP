@@ -1,6 +1,16 @@
 #!/usr/bin/env bash
 set -e
 
+# Dual-purpose script:
+# 1. Chạy thủ công/qua CI/CD sau mỗi lần deploy (xem .github/workflows/main.yml).
+# 2. Cài làm Certbot deploy-hook (/etc/letsencrypt/renewal-hooks/deploy/reapply-nginx.sh, xem cùng
+#    workflow) - Certbot LUÔN chạy mọi script trong thư mục đó sau khi renew SSL thành công, bất kể
+#    plugin nào. Certbot's --nginx plugin có thể tự ghi lại server block riêng theo domain (đè lên cấu
+#    hình default_server bên dưới, trỏ nhầm proxy_pass về cổng backend cũ) - hook này đảm bảo Nginx luôn
+#    tự phục hồi đúng cấu hình ngay sau mỗi lần renew, không phải đợi tới lần deploy code kế tiếp.
+# Vì chạy ở cả 2 ngữ cảnh (SSH session không tương tác của CI/CD, và cron/systemd timer không tương tác
+# của Certbot), script phải an toàn khi chạy lặp lại nhiều lần (idempotent) và không cần input nào.
+
 echo "==== Updating Nginx Reverse Proxy Config ===="
 
 # Overwrite EVERY file in /etc/nginx/sites-available/ to ensure Certbot domain configs use port 3000

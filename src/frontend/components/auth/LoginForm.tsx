@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Field, FieldError, FieldGroup, FieldSeparator } from "@/components/ui/field";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { SocialAuthButtons } from "@/components/auth/SocialAuthButtons";
-import { notifyCustomerSessionChanged } from "@/lib/auth/customerSessionClient";
+import { notifyCustomerSessionChanged, readCustomerSessionCookie } from "@/lib/auth/customerSessionClient";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -68,6 +68,16 @@ export function LoginForm() {
       }
 
       const data = (await res.json()) as { fullName: string };
+
+      // Phòng thủ tầng ứng dụng (xem plan chẩn đoán lỗi đăng nhập production) - backend trả 200 không
+      // đồng nghĩa cookie đã thực sự được Route Handler set vào trình duyệt (vd hạ tầng route request
+      // thẳng vào backend .NET, bỏ qua Route Handler). Kiểm tra cookie session thật trước khi báo
+      // thành công, tránh toast "Chào mừng trở lại" hiện ra dù chưa hề đăng nhập được.
+      if (!readCustomerSessionCookie()) {
+        toast.error("Đăng nhập thất bại do lỗi hệ thống, vui lòng thử lại sau ít phút.");
+        return;
+      }
+
       toast.success(`Chào mừng trở lại, ${data.fullName}`);
       notifyCustomerSessionChanged();
       window.location.href = "/";
