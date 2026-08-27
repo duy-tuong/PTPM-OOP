@@ -2,6 +2,9 @@
 set -e
 
 echo "==== Updating Nginx Reverse Proxy Config ===="
+# Purge any stale proxy rules pointing to port 5000 anywhere in /etc/nginx/
+sudo grep -rl "5000" /etc/nginx/ 2>/dev/null | xargs -r sudo sed -i 's/5000/3000/g' || true
+
 sudo rm -rf /etc/nginx/conf.d/*
 sudo rm -rf /etc/nginx/sites-enabled/*
 
