@@ -116,7 +116,6 @@ jobs:
             echo "==== Building Docker Images & Starting Containers ===="
             docker compose up -d --build --remove-orphans
             docker image prune -f
-            echo "==== Updating Nginx Reverse Proxy Config ===="
             sudo bash -c 'cat << "EOF" > /etc/nginx/sites-available/default
 server {
     listen 80;
