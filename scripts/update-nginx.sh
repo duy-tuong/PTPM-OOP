@@ -2,8 +2,10 @@
 set -e
 
 echo "==== Updating Nginx Reverse Proxy Config ===="
-# Purge any stale proxy rules pointing to port 5000 anywhere in /etc/nginx/
-sudo grep -rl "5000" /etc/nginx/ 2>/dev/null | xargs -r sudo sed -i 's/5000/3000/g' || true
+# Purge any proxy_pass rules pointing to port 5000 anywhere in /etc/nginx/
+sudo grep -rl "proxy_pass" /etc/nginx/ 2>/dev/null | xargs -r sudo sed -i 's|http://127.0.0.1:5000|http://127.0.0.1:3000|g' || true
+sudo grep -rl "proxy_pass" /etc/nginx/ 2>/dev/null | xargs -r sudo sed -i 's|http://localhost:5000|http://127.0.0.1:3000|g' || true
+sudo grep -rl "proxy_pass" /etc/nginx/ 2>/dev/null | xargs -r sudo sed -i 's|http://backend:5000|http://127.0.0.1:3000|g' || true
 
 sudo rm -rf /etc/nginx/conf.d/*
 sudo rm -rf /etc/nginx/sites-enabled/*
@@ -39,6 +41,10 @@ server {
     }
 }
 EOF
+
+if [ -f /etc/nginx/sites-available/default-le-ssl.conf ]; then
+    sudo cp /etc/nginx/sites-available/default /etc/nginx/sites-available/default-le-ssl.conf
+fi
 
 sudo ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 sudo nginx -t
