@@ -3,7 +3,8 @@ import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { getServiceCategories } from "@/lib/api/catalog";
 import { safeFetch } from "@/lib/api/safe";
 import { ScrollReveal } from "@/components/home/ScrollReveal";
-import { getCategoryIcon } from "@/lib/constants/serviceCategoryIcons";
+import { getCategoryIcon, isCuratedCategoryIcon } from "@/lib/constants/serviceCategoryIcons";
+import { FallbackImage } from "@/components/shared/FallbackImage";
 import { cn } from "@/lib/utils";
 
 const HERO_SLUG = "vps";
@@ -36,6 +37,7 @@ export async function ServicesBentoSection() {
         >
           {categories.map((category, index) => {
             const Icon = getCategoryIcon(category.slug);
+            const isCurated = isCuratedCategoryIcon(category.slug);
             const isHero = useBentoLayout && category.slug === HERO_SLUG;
 
             return (
@@ -50,17 +52,36 @@ export async function ServicesBentoSection() {
                   <div>
                     <div
                       className={cn(
-                        "mb-5 inline-flex items-center justify-center rounded-xl bg-muted/60 transition-colors duration-300 group-hover/card:bg-blue-50 dark:group-hover/card:bg-blue-900/20",
+                        "mb-5 inline-flex items-center justify-center overflow-hidden rounded-xl bg-muted/60 transition-colors duration-300 group-hover/card:bg-blue-50 dark:group-hover/card:bg-blue-900/20",
                         isHero ? "size-14" : "size-12"
                       )}
                     >
-                      <Icon 
-                        className={cn(
-                          "text-foreground transition-colors duration-300 group-hover/card:text-blue-600 dark:group-hover/card:text-blue-400",
-                          isHero ? "size-7" : "size-6"
-                        )} 
-                        weight="fill" 
-                      />
+                      {isCurated ? (
+                        <Icon
+                          className={cn(
+                            "text-foreground transition-colors duration-300 group-hover/card:text-blue-600 dark:group-hover/card:text-blue-400",
+                            isHero ? "size-7" : "size-6"
+                          )}
+                          weight="fill"
+                        />
+                      ) : (
+                        // Danh mục Admin tự thêm (chưa có icon vector riêng, xem serviceCategoryIcons.ts)
+                        // - ưu tiên ảnh Admin tự upload, tự rơi về icon Cpu mặc định nếu chưa upload/tải lỗi.
+                        <FallbackImage
+                          src={category.iconUrl}
+                          alt={category.name}
+                          className="size-full object-cover"
+                          fallback={
+                            <Icon
+                              className={cn(
+                                "text-foreground transition-colors duration-300 group-hover/card:text-blue-600 dark:group-hover/card:text-blue-400",
+                                isHero ? "size-7" : "size-6"
+                              )}
+                              weight="fill"
+                            />
+                          }
+                        />
+                      )}
                     </div>
                     
                     <h3 className={cn("font-bold text-foreground tracking-tight mb-2", isHero ? "text-2xl sm:text-3xl" : "text-xl")}>

@@ -11,7 +11,8 @@ import { PlanComparisonTable } from "@/components/pricing/PlanComparisonTable";
 import { DomainPricingTable } from "@/components/pricing/DomainPricingTable";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getCategoryIcon } from "@/lib/constants/serviceCategoryIcons";
+import { getCategoryIcon, isCuratedCategoryIcon } from "@/lib/constants/serviceCategoryIcons";
+import { FallbackImage } from "@/components/shared/FallbackImage";
 import { countryFlag } from "@/lib/utils/region";
 import { cn } from "@/lib/utils";
 import type { ServiceCategoryDto, ServicePlanListItemDto, TldPricingDto, RegionDto } from "@/lib/types/catalog";
@@ -85,6 +86,7 @@ export function PricingMatrixTabs({
       <nav className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0">
         {categories.map((category) => {
           const Icon = getCategoryIcon(category.slug);
+          const isCurated = isCuratedCategoryIcon(category.slug);
           const isActive = activeSlug === category.slug;
           return (
             <button
@@ -101,7 +103,18 @@ export function PricingMatrixTabs({
                   : "text-muted-foreground hover:scale-[1.03] hover:text-foreground",
               )}
             >
-              <Icon className="size-4" weight={isActive ? "fill" : "regular"} />
+              {isCurated ? (
+                <Icon className="size-4" weight={isActive ? "fill" : "regular"} />
+              ) : (
+                // Danh mục Admin tự thêm - mirror ServicesBentoSection.tsx (ưu tiên ảnh upload, tự rơi
+                // về icon Cpu mặc định nếu chưa upload/tải lỗi).
+                <FallbackImage
+                  src={category.iconUrl}
+                  alt={category.name}
+                  className="size-4 shrink-0 rounded-full object-cover"
+                  fallback={<Icon className="size-4" weight={isActive ? "fill" : "regular"} />}
+                />
+              )}
               {category.name}
             </button>
           );
