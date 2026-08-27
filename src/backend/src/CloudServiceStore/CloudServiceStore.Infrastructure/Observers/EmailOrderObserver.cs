@@ -49,7 +49,9 @@ public class EmailOrderObserver : IOrderStatusObserver
         await _emailService.SendAsync(order.CustomerEmail, subject, body, cancellationToken);
     }
 
-    private static bool IsNotifiableStatus(OrderRequestStatus status) =>
+    // public - NotificationOrderObserver.cs tái dùng đúng danh sách này (chỉ tạo thông báo trong app cho
+    // đúng những trạng thái cũng gửi email, không muốn 2 danh sách lệch nhau).
+    public static bool IsNotifiableStatus(OrderRequestStatus status) =>
         status is OrderRequestStatus.Paid or OrderRequestStatus.Provisioning
             or OrderRequestStatus.Completed or OrderRequestStatus.Cancelled;
 

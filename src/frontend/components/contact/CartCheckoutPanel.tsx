@@ -138,7 +138,12 @@ export function CartCheckoutPanel({ promotion }: { promotion: PromotionDto | nul
         <h2 className="font-heading text-xl font-semibold">Giỏ hàng của bạn</h2>
 
         {cart.items.length === 0 ? (
-          <p className="mt-3 text-sm text-muted-foreground">Chưa có sản phẩm nào trong giỏ.</p>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Chưa có sản phẩm nào trong giỏ.{" "}
+            <Link href="/lien-he" className="font-medium text-primary hover:underline">
+              Chọn dịch vụ ngay
+            </Link>
+          </p>
         ) : (
           <ul className="mt-3 flex flex-col gap-3">
             {cart.items.map((item) => (

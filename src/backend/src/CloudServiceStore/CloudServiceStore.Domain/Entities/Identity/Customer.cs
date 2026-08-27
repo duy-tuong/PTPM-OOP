@@ -51,4 +51,7 @@ public class Customer : ISoftDelete
 
     // SSH Key lưu theo tài khoản (Đợt 3, Phần 12) - xem CustomerSshKey.cs.
     public ICollection<CustomerSshKey> SshKeys { get; set; } = new List<CustomerSshKey>();
+
+    // Thông báo trong app (chuông ở Navbar) - xem CustomerNotification.cs.
+    public ICollection<CustomerNotification> Notifications { get; set; } = new List<CustomerNotification>();
 }

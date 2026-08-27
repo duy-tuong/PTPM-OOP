@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getCustomerAccessToken } from "@/lib/auth/customerSession";
 import { getMyOrders } from "@/lib/api/customer";
 import { ApiError } from "@/lib/api/http";
-import { MyOrderRow } from "@/components/account/MyOrderRow";
+import { MyOrdersTableBody } from "@/components/account/MyOrdersTableBody";
 import {
   Pagination,
   PaginationContent,
@@ -69,11 +69,12 @@ export default async function MyOrdersPage({
                     <th className="px-6 py-4 font-medium" aria-label="Chi tiết" />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
-                  {result.items.map((order) => (
-                    <MyOrderRow key={order.id} order={order} />
-                  ))}
-                </tbody>
+                <MyOrdersTableBody
+                  key={pageNumber}
+                  initialItems={result.items}
+                  pageNumber={pageNumber}
+                  pageSize={PAGE_SIZE}
+                />
               </table>
             </div>
           ) : (

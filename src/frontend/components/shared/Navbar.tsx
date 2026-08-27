@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { NotificationBell } from "@/components/shared/NotificationBell";
 import { MagneticButton } from "@/components/shared/MagneticButton";
 import { Logo } from "@/components/shared/Logo";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
@@ -108,8 +109,8 @@ export function Navbar() {
         "fixed inset-x-0 top-4 z-40 mx-auto w-[calc(100%-2rem)] max-w-6xl rounded-[24px] transition-all duration-300",
         hidden ? "-translate-y-24 opacity-0" : "translate-y-0 opacity-100",
         scrolled 
-          ? "bg-background/80 backdrop-blur-md border border-border/50 shadow-sm" 
-          : "bg-background/40 backdrop-blur-sm border border-transparent"
+          ? "bg-muted/80 backdrop-blur-md border border-border/50 shadow-sm" 
+          : "bg-muted/40 backdrop-blur-sm border border-transparent"
       )}
     >
       <div className="relative mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -138,8 +139,10 @@ export function Navbar() {
 
         <div className="relative z-10 hidden flex-1 items-center justify-end gap-3 lg:gap-4 lg:flex">
           <div className="flex items-center gap-1">
+            {session && <NotificationBell />}
+
             <Link
-              href="/lien-he"
+              href="/gio-hang"
               aria-label={cartCount > 0 ? `Giỏ hàng, ${cartCount} sản phẩm` : "Giỏ hàng"}
               className="relative inline-flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
@@ -236,8 +239,10 @@ export function Navbar() {
                 );
               })}
 
+              {session && <NotificationBell variant="row" />}
+
               <Link
-                href="/lien-he"
+                href="/gio-hang"
                 onClick={() => setOpen(false)}
                 className="flex items-center justify-between text-base font-medium text-muted-foreground hover:text-foreground mt-2"
               >

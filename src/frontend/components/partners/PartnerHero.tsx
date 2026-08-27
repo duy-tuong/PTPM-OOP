@@ -5,7 +5,7 @@ import Link from "next/link";
 // nên đoạn giới thiệu là copy tĩnh, không lấy từ CMS.
 export function PartnerHero() {
   return (
-    <section className="relative overflow-hidden bg-background">
+    <section className="relative overflow-hidden">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 opacity-5 [mask-image:linear-gradient(to_bottom,black,transparent)]"

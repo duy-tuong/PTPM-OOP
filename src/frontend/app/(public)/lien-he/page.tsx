@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
-import { getServiceCategories, getServicePlans, getPromotions, getTldPricing } from "@/lib/api/catalog";
+import { getServiceCategories, getServicePlans, getTldPricing } from "@/lib/api/catalog";
 import { safeFetch, emptyPagedResult } from "@/lib/api/safe";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { OrderRequestForm } from "@/components/contact/OrderRequestForm";
 import { DomainOrderForm } from "@/components/contact/DomainOrderForm";
 import { ConsultationRequestForm } from "@/components/contact/ConsultationRequestForm";
-import { CartCheckoutPanel } from "@/components/contact/CartCheckoutPanel";
 import { AutoAddFromQuery } from "@/components/contact/AutoAddFromQuery";
 
 export const metadata: Metadata = {
@@ -13,11 +12,12 @@ export const metadata: Metadata = {
   description: "Đặt dịch vụ hoặc gửi yêu cầu tư vấn miễn phí từ đội ngũ Cloudverse.",
 };
 
-// Đích CTA "Đặt dịch vụ"/"Đặt mua" (tên miền) duy nhất toàn site. Đọc searchParams server-side (đúng
-// convention /tin-tuc/page.tsx) để resolve plan/tldPricing/promotion thật trước khi render form - không
-// có endpoint GET-by-id cho ServicePlan/TldPricing/Promotion nên fetch nguyên danh sách rồi tìm theo
-// id/code (đúng cách PricingMatrixTabs.tsx đã làm cho plan). ?intent=tu-van|ten-mien quyết định tab
-// mặc định (DomainPricingTable.tsx trỏ CTA "Đặt mua" về ?intent=ten-mien&tldPricingId=).
+// Đích CTA "Đặt dịch vụ"/"Đặt mua" (tên miền) duy nhất toàn site - CHỈ còn 3 tab "chọn sản phẩm"
+// (giỏ hàng + checkout đã tách sang app/(public)/gio-hang/page.tsx, xem comment ở đó). Đọc
+// searchParams server-side (đúng convention /tin-tuc/page.tsx) để resolve plan/tldPricing thật trước
+// khi render form - không có endpoint GET-by-id cho ServicePlan/TldPricing nên fetch nguyên danh sách
+// rồi tìm theo id (đúng cách PricingMatrixTabs.tsx đã làm cho plan). ?intent=tu-van|ten-mien quyết
+// định tab mặc định (DomainPricingTable.tsx trỏ CTA "Đặt mua" về ?intent=ten-mien&tldPricingId=).
 export default async function ContactPage({
   searchParams,
 }: {
@@ -25,16 +25,14 @@ export default async function ContactPage({
     planId?: string;
     tldPricingId?: string;
     domainName?: string;
-    promotionCode?: string;
     intent?: string;
   }>;
 }) {
   const params = await searchParams;
 
-  const [plansResult, tldResult, promotions, categories] = await Promise.all([
+  const [plansResult, tldResult, categories] = await Promise.all([
     safeFetch(() => getServicePlans({ pageSize: 100 }, { revalidate: 900 }), emptyPagedResult(100)),
     safeFetch(() => getTldPricing({ pageSize: 100 }, { revalidate: 3600 }), emptyPagedResult(100)),
-    safeFetch(() => getPromotions({ revalidate: 300 }), []),
     safeFetch(() => getServiceCategories({ revalidate: 3600 }), []),
   ]);
 
@@ -44,7 +42,6 @@ export default async function ContactPage({
   const defaultPlan = Number.isFinite(planId) ? (plans.find((p) => p.id === planId) ?? null) : null;
   const tldPricingId = Number(params.tldPricingId);
   const defaultTldPricing = Number.isFinite(tldPricingId) ? (tldPricing.find((t) => t.id === tldPricingId) ?? null) : null;
-  const promotion = params.promotionCode ? (promotions.find((p) => p.code === params.promotionCode) ?? null) : null;
   const defaultTab =
     params.intent === "tu-van" ? "tu-van" : params.intent === "ten-mien" ? "dat-ten-mien" : "dat-dich-vu";
 
@@ -91,10 +88,6 @@ export default async function ContactPage({
           <ConsultationRequestForm categories={categories} />
         </TabsContent>
       </Tabs>
-
-      <div className="mt-10">
-        <CartCheckoutPanel promotion={promotion} />
-      </div>
     </div>
   );
 }

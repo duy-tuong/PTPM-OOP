@@ -20,6 +20,7 @@ public class AppDbContext : DbContext
     public DbSet<AppUserRole> AppUserRoles => Set<AppUserRole>();
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<CustomerSshKey> CustomerSshKeys => Set<CustomerSshKey>();
+    public DbSet<CustomerNotification> CustomerNotifications => Set<CustomerNotification>();
 
     // System
     public DbSet<SiteSetting> SiteSettings => Set<SiteSetting>();

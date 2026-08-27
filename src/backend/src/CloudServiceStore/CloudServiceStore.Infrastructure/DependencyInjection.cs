@@ -63,6 +63,10 @@ public static class DependencyInjection
         services.AddSingleton<IPaymentGatewayService, PayOsPaymentGatewayService>();
         services.AddScoped<IOrderStatusObserver, AuditLogOrderObserver>();
         services.AddScoped<IOrderStatusObserver, EmailOrderObserver>();
+        services.AddScoped<IOrderStatusObserver, NotificationOrderObserver>();
+        services.AddScoped<IConsultationStatusObserver, AuditLogConsultationObserver>();
+        services.AddScoped<IConsultationStatusObserver, EmailConsultationObserver>();
+        services.AddScoped<IConsultationStatusObserver, NotificationConsultationObserver>();
         services.AddScoped<IOrderRequestExportService, OrderRequestExportService>();
 
         services.AddSingleton<IFakeProvisioningGenerator, FakeProvisioningGenerator>();

@@ -37,7 +37,7 @@ export async function Footer() {
     .map((category) => ({ href: `/dich-vu/${category.slug}`, label: category.name }));
 
   return (
-    <footer className="relative z-10 border-t border-border/50 bg-background pt-16 pb-8">
+    <footer className="relative z-10 border-t border-border/50 bg-muted pt-16 pb-8">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-6 lg:gap-8">
           

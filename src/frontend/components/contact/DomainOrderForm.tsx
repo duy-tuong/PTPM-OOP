@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,11 @@ import { Field, FieldError, FieldGroup } from "@/components/ui/field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCart } from "@/lib/cart/CartContext";
 import { formatCurrency } from "@/lib/utils";
+import {
+  CUSTOMER_SESSION_CHANGED_EVENT,
+  readCustomerSessionCookie,
+} from "@/lib/auth/customerSessionClient";
+import type { CustomerSessionUser } from "@/lib/types/customerAuth";
 import type { TldPricingDto } from "@/lib/types/catalog";
 
 interface DomainFormErrors {
@@ -31,10 +37,22 @@ export function DomainOrderForm({
   defaultDomainName: string;
 }) {
   const cart = useCart();
+  // Bắt buộc đăng nhập trước khi thêm vào giỏ - mirror OrderRequestForm.tsx.
+  const [session, setSession] = useState<CustomerSessionUser | null>(null);
   const [tldPricingId, setTldPricingId] = useState<number | null>(defaultTldPricing?.id ?? null);
   const [domainName, setDomainName] = useState(defaultDomainName);
   const [years, setYears] = useState(1);
   const [errors, setErrors] = useState<DomainFormErrors>({});
+
+  useEffect(() => {
+    function syncSession() {
+      setSession(readCustomerSessionCookie());
+    }
+
+    syncSession();
+    window.addEventListener(CUSTOMER_SESSION_CHANGED_EVENT, syncSession);
+    return () => window.removeEventListener(CUSTOMER_SESSION_CHANGED_EVENT, syncSession);
+  }, []);
 
   const selectedTld = useMemo(
     () => tldPricing.find((t) => t.id === tldPricingId) ?? null,
@@ -43,6 +61,10 @@ export function DomainOrderForm({
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!session) {
+      toast.error("Vui lòng đăng nhập để thêm vào giỏ hàng");
+      return;
+    }
 
     const nextErrors: DomainFormErrors = {};
     if (!selectedTld) {
@@ -135,6 +157,20 @@ export function DomainOrderForm({
           />
         </Field>
       </FieldGroup>
+
+      {!session && (
+        <div className="rounded-xl border border-primary/40 bg-primary/5 px-4 py-4 text-sm">
+          <p className="font-medium text-foreground">Vui lòng đăng nhập để thêm vào giỏ hàng</p>
+          <p className="mt-1 text-muted-foreground">
+            Đăng nhập giúp bạn lưu lại giỏ hàng, xem lại đơn hàng và quản lý dịch vụ dễ dàng hơn sau này.
+          </p>
+          <Button
+            nativeButton={false}
+            className="mt-3 h-10 rounded-full px-6"
+            render={<Link href="/login">Đăng nhập</Link>}
+          />
+        </div>
+      )}
 
       <Button type="submit" className="h-11 w-full text-base font-semibold">
         Thêm vào giỏ hàng

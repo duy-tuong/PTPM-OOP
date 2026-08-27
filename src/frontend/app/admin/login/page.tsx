@@ -14,6 +14,7 @@ export const metadata: Metadata = {
 // như AuthPageShell của Customer - Admin cần cảm giác "công cụ làm việc", không phải landing page.
 import { redirect } from "next/navigation";
 import { getAdminSession } from "@/lib/auth/adminSession";
+import { ParticleNetworkBackground } from "@/components/home/effects/ParticleNetworkBackground";
 
 export default async function AdminLoginPage() {
   const session = await getAdminSession();
@@ -22,7 +23,9 @@ export default async function AdminLoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-8 bg-muted/30 px-4 py-16">
+    <>
+      <ParticleNetworkBackground />
+      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center gap-8 px-4 py-16">
       <Logo />
 
       <Card className="w-full max-w-sm shadow-lg">
@@ -35,5 +38,6 @@ export default async function AdminLoginPage() {
         </CardContent>
       </Card>
     </div>
+    </>
   );
 }

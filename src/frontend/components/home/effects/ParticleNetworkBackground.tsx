@@ -23,7 +23,7 @@ export function ParticleNetworkBackground() {
     if (!pathname) return false;
     
     // 1. Dashboard khách hàng / Admin
-    if (pathname.startsWith('/khach-hang') || pathname.startsWith('/admin')) return true;
+    if (pathname.startsWith('/khach-hang') || (pathname.startsWith('/admin') && pathname !== '/admin/login')) return true;
     
     // 2. Chi tiết tin tức
     if (pathname.startsWith('/tin-tuc/') && pathname !== '/tin-tuc') return true;
@@ -31,9 +31,7 @@ export function ParticleNetworkBackground() {
     // 3. Các trang tĩnh, cần tập trung
     const hiddenExactPaths = [
       '/lien-he',
-      '/login',
-      '/register',
-      '/quen-mat-khau',
+      '/gio-hang',
     ];
     
     return hiddenExactPaths.includes(pathname);

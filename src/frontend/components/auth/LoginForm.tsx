@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Check, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { Field, FieldError, FieldGroup, FieldSeparator } from "@/components/ui/f
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { SocialAuthButtons } from "@/components/auth/SocialAuthButtons";
 import { notifyCustomerSessionChanged, readCustomerSessionCookie } from "@/lib/auth/customerSessionClient";
+import { isSafeRedirectPath } from "@/lib/utils";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -24,6 +25,7 @@ interface LoginFormErrors {
 // httpOnly) - KHÔNG gọi lib/api/customerAuth.ts#loginCustomer trực tiếp từ đây (hàm đó server-only).
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
@@ -80,7 +82,10 @@ export function LoginForm() {
 
       toast.success(`Chào mừng trở lại, ${data.fullName}`);
       notifyCustomerSessionChanged();
-      window.location.href = "/";
+      // Hỗ trợ ?redirect= (AutoAddFromQuery.tsx điều hướng khách chưa đăng nhập về đây kèm đường dẫn
+      // gốc) - validate qua isSafeRedirectPath() để chặn open-redirect ra site ngoài, mặc định "/".
+      const redirectTo = searchParams.get("redirect");
+      window.location.href = isSafeRedirectPath(redirectTo) ? redirectTo : "/";
     } finally {
       setIsSubmitting(false);
     }

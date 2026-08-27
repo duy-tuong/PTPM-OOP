@@ -35,6 +35,7 @@ using CloudServiceStore.Application.Features.Content.NewsTags;
 using CloudServiceStore.Application.Features.Content.Partners;
 using CloudServiceStore.Application.Features.Content.Testimonials;
 using CloudServiceStore.Application.Features.Customers.Auth;
+using CloudServiceStore.Application.Features.Customers.Notifications;
 using CloudServiceStore.Application.Features.Customers.SshKeys;
 using CloudServiceStore.Application.Features.Marketing.Promotions;
 using CloudServiceStore.Application.Features.Sales.AffiliateApplications;
@@ -51,7 +52,9 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICustomerAuthService, CustomerAuthService>();
         services.AddScoped<ICustomerSshKeyService, CustomerSshKeyService>();
+        services.AddScoped<ICustomerNotificationService, CustomerNotificationService>();
         services.AddScoped<OrderStatusNotifier>();
+        services.AddScoped<ConsultationStatusNotifier>();
         services.AddScoped<IOrderRequestStatusTransitionService, OrderRequestStatusTransitionService>();
         services.AddScoped<IPaymentWebhookService, PaymentWebhookService>();
 

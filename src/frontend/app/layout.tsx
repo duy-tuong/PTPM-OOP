@@ -4,13 +4,18 @@ import Script from "next/script";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-// Chạy trước khi paint (script thô trong <head>, Next tự hoist đúng vị trí, không dùng next/script vì
-// không cần tính năng của nó ở đây) để quyết định light/dark TRƯỚC khi React hydrate - không dùng
-// headers()/cookies() ở Server Component vì sẽ ép toàn site thành dynamic render, mất SSG (bài học từ
-// Phase 6.2c). Admin (/admin/**) giữ nguyên :root (sáng, khoá cứng - không đọc theme người dùng chọn ở
-// public, xem MarkdownEditor.tsx/admin/login/page.tsx). Public đọc lựa chọn đã lưu ở localStorage
-// ("cloudverse-theme", ghi bởi lib/theme/publicTheme.ts qua ThemeToggle) - nếu chưa từng chọn thì theo
-// prefers-color-scheme của hệ điều hành, mặc định dark nếu OS không báo light rõ ràng.
+// Chạy trước khi paint (next/script strategy="beforeInteractive") để quyết định light/dark TRƯỚC khi
+// React hydrate - không dùng headers()/cookies() ở Server Component vì sẽ ép toàn site thành dynamic
+// render, mất SSG (bài học từ Phase 6.2c). Admin (/admin/**) giữ nguyên :root (sáng, khoá cứng - không
+// đọc theme người dùng chọn ở public, xem MarkdownEditor.tsx/admin/login/page.tsx). Public đọc lựa
+// chọn đã lưu ở localStorage ("cloudverse-theme", ghi bởi lib/theme/publicTheme.ts qua ThemeToggle) -
+// nếu chưa từng chọn thì theo prefers-color-scheme của hệ điều hành, mặc định dark nếu OS không báo
+// light rõ ràng.
+// LƯU Ý ĐẶT VỊ TRÍ: <Script> phải là con trực tiếp của <body>, KHÔNG được lồng trong 1 thẻ <head> tự
+// viết tay - Next.js luôn tự hoist script strategy="beforeInteractive" vào đúng <head> thật của HTML
+// output bất kể đặt ở đâu trong layout, tự đặt nó bên trong <head> viết tay sẽ khiến React coi đây là
+// 1 thẻ <script> thường render trong RSC tree (lỗi "Encountered a script tag while rendering React
+// component" - đã gặp thật, không phải giả định).
 const THEME_INIT_SCRIPT = `
   (function () {
     if (location.pathname.startsWith('/admin')) return;
@@ -73,10 +78,8 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${bodyFont.variable} ${displayFont.variable} ${monoFont.variable} antialiased`}
     >
-      <head>
-        <Script id="theme-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
-      </head>
       <body className="min-h-screen flex flex-col">
+        <Script id="theme-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         {children}
         <Toaster />
       </body>

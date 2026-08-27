@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,11 @@ import { CustomPlanSliderConfigurator, type CustomPlanSelection } from "@/compon
 import { computeCustomPlanUnitPrice } from "@/lib/pricing/customPlanPricing";
 import { useCart } from "@/lib/cart/CartContext";
 import { formatCurrency } from "@/lib/utils";
+import {
+  CUSTOMER_SESSION_CHANGED_EVENT,
+  readCustomerSessionCookie,
+} from "@/lib/auth/customerSessionClient";
+import type { CustomerSessionUser } from "@/lib/types/customerAuth";
 import type { ServicePlanListItemDto } from "@/lib/types/catalog";
 import type { CustomerSshKeyDto } from "@/lib/types/sales";
 
@@ -62,6 +68,9 @@ export function OrderRequestForm({
   defaultPlan: ServicePlanListItemDto | null;
 }) {
   const cart = useCart();
+  // Bắt buộc đăng nhập trước khi thêm vào giỏ (đọc cookie "customer_session" y hệt CartCheckoutPanel.tsx
+  // - không có Context/Provider dùng chung, mỗi Client Component cần tự đọc lại).
+  const [session, setSession] = useState<CustomerSessionUser | null>(null);
   const [servicePlanId, setServicePlanId] = useState<number | null>(defaultPlan?.id ?? null);
   const [periodMonths, setPeriodMonths] = useState<number | null>(defaultPeriod(defaultPlan));
   const [quantity, setQuantity] = useState(1);
@@ -79,6 +88,16 @@ export function OrderRequestForm({
   const [hostname, setHostname] = useState("");
   const [tags, setTags] = useState("");
   const [savedSshKeys, setSavedSshKeys] = useState<CustomerSshKeyDto[]>([]);
+
+  useEffect(() => {
+    function syncSession() {
+      setSession(readCustomerSessionCookie());
+    }
+
+    syncSession();
+    window.addEventListener(CUSTOMER_SESSION_CHANGED_EVENT, syncSession);
+    return () => window.removeEventListener(CUSTOMER_SESSION_CHANGED_EVENT, syncSession);
+  }, []);
 
   // Nạp SSH Key đã lưu (nếu đã đăng nhập) - im lặng bỏ qua khi chưa đăng nhập (401), khách vẫn duyệt
   // sản phẩm bình thường trước khi đăng nhập ở bước CartCheckoutPanel.tsx.
@@ -129,6 +148,10 @@ export function OrderRequestForm({
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!session) {
+      toast.error("Vui lòng đăng nhập để thêm vào giỏ hàng");
+      return;
+    }
     if (!selectedPlan || !periodMonths) {
       setError("Vui lòng chọn gói dịch vụ");
       return;
@@ -416,6 +439,20 @@ export function OrderRequestForm({
           />
         </Field>
       </FieldGroup>
+
+      {!session && (
+        <div className="rounded-xl border border-primary/40 bg-primary/5 px-4 py-4 text-sm">
+          <p className="font-medium text-foreground">Vui lòng đăng nhập để thêm vào giỏ hàng</p>
+          <p className="mt-1 text-muted-foreground">
+            Đăng nhập giúp bạn lưu lại giỏ hàng, xem lại đơn hàng và quản lý dịch vụ dễ dàng hơn sau này.
+          </p>
+          <Button
+            nativeButton={false}
+            className="mt-3 h-10 rounded-full px-6"
+            render={<Link href="/login">Đăng nhập</Link>}
+          />
+        </div>
+      )}
 
       <Button type="submit" className="h-11 w-full text-base font-semibold">
         Thêm vào giỏ hàng

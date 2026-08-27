@@ -7,7 +7,14 @@ import type {
   ChangeCustomerPasswordDto,
   RequestEmailChangeDto,
 } from "@/lib/types/customerAuth";
-import type { MyOrderRequestDto, MyServiceItemDto, MyConsultationRequestDto, CustomerSshKeyDto, CreateSshKeyDto } from "@/lib/types/sales";
+import type {
+  MyOrderRequestDto,
+  MyServiceItemDto,
+  MyConsultationRequestDto,
+  CustomerSshKeyDto,
+  CreateSshKeyDto,
+  CustomerNotificationDto,
+} from "@/lib/types/sales";
 
 // Server-only - gọi các endpoint tự phục vụ [Authorize(Roles="Customer")], dùng trong
 // app/khach-hang/** (Server Component đọc token qua getCustomerAccessToken()) và các Route Handler
@@ -54,4 +61,22 @@ export function createMySshKey(dto: CreateSshKeyDto, token: string) {
 
 export function deleteMySshKey(id: number, token: string) {
   return apiFetch<void>(getApiUrl(), `/customer/ssh-keys/${id}`, "DELETE", { token });
+}
+
+// Thông báo trong app (chuông Navbar) - gọi từ app/api/customer/notifications/**/route.ts, mirror
+// đúng lý do dùng Route Handler như SSH Key ở trên (Client Component không đọc được cookie httpOnly).
+export function getMyNotifications(token: string) {
+  return apiFetch<CustomerNotificationDto[]>(getApiUrl(), "/customer/notifications", "GET", { token });
+}
+
+export function getMyUnreadNotificationCount(token: string) {
+  return apiFetch<number>(getApiUrl(), "/customer/notifications/unread-count", "GET", { token });
+}
+
+export function markMyNotificationAsRead(id: number, token: string) {
+  return apiFetch<void>(getApiUrl(), `/customer/notifications/${id}/read`, "POST", { token });
+}
+
+export function markAllMyNotificationsAsRead(token: string) {
+  return apiFetch<void>(getApiUrl(), "/customer/notifications/read-all", "POST", { token });
 }

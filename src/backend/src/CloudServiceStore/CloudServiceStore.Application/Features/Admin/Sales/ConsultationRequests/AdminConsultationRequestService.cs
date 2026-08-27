@@ -1,9 +1,8 @@
 using CloudServiceStore.Application.Common.Exceptions;
 using CloudServiceStore.Application.Common.Interfaces;
+using CloudServiceStore.Application.Common.Services;
 using CloudServiceStore.Application.Features.Admin.Sales.ConsultationRequests.Dtos;
 using CloudServiceStore.Domain.Entities.Sales;
-using CloudServiceStore.Domain.Entities.System;
-using CloudServiceStore.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace CloudServiceStore.Application.Features.Admin.Sales.ConsultationRequests;
@@ -11,10 +10,12 @@ namespace CloudServiceStore.Application.Features.Admin.Sales.ConsultationRequest
 public class AdminConsultationRequestService : IAdminConsultationRequestService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ConsultationStatusNotifier _consultationStatusNotifier;
 
-    public AdminConsultationRequestService(IUnitOfWork unitOfWork)
+    public AdminConsultationRequestService(IUnitOfWork unitOfWork, ConsultationStatusNotifier consultationStatusNotifier)
     {
         _unitOfWork = unitOfWork;
+        _consultationStatusNotifier = consultationStatusNotifier;
     }
 
     public async Task<List<AdminConsultationRequestDto>> GetListAsync(CancellationToken cancellationToken = default)
@@ -49,17 +50,10 @@ public class AdminConsultationRequestService : IAdminConsultationRequestService
 
         repository.Update(entity);
 
-        var auditLog = new AuditLog
-        {
-            UserId = changedByUserId,
-            Action = AuditAction.StatusChange,
-            EntityName = nameof(ConsultationRequest),
-            EntityId = id.ToString(),
-            OldValues = oldStatus.ToString(),
-            NewValues = dto.NewStatus.ToString(),
-            Timestamp = DateTime.UtcNow
-        };
-        await _unitOfWork.Repository<AuditLog, long>().AddAsync(auditLog, cancellationToken);
+        // Observer pattern (mirror OrderRequestStatusTransitionService.cs) - AuditLogConsultationObserver/
+        // EmailConsultationObserver/NotificationConsultationObserver tự thêm việc vào cùng UnitOfWork -
+        // chỉ SaveChanges 1 lần dưới đây để gộp chung transaction.
+        await _consultationStatusNotifier.NotifyAsync(id, oldStatus, dto.NewStatus, changedByUserId, cancellationToken);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

@@ -37,7 +37,7 @@ export async function PromotionBannerSection() {
                 size="lg"
                 nativeButton={false}
                 className="h-12 rounded-xl bg-blue-600 px-8 font-semibold text-white shadow-sm transition-all hover:bg-blue-700 hover:shadow-md"
-                render={<Link href={`/lien-he?promotionCode=${activePromotion.code}`}>Đặt dịch vụ</Link>}
+                render={<Link href={`/gio-hang?promotionCode=${activePromotion.code}`}>Đặt dịch vụ</Link>}
               />
             </ScrollReveal>
           </div>

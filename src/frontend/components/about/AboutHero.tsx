@@ -6,7 +6,7 @@ import Link from "next/link";
 // tắc "không dùng gradient màu nền" đã khoá cho design system.
 export function AboutHero({ description }: { description?: string | null }) {
   return (
-    <section className="relative overflow-hidden bg-background">
+    <section className="relative overflow-hidden">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 opacity-5 [mask-image:linear-gradient(to_bottom,black,transparent)]"
