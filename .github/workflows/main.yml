@@ -113,8 +113,9 @@ jobs:
               echo "App__EmailFromAddress=${{ secrets.EMAIL_FROM_ADDRESS }}"
               echo "App__EmailFromName=${{ secrets.EMAIL_FROM_NAME }}"
             } > .env
-            echo "==== Building Docker Images & Starting Containers ===="
-            docker compose up -d --build --remove-orphans
+            echo "==== Building Docker Images & Starting Containers (No Cache) ===="
+            docker compose build --no-cache
+            docker compose up -d --remove-orphans
             docker image prune -f
             echo "==== Updating Nginx Reverse Proxy Config ===="
             chmod +x scripts/update-nginx.sh || true
