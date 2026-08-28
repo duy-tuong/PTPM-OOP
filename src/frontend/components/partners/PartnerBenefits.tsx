@@ -1,5 +1,6 @@
 import { HandCoins, Megaphone, Receipt } from "@phosphor-icons/react/dist/ssr";
 import { SpotlightCard } from "@/components/home/SpotlightCard";
+import { ScrollReveal } from "@/components/home/ScrollReveal";
 
 const BENEFITS = [
   {
@@ -26,26 +27,25 @@ const BENEFITS = [
 export function PartnerBenefits() {
   return (
     <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      <div className="mb-10 text-center">
+      <ScrollReveal className="mb-10 text-center">
         <h2 className="font-heading text-3xl font-bold text-balance sm:text-4xl">Vì Sao Trở Thành Đối Tác</h2>
-      </div>
+      </ScrollReveal>
 
       <div className="group/bento grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {BENEFITS.map((benefit) => (
-          <SpotlightCard
-            key={benefit.title}
-            className="glass-card rounded-3xl transition-opacity duration-500 group-hover/bento:opacity-50 hover:!opacity-100"
-          >
-            <div className="group/card flex h-full flex-col justify-between p-6">
-              <div className="w-fit rounded-lg border border-border bg-foreground/5 p-3 transition-all duration-300 group-hover/card:-translate-y-0.5 group-hover/card:bg-primary/10">
-                <benefit.icon className="size-7 text-primary" weight="fill" />
+        {BENEFITS.map((benefit, index) => (
+          <ScrollReveal key={benefit.title} delay={index * 0.08}>
+            <SpotlightCard className="glass-card h-full rounded-3xl transition-opacity duration-500 group-hover/bento:opacity-50 hover:!opacity-100">
+              <div className="group/card flex h-full flex-col justify-between p-6">
+                <div className="w-fit rounded-lg border border-border bg-foreground/5 p-3 transition-all duration-300 group-hover/card:-translate-y-0.5 group-hover/card:bg-primary/10">
+                  <benefit.icon className="size-7 text-primary" weight="fill" />
+                </div>
+                <div className="mt-6">
+                  <h3 className="font-heading mb-2 text-lg">{benefit.title}</h3>
+                  <p className="text-sm text-muted-foreground">{benefit.description}</p>
+                </div>
               </div>
-              <div className="mt-6">
-                <h3 className="font-heading mb-2 text-lg">{benefit.title}</h3>
-                <p className="text-sm text-muted-foreground">{benefit.description}</p>
-              </div>
-            </div>
-          </SpotlightCard>
+            </SpotlightCard>
+          </ScrollReveal>
         ))}
       </div>
     </section>

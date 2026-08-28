@@ -17,6 +17,16 @@ export async function ServicesBentoSection() {
     return null;
   }
 
+  // Trang chủ chỉ là "điểm nhấn/giới thiệu nhanh", không phải bản sao đầy đủ của /dich-vu (trang đã xây
+  // riêng từ Đợt 4 để liệt kê TOÀN BỘ danh mục, có sidebar sticky/scroll-spy, không giới hạn số lượng) -
+  // mirror đúng triết lý cap+link-xem-thêm đã áp dụng cho FeaturedPlansSection/NewsFaqSection. Nhiều hơn
+  // BENTO_CATEGORY_COUNT thì cắt bớt + thêm 1 thẻ CTA "Xem tất cả" thay vì để trang chủ phình dài vô hạn
+  // mỗi khi Admin thêm danh mục mới.
+  const hasMoreCategories = categories.length > BENTO_CATEGORY_COUNT;
+  const displayedCategories = hasMoreCategories ? categories.slice(0, BENTO_CATEGORY_COUNT) : categories;
+  // Layout bento đặc biệt (1 ô hero 2x2 + 5 ô thường lấp vừa khít lưới 3x3) chỉ đúng toán khi có ĐÚNG 6
+  // danh mục thật - khi bị cắt bớt (hasMoreCategories=true, categories.length luôn > 6 lúc đó) không
+  // dùng bố cục này, vì thêm thẻ CTA thứ 7 vào sẽ phá vỡ phép tính lưới 3x3 đã tinh chỉnh cho 6 ô.
   const useBentoLayout = categories.length === BENTO_CATEGORY_COUNT;
 
   return (
@@ -35,7 +45,7 @@ export async function ServicesBentoSection() {
             useBentoLayout ? "md:grid-cols-3 md:auto-rows-[200px]" : "md:grid-cols-2 lg:grid-cols-3",
           )}
         >
-          {categories.map((category, index) => {
+          {displayedCategories.map((category, index) => {
             const Icon = getCategoryIcon(category.slug);
             const isCurated = isCuratedCategoryIcon(category.slug);
             const isHero = useBentoLayout && category.slug === HERO_SLUG;
@@ -100,6 +110,25 @@ export async function ServicesBentoSection() {
               </ScrollReveal>
             );
           })}
+
+          {hasMoreCategories && (
+            <ScrollReveal delay={displayedCategories.length * 0.08}>
+              <Link
+                href="/dich-vu"
+                className="group/card flex h-full flex-col items-center justify-center gap-3 rounded-[20px] border border-dashed border-border p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/40 hover:bg-blue-50/50 sm:p-8 dark:hover:bg-blue-900/10"
+              >
+                <div className="inline-flex size-12 items-center justify-center rounded-xl bg-muted/60 transition-colors duration-300 group-hover/card:bg-blue-50 dark:group-hover/card:bg-blue-900/20">
+                  <ArrowRight className="size-6 text-foreground transition-colors duration-300 group-hover/card:text-blue-600 dark:group-hover/card:text-blue-400" weight="bold" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold tracking-tight text-foreground">Xem tất cả dịch vụ</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Còn {categories.length - displayedCategories.length} danh mục khác đang chờ bạn khám phá
+                  </p>
+                </div>
+              </Link>
+            </ScrollReveal>
+          )}
         </div>
       </div>
     </section>

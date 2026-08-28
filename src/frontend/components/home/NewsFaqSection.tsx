@@ -6,13 +6,19 @@ import { FaqColumn } from "@/components/home/FaqColumn";
 // Section 7/9 của Trang chủ - Minimalist B2B SaaS (solid zinc-900/zinc-800, không gradient). Server
 // Component chỉ fetch dữ liệu thật (không bịa) và điều phối - NewsColumn/FaqColumn (Client Component)
 // xử lý phần motion/tương tác (whileInView 2 chiều, stagger children, FAQ hover-to-expand).
+const HOME_FAQ_COUNT = 3;
+
 export async function NewsFaqSection() {
-  const [newsResult, faqs] = await Promise.all([
+  const [newsResult, allFaqs] = await Promise.all([
     safeFetch(() => getNewsArticles({ pageSize: 3 }, { revalidate: 900 }), emptyPagedResult(3)),
+    // GET /faqs không hỗ trợ phân trang (trả về TOÀN BỘ FAQ đang active, xem lib/api/content.ts) -
+    // cắt bớt ở đây cho khớp với cột Tin tức bên cạnh (luôn cố định 3 dòng), tránh cột FAQ kéo dài lệch
+    // hẳn khi Admin bật nhiều FAQ. FAQ đầy đủ vẫn xem hết ở /dich-vu, /bang-gia (FaqColumn ở đó không cắt).
     safeFetch(() => getFaqs(undefined, { revalidate: 3600 }), []),
   ]);
 
   const articles = newsResult.items;
+  const faqs = allFaqs.slice(0, HOME_FAQ_COUNT);
 
   if (articles.length === 0 && faqs.length === 0) {
     return null;

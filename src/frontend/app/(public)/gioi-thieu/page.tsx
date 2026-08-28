@@ -6,7 +6,6 @@ import { AboutStory } from "@/components/about/AboutStory";
 import { AboutValuesBento } from "@/components/about/AboutValuesBento";
 import { TrustStrip } from "@/components/home/TrustStrip";
 import { TestimonialsGridSection } from "@/components/home/TestimonialsGridSection";
-import { AboutFinalCta } from "@/components/about/AboutFinalCta";
 import type { ContentPageDto } from "@/lib/types/content";
 
 const ABOUT_SLUG = "gioi-thieu";
@@ -37,7 +36,6 @@ export default async function AboutPage() {
       <AboutValuesBento />
       <TrustStrip />
       <TestimonialsGridSection />
-      <AboutFinalCta />
     </>
   );
 }
