@@ -16,7 +16,37 @@ import "./globals.css";
 // output bất kể đặt ở đâu trong layout, tự đặt nó bên trong <head> viết tay sẽ khiến React coi đây là
 // 1 thẻ <script> thường render trong RSC tree (lỗi "Encountered a script tag while rendering React
 // component" - đã gặp thật, không phải giả định).
+//
+// LƯU Ý RIÊNG (khác lỗi trên): dù đã đặt đúng vị trí, console vẫn có thể hiện lại ĐÚNG dòng lỗi
+// "Encountered a script tag..." này - đây là false-positive đã xác nhận (không phải do code ở đây)
+// từ chính next/script khi dùng strategy="beforeInteractive" + dangerouslySetInnerHTML (script inline,
+// không có src) trên Next.js 16.2 + React 19: bản thân next/script nội bộ trả về 1 thẻ <script> JSX
+// thật cho trường hợp này (xem node_modules/next/dist/client/script.js, nhánh strategy==="beforeInteractive"
+// && !src), và React 19 cảnh báo MỌI thẻ <script> xuất hiện trong cây render dù đây là cơ chế nội bộ hợp
+// lệ của Next, không phải lỗi ở app này. Cùng gốc, cùng thông báo y hệt, đã xác nhận qua 3 dự án lớn
+// không liên quan (next-themes #387, shadcn/ui #10104, heroui #6348) - chưa có bản vá từ Next.js/React,
+// cộng đồng chỉ khuyến nghị lọc bớt dòng console.error này ở dev cho đỡ nhiễu (script vẫn chạy đúng lúc
+// SSR, cảnh báo không phản ánh lỗi thật). Lọc phải chạy TRONG trình duyệt (không phải code Node ở
+// Server Component này - RootLayout không có "use client" nên code JS thường viết ở đây không hề được
+// gửi xuống client) nên gắn thẳng vào chuỗi script inline có sẵn (THEME_INIT_SCRIPT, vốn đã chạy được
+// trong trình duyệt qua <Script dangerouslySetInnerHTML>). Chỉ nhúng đoạn lọc khi NODE_ENV=development
+// (tính ở server lúc build chuỗi, không dùng `process` trong JS chạy trình duyệt - process không tồn
+// tại ở đó) - bản production không mang theo, không âm thầm che giấu cảnh báo thật ở môi trường thật.
+const CONSOLE_ERROR_FILTER_SCRIPT =
+  process.env.NODE_ENV === "development"
+    ? `
+  (function () {
+    var originalConsoleError = console.error;
+    console.error = function () {
+      if (typeof arguments[0] === "string" && arguments[0].indexOf("Encountered a script tag") !== -1) return;
+      originalConsoleError.apply(console, arguments);
+    };
+  })();
+`
+    : "";
+
 const THEME_INIT_SCRIPT = `
+  ${CONSOLE_ERROR_FILTER_SCRIPT}
   (function () {
     if (location.pathname.startsWith('/admin')) return;
     var stored = localStorage.getItem('cloudverse-theme');
