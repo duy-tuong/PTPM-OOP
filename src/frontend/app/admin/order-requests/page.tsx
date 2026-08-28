@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 };
 
 interface AdminOrderRequestsPageProps {
-  searchParams: Promise<{ page?: string; status?: string; flaggedOnly?: string }>;
+  searchParams: Promise<{ page?: string; status?: string; flaggedOnly?: string; search?: string }>;
 }
 
 export default async function AdminOrderRequestsPage({ searchParams }: AdminOrderRequestsPageProps) {
@@ -43,6 +43,7 @@ export default async function AdminOrderRequestsPage({ searchParams }: AdminOrde
           ? OrderRequestStatus[params.status as keyof typeof OrderRequestStatus]
           : undefined,
         flaggedOnly: params.flaggedOnly === "true" ? true : undefined,
+        search: params.search || undefined,
       },
       token,
     ),
@@ -55,6 +56,7 @@ export default async function AdminOrderRequestsPage({ searchParams }: AdminOrde
     const search = new URLSearchParams();
     if (params.status) search.set("status", params.status);
     if (params.flaggedOnly === "true") search.set("flaggedOnly", "true");
+    if (params.search) search.set("search", params.search);
     search.set("page", String(page));
     return `/admin/order-requests?${search.toString()}`;
   }
@@ -72,7 +74,11 @@ export default async function AdminOrderRequestsPage({ searchParams }: AdminOrde
 
         <div className="overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
           <div className="border-b border-zinc-100 bg-zinc-50/30 p-4">
-            <OrderRequestsFilterBar currentStatus={params.status} flaggedOnly={params.flaggedOnly === "true"} />
+            <OrderRequestsFilterBar
+              currentStatus={params.status}
+              flaggedOnly={params.flaggedOnly === "true"}
+              currentSearch={params.search}
+            />
           </div>
           <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0">
             <OrderRequestsTable orders={orders.items} />

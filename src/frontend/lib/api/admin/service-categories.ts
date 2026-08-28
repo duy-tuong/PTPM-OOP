@@ -1,14 +1,16 @@
 import { apiFetch } from "../http";
+import type { PagedResult } from "@/lib/types/common";
 import type {
   AdminServiceCategoryDto,
   CreateServiceCategoryDto,
+  ServiceCategoryQueryParams,
   UpdateServiceCategoryDto,
 } from "@/lib/types/admin";
 
 // baseUrl truyền vào là API_URL (đọc lần đầu ở Server Component) hoặc "/api/backend" (thao tác
 // từ Client Component qua Route Handler proxy, Phase 6.5) - xem Design System §"3 cách gọi backend".
-export function getAdminServiceCategories(baseUrl: string, token?: string) {
-  return apiFetch<AdminServiceCategoryDto[]>(baseUrl, "/admin/service-categories", "GET", { token });
+export function getAdminServiceCategories(baseUrl: string, params: ServiceCategoryQueryParams = {}, token?: string) {
+  return apiFetch<PagedResult<AdminServiceCategoryDto>>(baseUrl, "/admin/service-categories", "GET", { params, token });
 }
 
 export function createAdminServiceCategory(baseUrl: string, dto: CreateServiceCategoryDto, token?: string) {

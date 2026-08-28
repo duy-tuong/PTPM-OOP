@@ -1,3 +1,4 @@
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Catalog.Addons;
 using CloudServiceStore.Application.Features.Admin.Catalog.Addons.Dtos;
 using Microsoft.AspNetCore.Authorization;
@@ -18,9 +19,9 @@ public class AdminAddonsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<AdminAddonDto>>> GetList(CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResult<AdminAddonDto>>> GetList([FromQuery] AddonQueryParams query, CancellationToken cancellationToken)
     {
-        return Ok(await _service.GetListAsync(cancellationToken));
+        return Ok(await _service.GetListAsync(query, cancellationToken));
     }
 
     [HttpGet("{id:int}")]

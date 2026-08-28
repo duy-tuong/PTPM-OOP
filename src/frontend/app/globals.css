@@ -37,6 +37,9 @@
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-accent-purple: var(--accent-purple);
+  --color-accent-cyan: var(--accent-cyan);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -110,6 +113,7 @@
   --accent: #1e293b;
   --accent-foreground: #f8fafc;
   --accent-purple: #818cf8;
+  --accent-cyan: #22d3ee;
   --destructive: oklch(0.704 0.191 22.216);
   --border: #1e293b;
   --input: #1e293b;
@@ -135,9 +139,14 @@
    .dark (đối xứng có chủ đích). --primary đậm hoá (#0e7490 thay vì #00f0ff) vì dùng CHUNG 1 token cho
    cả text/link/icon lẫn nút/viền/glow trong toàn bộ Trang chủ - giữ nguyên #00f0ff sẽ fail contrast khi
    làm chữ trên nền trắng; đánh đổi là nút bg-primary ở light mode đậm hơn dark mode, không neon. Gắn
-   class "light" ở <html> theo lựa chọn người dùng (localStorage) qua THEME_INIT_SCRIPT, xem app/layout.tsx. */
+   class "light" ở <html> theo lựa chọn người dùng (localStorage) qua THEME_INIT_SCRIPT, xem app/layout.tsx.
+   Đợt 9 ("Aurora"): --background/--secondary/--muted/--accent/--border/--input chuyển sang tông ấm-xanh
+   nhẹ hơn (thay vì xám phẳng #f8fafc/#f1f5f9/#e2e8f0 cũ) để nền/card/viền có chiều sâu hơn; --accent-purple
+   đậm hoá (#6366f1 -> #7c3aed) và thêm --accent-cyan mới - cùng --primary tạo phổ Blue->Violet->Cyan dùng
+   cho .text-gradient-primary/.gradient-card thay vì chỉ 2 tông cũ. --primary/--card giữ nguyên (không đổi
+   nhận diện thương hiệu, card vẫn trắng sạch). */
 .light {
-  --background: #f8fafc;
+  --background: #f7f9ff;
   --foreground: #0f172a;
   --card: #ffffff;
   --card-foreground: #0f172a;
@@ -146,21 +155,22 @@
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
   --primary-foreground: #ffffff;
-  --secondary: #f1f5f9;
+  --secondary: #eef2fc;
   --secondary-foreground: #0f172a;
-  --muted: #f1f5f9;
+  --muted: #eef2fc;
   --muted-foreground: #64748b;
-  --accent: #f1f5f9;
+  --accent: #eef2fc;
   --accent-foreground: #0f172a;
-  --accent-purple: #6366f1;
+  --accent-purple: #7c3aed;
+  --accent-cyan: #06b6d4;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: #e2e8f0;
-  --input: #e2e8f0;
+  --border: #e4e9f7;
+  --input: #e4e9f7;
   --ring: #2563eb;
   --success: #10b981;
   --warning: #f59e0b;
   --chart-1: #2563eb;
-  --chart-2: #6366f1;
+  --chart-2: #06b6d4;
   --chart-3: oklch(0.556 0 0);
   --chart-4: oklch(0.439 0 0);
   --chart-5: oklch(0.269 0 0);
@@ -168,9 +178,9 @@
   --sidebar-foreground: #0f172a;
   --sidebar-primary: #2563eb;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f1f5f9;
+  --sidebar-accent: #eef2fc;
   --sidebar-accent-foreground: #0f172a;
-  --sidebar-border: #e2e8f0;
+  --sidebar-border: #e4e9f7;
   --sidebar-ring: #2563eb;
 }
 
@@ -289,13 +299,27 @@
   opacity: 1;
 }
 
-/* Chữ gradient cyan -> tím (Hero headline, pivot 2 Cloudverse) */
+/* Chữ gradient Blue -> Violet -> Cyan (Hero headline, "Aurora" - Đợt 9). --accent-purple/--accent-cyan
+   luôn có giá trị ở cả .light/.dark nên không cần fallback var(--chart-2) như trước nữa. */
 .text-gradient-primary {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--accent-purple, var(--chart-2)) 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent-purple) 55%, var(--accent-cyan) 100%);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
   -webkit-text-fill-color: transparent;
+}
+
+/* Thẻ gradient nhạt Blue -> Cyan (Đợt 9) - thay cho pattern hardcode `from-[#EFF6FF] to-[#ECFEFF]
+   dark:from-blue-950/40 dark:to-cyan-950/20` từng lặp y hệt ở 3 nơi (NewsFaqSection/PlanComparisonTable/
+   PromotionBannerSection). color-mix với var(--card) nên tự đúng theo cả 2 theme, không cần viết dark:
+   riêng nữa. */
+.gradient-card {
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklch, var(--primary) 6%, var(--card)) 0%,
+    color-mix(in oklch, var(--accent-cyan) 6%, var(--card)) 100%
+  );
+  border: 1px solid color-mix(in oklch, var(--primary) 12%, var(--border));
 }
 
 /* Ánh sáng lướt ngang khi hover (Hero CTA, pivot 2 Cloudverse) - dải sáng chéo quét qua nút bằng

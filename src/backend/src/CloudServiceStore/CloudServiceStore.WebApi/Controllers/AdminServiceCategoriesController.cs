@@ -1,3 +1,4 @@
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Catalog.ServiceCategories;
 using CloudServiceStore.Application.Features.Admin.Catalog.ServiceCategories.Dtos;
 using Microsoft.AspNetCore.Authorization;
@@ -18,9 +19,9 @@ public class AdminServiceCategoriesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<AdminServiceCategoryDto>>> GetList(CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResult<AdminServiceCategoryDto>>> GetList([FromQuery] ServiceCategoryQueryParams query, CancellationToken cancellationToken)
     {
-        return Ok(await _service.GetListAsync(cancellationToken));
+        return Ok(await _service.GetListAsync(query, cancellationToken));
     }
 
     [HttpPost]

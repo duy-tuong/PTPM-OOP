@@ -1,10 +1,11 @@
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Content.NewsCategories.Dtos;
 
 namespace CloudServiceStore.Application.Features.Admin.Content.NewsCategories;
 
 public interface IAdminNewsCategoryService
 {
-    Task<List<AdminNewsCategoryDto>> GetListAsync(CancellationToken cancellationToken = default);
+    Task<PagedResult<AdminNewsCategoryDto>> GetListAsync(NewsCategoryQueryParams query, CancellationToken cancellationToken = default);
 
     Task<AdminNewsCategoryDto> CreateAsync(CreateNewsCategoryDto dto, CancellationToken cancellationToken = default);
 

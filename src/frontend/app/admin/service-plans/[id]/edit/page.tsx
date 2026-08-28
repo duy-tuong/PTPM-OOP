@@ -25,15 +25,17 @@ export default async function AdminEditServicePlanPage({ params }: AdminEditServ
   const token = cookieStore.get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
   const baseUrl = getApiUrl();
 
+  // pageSize lớn để lấy gần như toàn bộ danh mục/addon/OS image cho các <Select> chọn trong form - dự
+  // án quy mô nhỏ, chưa cần endpoint "lấy tất cả không phân trang" riêng cho việc này.
   const [plan, categories, regions, addons, osImages] = await Promise.all([
     getAdminServicePlanById(baseUrl, Number(id), token).catch((error) => {
       if (error instanceof ApiError && error.status === 404) return null;
       throw error;
     }),
-    getAdminServiceCategories(baseUrl, token),
+    getAdminServiceCategories(baseUrl, { pageSize: 100 }, token),
     getRegions(),
-    getAdminAddons(baseUrl, token),
-    getAdminOsImages(baseUrl, token),
+    getAdminAddons(baseUrl, { pageSize: 100 }, token),
+    getAdminOsImages(baseUrl, { pageSize: 100 }, token),
   ]);
 
   if (!plan) notFound();
@@ -45,7 +47,7 @@ export default async function AdminEditServicePlanPage({ params }: AdminEditServ
           <h1 className="font-heading text-2xl font-semibold tracking-tight text-zinc-900">Sửa gói dịch vụ</h1>
           <p className="mt-1 text-[14px] text-zinc-500">{plan.name}</p>
         </div>
-        <ServicePlanForm mode="edit" initialData={plan} categories={categories} regions={regions} availableAddons={addons} availableOsImages={osImages} />
+        <ServicePlanForm mode="edit" initialData={plan} categories={categories.items} regions={regions} availableAddons={addons.items} availableOsImages={osImages.items} />
       </div>
     </div>
   );

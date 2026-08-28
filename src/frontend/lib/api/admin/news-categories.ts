@@ -1,8 +1,9 @@
 import { apiFetch } from "../http";
-import type { AdminNewsCategoryDto, CreateNewsCategoryDto, UpdateNewsCategoryDto } from "@/lib/types/admin";
+import type { PagedResult } from "@/lib/types/common";
+import type { AdminNewsCategoryDto, CreateNewsCategoryDto, NewsCategoryQueryParams, UpdateNewsCategoryDto } from "@/lib/types/admin";
 
-export function getAdminNewsCategories(baseUrl: string, token?: string) {
-  return apiFetch<AdminNewsCategoryDto[]>(baseUrl, "/admin/news-categories", "GET", { token });
+export function getAdminNewsCategories(baseUrl: string, params: NewsCategoryQueryParams = {}, token?: string) {
+  return apiFetch<PagedResult<AdminNewsCategoryDto>>(baseUrl, "/admin/news-categories", "GET", { params, token });
 }
 
 export function createAdminNewsCategory(baseUrl: string, dto: CreateNewsCategoryDto, token?: string) {

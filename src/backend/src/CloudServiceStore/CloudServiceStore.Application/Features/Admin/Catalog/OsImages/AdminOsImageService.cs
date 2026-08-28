@@ -1,5 +1,6 @@
 using CloudServiceStore.Application.Common.Exceptions;
 using CloudServiceStore.Application.Common.Interfaces;
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Catalog.OsImages.Dtos;
 using CloudServiceStore.Domain.Entities.Catalog;
 using CloudServiceStore.Domain.Entities.Sales;
@@ -17,16 +18,22 @@ public class AdminOsImageService : IAdminOsImageService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<List<AdminOsImageDto>> GetListAsync(CancellationToken cancellationToken = default)
+    public async Task<PagedResult<AdminOsImageDto>> GetListAsync(OsImageQueryParams query, CancellationToken cancellationToken = default)
     {
         var repository = _unitOfWork.Repository<OsImage, int>();
 
-        var entities = await repository.Query()
-            .OrderBy(o => o.DisplayOrder)
-            .ThenBy(o => o.Name)
+        var baseQuery = repository.Query()
+            .Where(o => query.Search == null || o.Name.Contains(query.Search) || o.Slug.Contains(query.Search))
+            .OrderBy(o => o.DisplayOrder).ThenBy(o => o.Name);
+
+        var totalCount = await baseQuery.CountAsync(cancellationToken);
+        var entities = await baseQuery
+            .Skip((query.PageNumber - 1) * query.PageSize)
+            .Take(query.PageSize)
             .ToListAsync(cancellationToken);
 
-        return entities.Select(MapToDto).ToList();
+        var dtos = entities.Select(MapToDto).ToList();
+        return PagedResult<AdminOsImageDto>.Create(dtos, totalCount, query.PageNumber, query.PageSize);
     }
 
     public async Task<AdminOsImageDto> GetByIdAsync(int id, CancellationToken cancellationToken = default)

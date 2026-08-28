@@ -57,7 +57,7 @@ export function PlanPricingGrid({ plans }: { plans: ServicePlanListItemDto[] }) 
           >
             Hàng năm
             {maxDiscountPercent > 0 && (
-              <span className="absolute -top-3 -right-2 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+              <span className="absolute -top-3 -right-2 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
                 Tiết kiệm đến {maxDiscountPercent}%
               </span>
             )}
@@ -105,19 +105,19 @@ function PlanCard({
     <div
       className={cn(
         "group relative flex h-full flex-col rounded-[20px] border p-6 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl",
-        highlighted 
-          ? "border-blue-500 bg-blue-50/50 shadow-lg dark:bg-blue-900/10" 
-          : "border-border bg-card shadow-sm hover:border-blue-500/30"
+        highlighted
+          ? "border-primary bg-primary/5 shadow-lg"
+          : "border-border bg-card shadow-sm hover:border-primary/30"
       )}
     >
       {highlighted && (
-        <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-4 py-1 text-xs font-bold tracking-widest text-white uppercase shadow-sm whitespace-nowrap">
+        <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-primary px-4 py-1 text-xs font-bold tracking-widest text-primary-foreground uppercase shadow-sm whitespace-nowrap">
           Phổ biến nhất
         </div>
       )}
 
       <div className="mb-4">
-        <span className="text-[10px] font-bold tracking-widest text-blue-600 dark:text-blue-400 uppercase mb-2 block">{plan.categoryName}</span>
+        <span className="text-[10px] font-bold tracking-widest text-primary uppercase mb-2 block">{plan.categoryName}</span>
         <h3 className="font-heading text-xl font-bold text-foreground">{plan.name}</h3>
         {plan.shortDescription && <p className="mt-2 text-sm text-muted-foreground">{plan.shortDescription}</p>}
       </div>
@@ -136,7 +136,7 @@ function PlanCard({
       <ul className="mb-6 flex flex-1 flex-col gap-3">
         {plan.features.map((feature) => (
           <li key={feature.featureKey} className="flex items-start gap-3 text-sm text-foreground">
-            <CheckCircle className="mt-0.5 size-5 shrink-0 text-blue-600 dark:text-blue-400" weight="fill" />
+            <CheckCircle className="mt-0.5 size-5 shrink-0 text-primary" weight="fill" />
             <span className="font-medium text-muted-foreground">
               {feature.featureLabel}: <span className="text-foreground">{feature.featureValueText}</span>
             </span>
@@ -149,9 +149,9 @@ function PlanCard({
         variant="default"
         className={cn(
           "w-full h-12 rounded-xl text-base font-semibold shadow-sm transition-all",
-          highlighted 
-            ? "bg-blue-600 text-white hover:bg-blue-700" 
-            : "bg-background text-foreground border-2 border-border hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400"
+          highlighted
+            ? "bg-primary text-primary-foreground hover:bg-primary-hover"
+            : "bg-background text-foreground border-2 border-border hover:border-primary hover:text-primary"
         )}
         render={
           <Link href={`/lien-he?planId=${plan.id}`} className="flex items-center justify-center gap-2">

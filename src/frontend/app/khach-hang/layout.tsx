@@ -24,7 +24,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
       <SmoothScrollProvider>
         <div className="flex min-h-full flex-1 flex-col">
           <Navbar />
-          <main className="flex-1 pt-20 pb-12 bg-slate-50 dark:bg-[#070A12]">
+          <main className="flex-1 pt-20 pb-12 bg-muted dark:bg-[#070A12]">
             <div className="mx-auto max-w-[1280px] px-4 py-8 sm:px-6 lg:px-8">
               <div className="mb-8">
                 <h1 className="text-3xl font-bold tracking-tight text-foreground">Tài khoản của tôi</h1>

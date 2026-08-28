@@ -1,7 +1,9 @@
 "use client";
 
+import { useState, type KeyboardEvent } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { TriangleAlert } from "lucide-react";
+import { Search, TriangleAlert } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { ORDER_REQUEST_STATUS_LABELS } from "@/lib/types/enums";
@@ -10,10 +12,19 @@ const ALL_STATUS_VALUE = "all-status";
 
 // URL lưu tên enum ("New"/"Contacted"/...) thay vì số - đọc dễ hơn, khớp cách backend trả về status
 // dạng string. page.tsx tự map tên -> số khi build query gọi API.
-export function OrderRequestsFilterBar({ currentStatus, flaggedOnly }: { currentStatus?: string; flaggedOnly?: boolean }) {
+export function OrderRequestsFilterBar({
+  currentStatus,
+  flaggedOnly,
+  currentSearch,
+}: {
+  currentStatus?: string;
+  flaggedOnly?: boolean;
+  currentSearch?: string;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [searchValue, setSearchValue] = useState(currentSearch ?? "");
 
   function updateParam(key: string, value: string | null) {
     const next = new URLSearchParams(searchParams.toString());
@@ -23,8 +34,26 @@ export function OrderRequestsFilterBar({ currentStatus, flaggedOnly }: { current
     router.push(`${pathname}?${next.toString()}`);
   }
 
+  function handleSearchKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      updateParam("search", searchValue.trim() || null);
+    }
+  }
+
   return (
     <div className="flex flex-wrap items-center gap-3">
+      <div className="relative w-full max-w-xs">
+        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-zinc-400" />
+        <Input
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value)}
+          onKeyDown={handleSearchKeyDown}
+          placeholder="Tìm theo mã đơn, tên hoặc email khách... Enter"
+          className="rounded-full bg-white pl-9 shadow-none ring-1 ring-zinc-950/5"
+        />
+      </div>
+
       <Select
         items={[
           { value: ALL_STATUS_VALUE, label: "Tất cả trạng thái" },

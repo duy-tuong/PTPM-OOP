@@ -27,3 +27,11 @@ const CATEGORY_ICONS: Record<string, ServiceCategoryIcon> = {
 export function getCategoryIcon(slug: string): ServiceCategoryIcon {
   return CATEGORY_ICONS[slug] ?? Cpu;
 }
+
+// Danh mục KHÔNG nằm trong CATEGORY_ICONS (Admin tự thêm mới qua giao diện, chưa có lập trình viên
+// map icon riêng) - nơi gọi dùng cờ này để quyết định có nên hiện ảnh Admin tự upload
+// (ServiceCategory.iconUrl) thay cho icon Cpu mặc định hay không. 7 danh mục gốc luôn dùng icon vector
+// đã map, KHÔNG đụng iconUrl dù có upload - giữ nguyên bộ icon đã tinh chỉnh đẹp cho các danh mục này.
+export function isCuratedCategoryIcon(slug: string): boolean {
+  return slug in CATEGORY_ICONS;
+}

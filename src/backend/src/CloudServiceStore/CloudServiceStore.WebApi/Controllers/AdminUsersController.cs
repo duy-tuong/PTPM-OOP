@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Identity.Users;
 using CloudServiceStore.Application.Features.Admin.Identity.Users.Dtos;
 using Microsoft.AspNetCore.Authorization;
@@ -19,9 +20,9 @@ public class AdminUsersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<AdminUserDto>>> GetList(CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResult<AdminUserDto>>> GetList([FromQuery] UserQueryParams query, CancellationToken cancellationToken)
     {
-        return Ok(await _service.GetListAsync(cancellationToken));
+        return Ok(await _service.GetListAsync(query, cancellationToken));
     }
 
     [HttpPost]

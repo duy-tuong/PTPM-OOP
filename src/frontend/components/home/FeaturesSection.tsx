@@ -38,9 +38,9 @@ export function FeaturesSection() {
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:gap-8">
           {FEATURES.map((feature, index) => (
             <ScrollReveal key={index} delay={index * 0.1}>
-              <div className="group relative flex flex-col gap-4 rounded-[20px] border border-border bg-card p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/40 hover:shadow-md sm:flex-row sm:items-center sm:p-6">
-                <div className="flex size-12 sm:size-14 shrink-0 items-center justify-center rounded-xl bg-muted/60 transition-colors duration-300 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20">
-                  <span className="text-foreground transition-colors duration-300 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+              <div className="group relative flex flex-col gap-4 rounded-[20px] border border-border bg-card p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-md sm:flex-row sm:items-center sm:p-6">
+                <div className="flex size-12 sm:size-14 shrink-0 items-center justify-center rounded-xl bg-muted/60 transition-colors duration-300 group-hover:bg-primary/10">
+                  <span className="text-foreground transition-colors duration-300 group-hover:text-primary">
                     {feature.icon}
                   </span>
                 </div>

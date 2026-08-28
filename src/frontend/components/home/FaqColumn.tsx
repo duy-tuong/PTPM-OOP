@@ -45,18 +45,18 @@ function FaqBlockItem({ faq }: { faq: FaqDto }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="rounded-xl border border-blue-200/60 bg-white/50 p-5 shadow-sm transition-all duration-300 hover:bg-white hover:shadow-md dark:border-blue-900/50 dark:bg-zinc-900/40 dark:hover:bg-zinc-900/80">
+    <div className="rounded-xl border border-border bg-card/50 p-5 shadow-sm transition-all duration-300 hover:bg-card hover:shadow-md">
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
         className="group flex w-full items-start justify-between gap-4 text-left focus:outline-none"
       >
-        <h3 className="font-heading text-base font-semibold text-foreground transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400">
+        <h3 className="font-heading text-base font-semibold text-foreground transition-colors group-hover:text-primary">
           {faq.question}
         </h3>
         <CaretDown
-          className={cn("mt-1 size-4 shrink-0 text-muted-foreground transition-transform duration-300 group-hover:text-blue-600 dark:group-hover:text-blue-400", open && "rotate-180")}
+          className={cn("mt-1 size-4 shrink-0 text-muted-foreground transition-transform duration-300 group-hover:text-primary", open && "rotate-180")}
         />
       </button>
       <AnimatePresence initial={false}>

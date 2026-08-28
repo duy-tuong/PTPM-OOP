@@ -1689,6 +1689,46 @@ namespace CloudServiceStore.Infrastructure.Migrations
                     b.ToTable("Customers", (string)null);
                 });
 
+            modelBuilder.Entity("CloudServiceStore.Domain.Entities.Identity.CustomerNotification", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LinkUrl")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId", "IsRead", "CreatedAt");
+
+                    b.ToTable("CustomerNotifications", (string)null);
+                });
+
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.Identity.CustomerSshKey", b =>
                 {
                     b.Property<int>("Id")
@@ -2585,6 +2625,17 @@ namespace CloudServiceStore.Infrastructure.Migrations
                     b.Navigation("Role");
                 });
 
+            modelBuilder.Entity("CloudServiceStore.Domain.Entities.Identity.CustomerNotification", b =>
+                {
+                    b.HasOne("CloudServiceStore.Domain.Entities.Identity.Customer", "Customer")
+                        .WithMany("Notifications")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+                });
+
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.Identity.CustomerSshKey", b =>
                 {
                     b.HasOne("CloudServiceStore.Domain.Entities.Identity.Customer", "Customer")
@@ -2840,6 +2891,8 @@ namespace CloudServiceStore.Infrastructure.Migrations
 
             modelBuilder.Entity("CloudServiceStore.Domain.Entities.Identity.Customer", b =>
                 {
+                    b.Navigation("Notifications");
+
                     b.Navigation("SshKeys");
                 });
 

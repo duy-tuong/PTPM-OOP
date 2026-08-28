@@ -6,12 +6,19 @@ import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/admin/DataTable";
 import { ConsultationStatusBadge } from "@/components/admin/ConsultationStatusBadge";
 import { ConsultationStatusDialog } from "@/components/admin/consultation-requests/ConsultationStatusDialog";
+import { ConsultationRequestsFilterBar } from "@/components/admin/consultation-requests/ConsultationRequestsFilterBar";
 import { formatDate } from "@/lib/utils";
 import type { AdminConsultationRequestDto } from "@/lib/types/admin";
 
-// Backend không hỗ trợ filter/phân trang cho resource này (List<T> phẳng) - render nguyên danh
-// sách, không tự chế UI filter hứa hẹn chức năng không có thật.
-export function ConsultationRequestsManager({ requests }: { requests: AdminConsultationRequestDto[] }) {
+// Nhận danh sách của trang hiện tại (đã phân trang server-side qua PagedResult<T> - xem
+// app/admin/consultation-requests/page.tsx).
+export function ConsultationRequestsManager({
+  requests,
+  currentSearch,
+}: {
+  requests: AdminConsultationRequestDto[];
+  currentSearch?: string;
+}) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<AdminConsultationRequestDto | null>(null);
 
@@ -82,13 +89,18 @@ export function ConsultationRequestsManager({ requests }: { requests: AdminConsu
 
   return (
     <>
-      <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0 overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
-        <DataTable
-          columns={columns}
-          data={requests}
-          emptyMessage="Chưa có yêu cầu tư vấn nào."
-          getRowKey={(row) => row.id}
-        />
+      <div className="overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
+        <div className="border-b border-zinc-100 bg-zinc-50/30 p-4">
+          <ConsultationRequestsFilterBar currentSearch={currentSearch} />
+        </div>
+        <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0">
+          <DataTable
+            columns={columns}
+            data={requests}
+            emptyMessage="Chưa có yêu cầu tư vấn nào."
+            getRowKey={(row) => row.id}
+          />
+        </div>
       </div>
       <ConsultationStatusDialog open={dialogOpen} onOpenChange={setDialogOpen} request={selectedRequest} />
     </>

@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Sales.AffiliateApplications;
 using CloudServiceStore.Application.Features.Admin.Sales.AffiliateApplications.Dtos;
 using Microsoft.AspNetCore.Authorization;
@@ -19,9 +20,9 @@ public class AdminAffiliateApplicationsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<AdminAffiliateApplicationDto>>> GetList(CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResult<AdminAffiliateApplicationDto>>> GetList([FromQuery] AffiliateApplicationQueryParams query, CancellationToken cancellationToken)
     {
-        return Ok(await _service.GetListAsync(cancellationToken));
+        return Ok(await _service.GetListAsync(query, cancellationToken));
     }
 
     [HttpPut("{id:int}/status")]

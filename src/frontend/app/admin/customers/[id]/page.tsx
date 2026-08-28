@@ -43,8 +43,9 @@ export default async function AdminCustomerDetailPage({ params }: AdminCustomerD
   }
 
   // Danh sách nhân viên (Admin/Editor) làm nguồn cho select "Sales phụ trách" - tái dùng nguyên API
-  // GET /admin/users đã có sẵn cho trang Nhân viên, không cần endpoint riêng.
-  const salesReps = await getAdminUsers(baseUrl, token);
+  // GET /admin/users đã có sẵn cho trang Nhân viên, không cần endpoint riêng. pageSize lớn để lấy gần
+  // như toàn bộ nhân viên (dự án quy mô nhỏ, chưa cần endpoint không phân trang riêng).
+  const salesReps = await getAdminUsers(baseUrl, { pageSize: 100 }, token);
 
   return (
     <div className="min-h-full px-4 py-8 sm:px-6 lg:px-8">
@@ -84,7 +85,7 @@ export default async function AdminCustomerDetailPage({ params }: AdminCustomerD
           </div>
         </div>
 
-        <CustomerDetailForm customer={customer} salesReps={salesReps} />
+        <CustomerDetailForm customer={customer} salesReps={salesReps.items} />
       </div>
     </div>
   );

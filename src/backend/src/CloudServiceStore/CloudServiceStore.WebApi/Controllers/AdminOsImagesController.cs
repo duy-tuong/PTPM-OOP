@@ -1,3 +1,4 @@
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Catalog.OsImages;
 using CloudServiceStore.Application.Features.Admin.Catalog.OsImages.Dtos;
 using Microsoft.AspNetCore.Authorization;
@@ -18,9 +19,9 @@ public class AdminOsImagesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<AdminOsImageDto>>> GetList(CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResult<AdminOsImageDto>>> GetList([FromQuery] OsImageQueryParams query, CancellationToken cancellationToken)
     {
-        return Ok(await _service.GetListAsync(cancellationToken));
+        return Ok(await _service.GetListAsync(query, cancellationToken));
     }
 
     [HttpGet("{id:int}")]

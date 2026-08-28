@@ -7,14 +7,15 @@ import { DataTable, type DataTableColumn } from "@/components/admin/DataTable";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { ConfirmDeleteButton } from "@/components/admin/ConfirmDeleteButton";
 import { AddonDialog } from "@/components/admin/addons/AddonDialog";
+import { AddonsFilterBar } from "@/components/admin/addons/AddonsFilterBar";
 import { deleteAddonAction } from "@/app/admin/addons/actions";
 import { ADDON_TYPE_LABELS, ADDON_BILLING_TYPE_LABELS } from "@/lib/types/enums";
 import { formatCurrency } from "@/lib/utils";
 import type { AdminAddonDto } from "@/lib/types/admin";
 
-// unpaged-list-in-Dialog: getAdminAddons trả về danh sách phẳng (không phân trang), khớp
-// ServiceCategoriesManager.tsx - Addon là danh mục nhỏ, không cần phân trang.
-export function AddonsManager({ addons }: { addons: AdminAddonDto[] }) {
+// `addons` là 1 TRANG (page.tsx đã phân trang qua getAdminAddons) - Sửa chỉ prefill từ record đã có
+// sẵn trong mảng của trang hiện tại, không fetch lại theo id.
+export function AddonsManager({ addons, currentSearch }: { addons: AdminAddonDto[]; currentSearch?: string }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingAddon, setEditingAddon] = useState<AdminAddonDto | null>(null);
 
@@ -95,8 +96,13 @@ export function AddonsManager({ addons }: { addons: AdminAddonDto[] }) {
         </Button>
       </div>
 
-      <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0 overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
-        <DataTable columns={columns} data={addons} emptyMessage="Chưa có addon nào." getRowKey={(row) => row.id} />
+      <div className="overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
+        <div className="border-b border-zinc-100 bg-zinc-50/30 p-4">
+          <AddonsFilterBar currentSearch={currentSearch} />
+        </div>
+        <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0">
+          <DataTable columns={columns} data={addons} emptyMessage="Chưa có addon nào." getRowKey={(row) => row.id} />
+        </div>
       </div>
 
       <AddonDialog open={dialogOpen} onOpenChange={setDialogOpen} addon={editingAddon} />

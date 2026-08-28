@@ -65,6 +65,13 @@ export function estimateReadingMinutes(wordCount: number, wordsPerMinute = 200):
   return Math.max(1, Math.round(wordCount / wordsPerMinute));
 }
 
+// Xác thực giá trị query param "redirect" (dùng ở /login sau khi khách chưa đăng nhập bị chuyển hướng
+// từ AutoAddFromQuery.tsx/proxy.ts) - chỉ chấp nhận path nội bộ tương đối, chặn "//host" (protocol-
+// relative URL, vector open-redirect ra site ngoài) và mọi URL tuyệt đối (http://, https://,...).
+export function isSafeRedirectPath(path: string | null | undefined): path is string {
+  return !!path && path.startsWith("/") && !path.startsWith("//");
+}
+
 // Dùng cho ExportButton (Phase 6.9) - trigger tải file nhị phân (vd .xlsx) từ 1 Blob đã fetch sẵn.
 export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);

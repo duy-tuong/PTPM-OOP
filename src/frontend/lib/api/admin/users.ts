@@ -1,8 +1,9 @@
 import { apiFetch } from "../http";
-import type { AdminUserDto, CreateUserDto, UpdateUserDto, ResetUserPasswordDto } from "@/lib/types/admin";
+import type { PagedResult } from "@/lib/types/common";
+import type { AdminUserDto, CreateUserDto, UpdateUserDto, ResetUserPasswordDto, UserQueryParams } from "@/lib/types/admin";
 
-export function getAdminUsers(baseUrl: string, token?: string) {
-  return apiFetch<AdminUserDto[]>(baseUrl, "/admin/users", "GET", { token });
+export function getAdminUsers(baseUrl: string, params: UserQueryParams = {}, token?: string) {
+  return apiFetch<PagedResult<AdminUserDto>>(baseUrl, "/admin/users", "GET", { params, token });
 }
 
 export function createAdminUser(baseUrl: string, dto: CreateUserDto, token?: string) {

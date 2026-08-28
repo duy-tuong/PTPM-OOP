@@ -1,5 +1,6 @@
 using CloudServiceStore.Application.Common.Exceptions;
 using CloudServiceStore.Application.Common.Interfaces;
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Sales.AffiliateApplications.Dtos;
 using CloudServiceStore.Domain.Entities.Sales;
 using CloudServiceStore.Domain.Entities.System;
@@ -17,16 +18,23 @@ public class AdminAffiliateApplicationService : IAdminAffiliateApplicationServic
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<List<AdminAffiliateApplicationDto>> GetListAsync(CancellationToken cancellationToken = default)
+    public async Task<PagedResult<AdminAffiliateApplicationDto>> GetListAsync(AffiliateApplicationQueryParams query, CancellationToken cancellationToken = default)
     {
         var repository = _unitOfWork.Repository<AffiliateApplication, int>();
 
-        var entities = await repository.Query()
+        var baseQuery = repository.Query()
             .Include(a => a.ReviewedByUser)
-            .OrderByDescending(a => a.CreatedAt)
+            .Where(a => query.Search == null || a.FullName.Contains(query.Search) || a.Email.Contains(query.Search) || a.Phone.Contains(query.Search))
+            .OrderByDescending(a => a.CreatedAt);
+
+        var totalCount = await baseQuery.CountAsync(cancellationToken);
+        var entities = await baseQuery
+            .Skip((query.PageNumber - 1) * query.PageSize)
+            .Take(query.PageSize)
             .ToListAsync(cancellationToken);
 
-        return entities.Select(MapToDto).ToList();
+        var dtos = entities.Select(MapToDto).ToList();
+        return PagedResult<AdminAffiliateApplicationDto>.Create(dtos, totalCount, query.PageNumber, query.PageSize);
     }
 
     public async Task<AdminAffiliateApplicationDto> UpdateStatusAsync(int id, UpdateAffiliateApplicationStatusDto dto, Guid changedByUserId, CancellationToken cancellationToken = default)

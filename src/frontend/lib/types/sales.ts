@@ -36,6 +36,16 @@ export interface CustomerSshKeyDto {
   createdAt: string;
 }
 
+// Khớp Application/Features/Customers/Notifications/Dtos/CustomerNotificationDto.cs
+export interface CustomerNotificationDto {
+  id: number;
+  title: string;
+  message: string;
+  linkUrl: string | null;
+  isRead: boolean;
+  createdAt: string;
+}
+
 export interface CreateSshKeyDto {
   label: string;
   publicKey: string;

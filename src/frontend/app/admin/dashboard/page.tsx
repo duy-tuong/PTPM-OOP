@@ -7,6 +7,8 @@ import { ADMIN_ACCESS_TOKEN_COOKIE } from "@/lib/auth/adminAuthCookies";
 import { getAdminSession } from "@/lib/auth/adminSession";
 import { AdminDashboardView } from "@/components/admin/dashboard/AdminDashboardView";
 import { EditorDashboardView } from "@/components/admin/dashboard/EditorDashboardView";
+import { safeFetch, emptyPagedResult } from "@/lib/api/safe";
+import type { DashboardStatsDto } from "@/lib/types/admin";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -18,6 +20,20 @@ const TODAY_FORMATTER = new Intl.DateTimeFormat("vi-VN", {
   month: "long",
   year: "numeric",
 });
+
+// Fallback đúng SHAPE thật của DashboardStatsDto (khớp lib/types/admin.ts) - trước đây fallback là
+// `any` với field bịa (totalCustomers/activeServices/...) không tồn tại trong DTO thật, khiến
+// AdminDashboardView crash ngay khi backend tạm lỗi (đọc stats.monthlyStats.length trên object không
+// có field này). safeFetch (đã dùng cho trang public, xem lib/api/safe.ts) vừa log lỗi thật ra console
+// server vừa trả fallback đúng kiểu, không còn nuốt lỗi âm thầm như try/catch cũ.
+const EMPTY_DASHBOARD_STATS: DashboardStatsDto = {
+  totalOrderRequests: 0,
+  totalConsultationRequests: 0,
+  totalAffiliateApplications: 0,
+  pendingOrderRequests: 0,
+  monthlyStats: [],
+  topServicePlans: [],
+};
 
 import { redirect } from "next/navigation";
 
@@ -51,19 +67,10 @@ export default async function AdminDashboardPage() {
   const token = cookieStore.get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
   const baseUrl = getApiUrl();
 
-  let stats: any = { totalCustomers: 0, activeServices: 0, pendingOrders: 0, monthlyRevenue: 0 };
-  let recentOrders: any = [];
-
-  try {
-    const [statsRes, ordersRes] = await Promise.all([
-      getAdminDashboardStats(baseUrl, token),
-      getAdminOrderRequests(baseUrl, { pageSize: 5 }, token),
-    ]);
-    stats = statsRes;
-    recentOrders = ordersRes;
-  } catch {
-    // Gracefully handle backend API errors
-  }
+  const [stats, recentOrders] = await Promise.all([
+    safeFetch(() => getAdminDashboardStats(baseUrl, token), EMPTY_DASHBOARD_STATS),
+    safeFetch(() => getAdminOrderRequests(baseUrl, { pageSize: 5 }, token), emptyPagedResult(5)),
+  ]);
 
   return (
     <div className="min-h-full px-4 py-8 sm:px-6 lg:px-8">

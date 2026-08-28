@@ -1,5 +1,6 @@
 using CloudServiceStore.Application.Common.Exceptions;
 using CloudServiceStore.Application.Common.Interfaces;
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Content.Testimonials.Dtos;
 using CloudServiceStore.Domain.Entities.Content;
 using Microsoft.EntityFrameworkCore;
@@ -15,15 +16,22 @@ public class AdminTestimonialService : IAdminTestimonialService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<List<AdminTestimonialDto>> GetListAsync(CancellationToken cancellationToken = default)
+    public async Task<PagedResult<AdminTestimonialDto>> GetListAsync(TestimonialQueryParams query, CancellationToken cancellationToken = default)
     {
         var repository = _unitOfWork.Repository<Testimonial, int>();
 
-        var entities = await repository.Query()
-            .OrderBy(t => t.DisplayOrder)
+        var baseQuery = repository.Query()
+            .Where(t => query.Search == null || t.DisplayName.Contains(query.Search) || t.Content.Contains(query.Search))
+            .OrderBy(t => t.DisplayOrder);
+
+        var totalCount = await baseQuery.CountAsync(cancellationToken);
+        var entities = await baseQuery
+            .Skip((query.PageNumber - 1) * query.PageSize)
+            .Take(query.PageSize)
             .ToListAsync(cancellationToken);
 
-        return entities.Select(MapToDto).ToList();
+        var dtos = entities.Select(MapToDto).ToList();
+        return PagedResult<AdminTestimonialDto>.Create(dtos, totalCount, query.PageNumber, query.PageSize);
     }
 
     public async Task<AdminTestimonialDto> CreateAsync(CreateTestimonialDto dto, CancellationToken cancellationToken = default)

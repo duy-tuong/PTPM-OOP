@@ -23,7 +23,7 @@ export function ParticleNetworkBackground() {
     if (!pathname) return false;
     
     // 1. Dashboard khách hàng / Admin
-    if (pathname.startsWith('/khach-hang') || pathname.startsWith('/admin')) return true;
+    if (pathname.startsWith('/khach-hang') || (pathname.startsWith('/admin') && pathname !== '/admin/login')) return true;
     
     // 2. Chi tiết tin tức
     if (pathname.startsWith('/tin-tuc/') && pathname !== '/tin-tuc') return true;
@@ -31,9 +31,7 @@ export function ParticleNetworkBackground() {
     // 3. Các trang tĩnh, cần tập trung
     const hiddenExactPaths = [
       '/lien-he',
-      '/login',
-      '/register',
-      '/quen-mat-khau',
+      '/gio-hang',
     ];
     
     return hiddenExactPaths.includes(pathname);
@@ -76,9 +74,15 @@ export function ParticleNetworkBackground() {
     let animationFrameId: number;
     let particles: Particle[] = [];
     
-    // Config based on theme
-    const nodeColor = theme === 'dark' ? '6, 182, 212' : '71, 85, 105'; // Cyan-500 vs Slate-600
-    const lineColor = theme === 'dark' ? '59, 130, 246' : '71, 85, 105'; // Blue-500 vs Slate-600
+    // Config based on theme - light dùng cùng tông xanh với dark (thay vì xám Slate-600 cũ) để giữ
+    // đúng bản sắc màu của hiệu ứng ở cả 2 theme; đồng thời tăng alpha riêng cho light (xem
+    // nodeAlpha/lineAlphaMultiplier bên dưới) vì màu đậm trên nền sáng cần alpha cao hơn mới đạt độ
+    // tương phản tương đương màu sáng trên nền tối - dùng chung 1 alpha cho cả 2 theme (như code cũ)
+    // khiến bản sáng luôn mờ hơn hẳn dù cùng % opacity.
+    const nodeColor = theme === 'dark' ? '6, 182, 212' : '37, 99, 235'; // Cyan-500 vs Blue-600
+    const lineColor = theme === 'dark' ? '59, 130, 246' : '37, 99, 235'; // Blue-500 vs Blue-600
+    const nodeAlpha = theme === 'dark' ? 0.5 : 0.75;
+    const lineAlphaMultiplier = theme === 'dark' ? 0.15 : 0.3;
     
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;
@@ -124,7 +128,7 @@ export function ParticleNetworkBackground() {
         // Draw node
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${nodeColor}, 0.5)`;
+        ctx.fillStyle = `rgba(${nodeColor}, ${nodeAlpha})`;
         ctx.fill();
 
         // Connect to other nearby nodes
@@ -141,8 +145,8 @@ export function ParticleNetworkBackground() {
             
             // Opacity decreases as distance increases
             const opacity = 1 - (distance / connectionDistance);
-            // Lower overall line opacity for subtlety
-            ctx.strokeStyle = `rgba(${lineColor}, ${opacity * 0.15})`;
+            // Lower overall line opacity for subtlety (nhân số riêng theo theme, xem comment ở trên)
+            ctx.strokeStyle = `rgba(${lineColor}, ${opacity * lineAlphaMultiplier})`;
             ctx.lineWidth = 1;
             ctx.stroke();
           }
@@ -173,10 +177,12 @@ export function ParticleNetworkBackground() {
         <div className="absolute -bottom-[20%] left-[20%] h-[50%] w-[60%] rounded-full bg-blue-500 blur-[120px]" />
       </div>
 
-      {/* 2. Canvas Network */}
-      <canvas 
-        ref={canvasRef} 
-        className="absolute inset-0 h-full w-full opacity-60 dark:opacity-100"
+      {/* 2. Canvas Network - độ mờ đã tự điều chỉnh riêng theo theme ở nodeAlpha/lineAlphaMultiplier
+          bên trong canvas (JS), không cần thêm 1 lớp opacity CSS nhân dồn ở đây nữa (trước đây light
+          bị nhân thêm opacity-60 CHỒNG lên alpha thấp sẵn có, làm mờ gấp đôi so với dark). */}
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 h-full w-full"
       />
     </div>
   );

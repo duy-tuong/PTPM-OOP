@@ -1,8 +1,9 @@
 import { apiFetch } from "../http";
-import type { AdminAddonDto, CreateAddonDto, UpdateAddonDto } from "@/lib/types/admin";
+import type { PagedResult } from "@/lib/types/common";
+import type { AddonQueryParams, AdminAddonDto, CreateAddonDto, UpdateAddonDto } from "@/lib/types/admin";
 
-export function getAdminAddons(baseUrl: string, token?: string) {
-  return apiFetch<AdminAddonDto[]>(baseUrl, "/admin/addons", "GET", { token });
+export function getAdminAddons(baseUrl: string, params: AddonQueryParams = {}, token?: string) {
+  return apiFetch<PagedResult<AdminAddonDto>>(baseUrl, "/admin/addons", "GET", { params, token });
 }
 
 export function createAdminAddon(baseUrl: string, dto: CreateAddonDto, token?: string) {

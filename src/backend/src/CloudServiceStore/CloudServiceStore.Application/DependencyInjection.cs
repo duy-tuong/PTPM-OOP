@@ -15,6 +15,7 @@ using CloudServiceStore.Application.Features.Admin.Marketing.Promotions;
 using CloudServiceStore.Application.Features.Admin.Reporting.AuditLogs;
 using CloudServiceStore.Application.Features.Admin.Reporting.DashboardStats;
 using CloudServiceStore.Application.Features.Admin.Reporting.RevenueAnalytics;
+using CloudServiceStore.Application.Features.Admin.Search;
 using CloudServiceStore.Application.Features.Admin.Sales.AffiliateApplications;
 using CloudServiceStore.Application.Features.Admin.Sales.ConsultationRequests;
 using CloudServiceStore.Application.Features.Admin.Sales.OrderRequests;
@@ -35,6 +36,7 @@ using CloudServiceStore.Application.Features.Content.NewsTags;
 using CloudServiceStore.Application.Features.Content.Partners;
 using CloudServiceStore.Application.Features.Content.Testimonials;
 using CloudServiceStore.Application.Features.Customers.Auth;
+using CloudServiceStore.Application.Features.Customers.Notifications;
 using CloudServiceStore.Application.Features.Customers.SshKeys;
 using CloudServiceStore.Application.Features.Marketing.Promotions;
 using CloudServiceStore.Application.Features.Sales.AffiliateApplications;
@@ -51,7 +53,9 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICustomerAuthService, CustomerAuthService>();
         services.AddScoped<ICustomerSshKeyService, CustomerSshKeyService>();
+        services.AddScoped<ICustomerNotificationService, CustomerNotificationService>();
         services.AddScoped<OrderStatusNotifier>();
+        services.AddScoped<ConsultationStatusNotifier>();
         services.AddScoped<IOrderRequestStatusTransitionService, OrderRequestStatusTransitionService>();
         services.AddScoped<IPaymentWebhookService, PaymentWebhookService>();
 
@@ -80,6 +84,7 @@ public static class DependencyInjection
         services.AddScoped<IAdminOsImageService, AdminOsImageService>();
         services.AddScoped<IAdminTldPricingService, AdminTldPricingService>();
         services.AddScoped<IAdminPromotionService, AdminPromotionService>();
+        services.AddScoped<IAdminSearchService, AdminSearchService>();
 
         services.AddScoped<IAdminNewsCategoryService, AdminNewsCategoryService>();
         services.AddScoped<IAdminNewsArticleService, AdminNewsArticleService>();

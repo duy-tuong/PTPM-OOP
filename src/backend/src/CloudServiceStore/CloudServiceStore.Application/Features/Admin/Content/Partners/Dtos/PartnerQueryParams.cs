@@ -1,0 +1,9 @@
+using CloudServiceStore.Application.Common.Models;
+
+namespace CloudServiceStore.Application.Features.Admin.Content.Partners.Dtos;
+
+public class PartnerQueryParams : PaginationParams
+{
+    // Tìm theo tên đối tác.
+    public string? Search { get; set; }
+}

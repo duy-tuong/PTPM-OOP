@@ -1,10 +1,11 @@
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Content.ContentPages.Dtos;
 
 namespace CloudServiceStore.Application.Features.Admin.Content.ContentPages;
 
 public interface IAdminContentPageService
 {
-    Task<List<AdminContentPageDto>> GetListAsync(CancellationToken cancellationToken = default);
+    Task<PagedResult<AdminContentPageDto>> GetListAsync(ContentPageQueryParams query, CancellationToken cancellationToken = default);
 
     Task<AdminContentPageDto> CreateAsync(CreateContentPageDto dto, Guid authorId, CancellationToken cancellationToken = default);
 

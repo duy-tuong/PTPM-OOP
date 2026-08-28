@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { NotificationBell } from "@/components/shared/NotificationBell";
 import { MagneticButton } from "@/components/shared/MagneticButton";
 import { Logo } from "@/components/shared/Logo";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
@@ -75,7 +76,7 @@ export function Navbar() {
       requestAnimationFrame(() => {
         const y = window.scrollY;
         const delta = y - lastY;
-        
+
         // Handle scroll state for styling
         setScrolled(y > 20);
 
@@ -83,7 +84,7 @@ export function Navbar() {
         if (y < 80) setHidden(false);
         else if (delta > 8) setHidden(true);
         else if (delta < -8) setHidden(false);
-        
+
         lastY = y;
         ticking = false;
       });
@@ -107,9 +108,9 @@ export function Navbar() {
       className={cn(
         "fixed inset-x-0 top-4 z-40 mx-auto w-[calc(100%-2rem)] max-w-6xl rounded-[24px] transition-all duration-300",
         hidden ? "-translate-y-24 opacity-0" : "translate-y-0 opacity-100",
-        scrolled 
-          ? "bg-background/80 backdrop-blur-md border border-border/50 shadow-sm" 
-          : "bg-background/40 backdrop-blur-sm border border-transparent"
+        scrolled
+          ? "bg-muted/80 backdrop-blur-md border border-border/50 shadow-sm"
+          : "bg-muted/40 backdrop-blur-sm border border-transparent"
       )}
     >
       <div className="relative mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -120,7 +121,7 @@ export function Navbar() {
         <nav className="hidden items-center justify-center gap-6 lg:gap-8 lg:flex">
           {NAV_LINKS.map((link) => {
             const isActive = pathname === link.href || (link.href !== '/' && pathname?.startsWith(link.href));
-            
+
             return (
               <Link
                 key={link.href}
@@ -138,14 +139,16 @@ export function Navbar() {
 
         <div className="relative z-10 hidden flex-1 items-center justify-end gap-3 lg:gap-4 lg:flex">
           <div className="flex items-center gap-1">
+            {session && <NotificationBell />}
+
             <Link
-              href="/lien-he"
+              href="/gio-hang"
               aria-label={cartCount > 0 ? `Giỏ hàng, ${cartCount} sản phẩm` : "Giỏ hàng"}
               className="relative inline-flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <ShoppingCart className="size-5" />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] leading-none font-bold text-white">
+                <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] leading-none font-bold text-primary-foreground">
                   {cartCount}
                 </span>
               )}
@@ -159,7 +162,7 @@ export function Navbar() {
                   className="group ml-1 rounded-full outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <Avatar className="size-9 transition-transform group-hover:scale-105 border border-border/50">
-                    <AvatarFallback className="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 font-medium text-xs">
+                    <AvatarFallback className="bg-primary/10 text-primary font-medium text-xs">
                       {getInitials(session.fullName)}
                     </AvatarFallback>
                   </Avatar>
@@ -204,7 +207,7 @@ export function Navbar() {
           <MagneticButton>
             <Button
               nativeButton={false}
-              className="rounded-full bg-blue-600 px-6 font-medium text-white hover:bg-blue-700 hover:shadow-md transition-all border-0"
+              className="rounded-full bg-primary px-6 font-medium text-primary-foreground hover:bg-primary-hover hover:shadow-md transition-all border-0"
               render={<Link href="/lien-he">Đặt dịch vụ</Link>}
             />
           </MagneticButton>
@@ -236,8 +239,10 @@ export function Navbar() {
                 );
               })}
 
+              {session && <NotificationBell variant="row" />}
+
               <Link
-                href="/lien-he"
+                href="/gio-hang"
                 onClick={() => setOpen(false)}
                 className="flex items-center justify-between text-base font-medium text-muted-foreground hover:text-foreground mt-2"
               >
@@ -246,7 +251,7 @@ export function Navbar() {
                   Giỏ hàng
                 </span>
                 {cartCount > 0 && (
-                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-600 px-1.5 text-xs font-bold text-white">
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-bold text-primary-foreground">
                     {cartCount}
                   </span>
                 )}
@@ -287,7 +292,7 @@ export function Navbar() {
 
               <Button
                 nativeButton={false}
-                className="mt-4 rounded-full bg-blue-600 py-6 font-medium text-white hover:bg-blue-700 shadow-sm transition-all border-0"
+                className="mt-4 rounded-full bg-primary py-6 font-medium text-primary-foreground hover:bg-primary-hover shadow-sm transition-all border-0"
                 render={
                   <Link href="/lien-he" onClick={() => setOpen(false)}>
                     Đặt dịch vụ

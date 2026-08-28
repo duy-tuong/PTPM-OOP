@@ -1,8 +1,9 @@
 import { apiFetch } from "../http";
-import type { AdminPartnerDto, CreatePartnerDto, UpdatePartnerDto } from "@/lib/types/admin";
+import type { PagedResult } from "@/lib/types/common";
+import type { AdminPartnerDto, CreatePartnerDto, PartnerQueryParams, UpdatePartnerDto } from "@/lib/types/admin";
 
-export function getAdminPartners(baseUrl: string, token?: string) {
-  return apiFetch<AdminPartnerDto[]>(baseUrl, "/admin/partners", "GET", { token });
+export function getAdminPartners(baseUrl: string, params: PartnerQueryParams = {}, token?: string) {
+  return apiFetch<PagedResult<AdminPartnerDto>>(baseUrl, "/admin/partners", "GET", { params, token });
 }
 
 export function createAdminPartner(baseUrl: string, dto: CreatePartnerDto, token?: string) {

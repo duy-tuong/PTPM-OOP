@@ -165,7 +165,7 @@ export function SshKeysManager({ initialKeys }: { initialKeys: CustomerSshKeyDto
             </FieldGroup>
 
             <div>
-              <Button type="submit" disabled={isSubmitting} className="h-10 rounded-[8px] bg-indigo-600 px-6 font-semibold text-white hover:bg-indigo-700">
+              <Button type="submit" disabled={isSubmitting} className="h-10 rounded-[8px] bg-primary px-6 font-semibold text-primary-foreground hover:bg-primary-hover">
                 <Plus className="size-4" />
                 {isSubmitting ? "Đang lưu..." : "Thêm SSH Key"}
               </Button>

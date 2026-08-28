@@ -7,14 +7,15 @@ import { DataTable, type DataTableColumn } from "@/components/admin/DataTable";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { ConfirmDeleteButton } from "@/components/admin/ConfirmDeleteButton";
 import { OsImageDialog } from "@/components/admin/os-images/OsImageDialog";
+import { OsImagesFilterBar } from "@/components/admin/os-images/OsImagesFilterBar";
 import { deleteOsImageAction } from "@/app/admin/os-images/actions";
 import { OS_FAMILY_LABELS } from "@/lib/types/enums";
 import { formatCurrency } from "@/lib/utils";
 import type { AdminOsImageDto } from "@/lib/types/admin";
 
-// unpaged-list-in-Dialog: getAdminOsImages trả về danh sách phẳng (không phân trang), mirror
-// AddonsManager.tsx - OS Image là danh mục nhỏ, không cần phân trang.
-export function OsImagesManager({ osImages }: { osImages: AdminOsImageDto[] }) {
+// `osImages` là 1 TRANG (page.tsx đã phân trang qua getAdminOsImages) - Sửa chỉ prefill từ record đã
+// có sẵn trong mảng của trang hiện tại, không fetch lại theo id.
+export function OsImagesManager({ osImages, currentSearch }: { osImages: AdminOsImageDto[]; currentSearch?: string }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingOsImage, setEditingOsImage] = useState<AdminOsImageDto | null>(null);
 
@@ -90,8 +91,13 @@ export function OsImagesManager({ osImages }: { osImages: AdminOsImageDto[] }) {
         </Button>
       </div>
 
-      <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0 overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
-        <DataTable columns={columns} data={osImages} emptyMessage="Chưa có hệ điều hành nào." getRowKey={(row) => row.id} />
+      <div className="overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
+        <div className="border-b border-zinc-100 bg-zinc-50/30 p-4">
+          <OsImagesFilterBar currentSearch={currentSearch} />
+        </div>
+        <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0">
+          <DataTable columns={columns} data={osImages} emptyMessage="Chưa có hệ điều hành nào." getRowKey={(row) => row.id} />
+        </div>
       </div>
 
       <OsImageDialog open={dialogOpen} onOpenChange={setDialogOpen} osImage={editingOsImage} />

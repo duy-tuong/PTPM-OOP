@@ -18,11 +18,11 @@ export async function PromotionBannerSection() {
   return (
     <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
       <ScrollReveal>
-        <div className="relative overflow-hidden rounded-[20px] border border-blue-100 bg-gradient-to-br from-[#EFF6FF] to-[#ECFEFF] p-6 shadow-sm dark:border-blue-900/50 dark:from-blue-950/40 dark:to-cyan-950/20 md:px-10 md:py-8">
+        <div className="gradient-card relative overflow-hidden rounded-[20px] p-6 shadow-sm md:px-10 md:py-8">
 
           <div className="relative flex flex-col items-center gap-8 md:flex-row md:items-center md:justify-between">
             <ScrollReveal direction="left" delay={0.1} className="flex flex-col items-center gap-2 text-center md:items-start md:text-left">
-              <span className="flex items-center gap-1.5 text-xs font-bold tracking-widest text-blue-600 dark:text-blue-400 uppercase">
+              <span className="flex items-center gap-1.5 text-xs font-bold tracking-widest text-primary uppercase">
                 <Lightning className="size-4" weight="fill" />
                 Ưu đãi có hạn
               </span>
@@ -36,8 +36,8 @@ export async function PromotionBannerSection() {
               <Button
                 size="lg"
                 nativeButton={false}
-                className="h-12 rounded-xl bg-blue-600 px-8 font-semibold text-white shadow-sm transition-all hover:bg-blue-700 hover:shadow-md"
-                render={<Link href={`/lien-he?promotionCode=${activePromotion.code}`}>Đặt dịch vụ</Link>}
+                className="h-12 rounded-xl bg-primary px-8 font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary-hover hover:shadow-md"
+                render={<Link href={`/gio-hang?promotionCode=${activePromotion.code}`}>Đặt dịch vụ</Link>}
               />
             </ScrollReveal>
           </div>

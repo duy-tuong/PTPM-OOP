@@ -1,10 +1,11 @@
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Content.Faqs.Dtos;
 
 namespace CloudServiceStore.Application.Features.Admin.Content.Faqs;
 
 public interface IAdminFaqService
 {
-    Task<List<AdminFaqDto>> GetListAsync(CancellationToken cancellationToken = default);
+    Task<PagedResult<AdminFaqDto>> GetListAsync(FaqQueryParams query, CancellationToken cancellationToken = default);
 
     Task<AdminFaqDto> CreateAsync(CreateFaqDto dto, CancellationToken cancellationToken = default);
 

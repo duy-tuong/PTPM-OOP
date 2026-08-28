@@ -1,4 +1,5 @@
 import { ClipboardText, Envelope, Hourglass } from "@phosphor-icons/react/dist/ssr";
+import { ScrollReveal } from "@/components/home/ScrollReveal";
 
 const STEPS = [
   {
@@ -24,13 +25,13 @@ const STEPS = [
 export function PartnerProcessSteps() {
   return (
     <section className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
-      <div className="mb-10 text-center">
+      <ScrollReveal className="mb-10 text-center">
         <h2 className="font-heading text-3xl font-bold text-balance sm:text-4xl">Quy Trình Đăng Ký</h2>
-      </div>
+      </ScrollReveal>
 
       <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
         {STEPS.map((step, index) => (
-          <div key={step.title} className="flex flex-col items-center gap-3 text-center">
+          <ScrollReveal key={step.title} delay={index * 0.08} className="flex flex-col items-center gap-3 text-center">
             <div className="relative flex size-14 items-center justify-center rounded-full border border-border bg-muted">
               <step.icon className="size-6 text-primary" weight="fill" />
               <span className="absolute -top-2 -right-2 flex size-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
@@ -39,7 +40,7 @@ export function PartnerProcessSteps() {
             </div>
             <h3 className="font-heading text-lg">{step.title}</h3>
             <p className="max-w-[240px] text-sm text-muted-foreground">{step.description}</p>
-          </div>
+          </ScrollReveal>
         ))}
       </div>
     </section>

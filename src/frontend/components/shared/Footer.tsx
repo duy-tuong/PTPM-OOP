@@ -37,10 +37,10 @@ export async function Footer() {
     .map((category) => ({ href: `/dich-vu/${category.slug}`, label: category.name }));
 
   return (
-    <footer className="relative z-10 border-t border-border/50 bg-background pt-16 pb-8">
+    <footer className="relative z-10 border-t border-border/50 bg-muted pt-16 pb-8">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-6 lg:gap-8">
-          
+
           {/* Logo & Intro */}
           <div className="lg:col-span-2">
             <Logo />
@@ -55,7 +55,7 @@ export async function Footer() {
             <ul className="mt-6 flex flex-col gap-3">
               {FOOTER_LINKS.company.links.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-sm font-medium text-muted-foreground transition-colors hover:text-blue-600 dark:hover:text-blue-400">
+                  <Link href={link.href} className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
                     {link.label}
                   </Link>
                 </li>
@@ -70,7 +70,7 @@ export async function Footer() {
               <ul className="mt-6 flex flex-col gap-3">
                 {serviceLinks.map((link) => (
                   <li key={link.href}>
-                    <Link href={link.href} className="text-sm font-medium text-muted-foreground transition-colors hover:text-blue-600 dark:hover:text-blue-400">
+                    <Link href={link.href} className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
                       {link.label}
                     </Link>
                   </li>
@@ -85,7 +85,7 @@ export async function Footer() {
             <ul className="mt-6 flex flex-col gap-3">
               {FOOTER_LINKS.support.links.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-sm font-medium text-muted-foreground transition-colors hover:text-blue-600 dark:hover:text-blue-400">
+                  <Link href={link.href} className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
                     {link.label}
                   </Link>
                 </li>
@@ -98,19 +98,19 @@ export async function Footer() {
             <h3 className="font-heading text-sm font-bold text-foreground">Liên hệ</h3>
             <ul className="mt-6 flex flex-col gap-4">
               <li className="flex items-start gap-3">
-                <EnvelopeSimple className="mt-0.5 size-4 shrink-0 text-blue-600 dark:text-blue-400" />
+                <EnvelopeSimple className="mt-0.5 size-4 shrink-0 text-primary" />
                 <span className="text-sm font-medium text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
                   support@cloudverse.vn
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <Phone className="mt-0.5 size-4 shrink-0 text-blue-600 dark:text-blue-400" />
+                <Phone className="mt-0.5 size-4 shrink-0 text-primary" />
                 <span className="text-sm font-medium text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
                   1900 1234
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <MapPin className="mt-0.5 size-4 shrink-0 text-blue-600 dark:text-blue-400" />
+                <MapPin className="mt-0.5 size-4 shrink-0 text-primary" />
                 <span className="text-sm font-medium text-muted-foreground leading-relaxed">
                   Toà nhà Cloudverse, Quận 1, TP.HCM
                 </span>
@@ -126,13 +126,13 @@ export async function Footer() {
             © {year} Cloudverse. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
-            <Link href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-blue-600 dark:hover:text-blue-400">
+            <Link href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
               Facebook
             </Link>
-            <Link href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-blue-600 dark:hover:text-blue-400">
+            <Link href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
               LinkedIn
             </Link>
-            <Link href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-blue-600 dark:hover:text-blue-400">
+            <Link href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
               Twitter
             </Link>
           </div>

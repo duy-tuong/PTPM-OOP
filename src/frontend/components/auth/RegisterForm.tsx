@@ -12,6 +12,7 @@ import { Field, FieldError, FieldGroup, FieldSeparator } from "@/components/ui/f
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { SocialAuthButtons } from "@/components/auth/SocialAuthButtons";
 import { notifyCustomerSessionChanged } from "@/lib/auth/customerSessionClient";
+import { PASSWORD_PATTERN, PASSWORD_POLICY_ERROR, PASSWORD_POLICY_HINT } from "@/lib/auth/passwordPolicy";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -47,8 +48,8 @@ export function RegisterForm() {
     }
     if (!password) {
       nextErrors.password = "Vui lòng nhập mật khẩu";
-    } else if (password.length < 6) {
-      nextErrors.password = "Mật khẩu phải có ít nhất 6 ký tự";
+    } else if (!PASSWORD_PATTERN.test(password)) {
+      nextErrors.password = PASSWORD_POLICY_ERROR;
     }
     if (!confirmPassword) {
       nextErrors.confirmPassword = "Vui lòng xác nhận mật khẩu";
@@ -141,7 +142,11 @@ export function RegisterForm() {
             autoComplete="new-password"
             aria-invalid={!!errors.password}
           />
-          <FieldError errors={errors.password ? [{ message: errors.password }] : undefined} />
+          {errors.password ? (
+            <FieldError errors={[{ message: errors.password }]} />
+          ) : (
+            <p className="text-xs text-muted-foreground">{PASSWORD_POLICY_HINT}</p>
+          )}
         </Field>
 
         <Field>

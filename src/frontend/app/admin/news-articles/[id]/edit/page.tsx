@@ -27,7 +27,9 @@ export default async function AdminEditNewsArticlePage({ params }: AdminEditNews
       if (error instanceof ApiError && error.status === 404) return null;
       throw error;
     }),
-    getAdminNewsCategories(baseUrl, token),
+    // pageSize lớn để lấy gần như toàn bộ danh mục cho <Select> chọn trong form - dự án quy mô nhỏ,
+    // chưa cần endpoint "lấy tất cả không phân trang" riêng cho việc này.
+    getAdminNewsCategories(baseUrl, { pageSize: 100 }, token),
   ]);
 
   if (!article) notFound();
@@ -39,7 +41,7 @@ export default async function AdminEditNewsArticlePage({ params }: AdminEditNews
           <h1 className="font-heading text-2xl font-semibold tracking-tight text-zinc-900">Sửa bài viết</h1>
           <p className="mt-1 text-[14px] text-zinc-500">{article.title}</p>
         </div>
-        <NewsArticleForm mode="edit" initialData={article} categories={categories} />
+        <NewsArticleForm mode="edit" initialData={article} categories={categories.items} />
       </div>
     </div>
   );

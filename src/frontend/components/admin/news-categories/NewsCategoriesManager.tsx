@@ -7,12 +7,19 @@ import { DataTable, type DataTableColumn } from "@/components/admin/DataTable";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { ConfirmDeleteButton } from "@/components/admin/ConfirmDeleteButton";
 import { NewsCategoryDialog } from "@/components/admin/news-categories/NewsCategoryDialog";
+import { NewsCategoriesFilterBar } from "@/components/admin/news-categories/NewsCategoriesFilterBar";
 import { deleteNewsCategoryAction } from "@/app/admin/news-categories/actions";
 import type { AdminNewsCategoryDto } from "@/lib/types/admin";
 
-// unpaged-list-in-Dialog: getAdminNewsCategories trả về danh sách phẳng (không phân trang) - Sửa
-// chỉ prefill từ record đã có sẵn trong mảng, không fetch lại theo id. Mirror ServiceCategoriesManager.
-export function NewsCategoriesManager({ categories }: { categories: AdminNewsCategoryDto[] }) {
+// `categories` là 1 TRANG (page.tsx đã phân trang qua getAdminNewsCategories) - Sửa chỉ prefill từ
+// record đã có sẵn trong mảng của trang hiện tại, không fetch lại theo id.
+export function NewsCategoriesManager({
+  categories,
+  currentSearch,
+}: {
+  categories: AdminNewsCategoryDto[];
+  currentSearch?: string;
+}) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<AdminNewsCategoryDto | null>(null);
 
@@ -85,13 +92,18 @@ export function NewsCategoriesManager({ categories }: { categories: AdminNewsCat
         </Button>
       </div>
 
-      <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0 overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
-        <DataTable
-          columns={columns}
-          data={categories}
-          emptyMessage="Chưa có danh mục tin tức nào."
-          getRowKey={(row) => row.id}
-        />
+      <div className="overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
+        <div className="border-b border-zinc-100 bg-zinc-50/30 p-4">
+          <NewsCategoriesFilterBar currentSearch={currentSearch} />
+        </div>
+        <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0">
+          <DataTable
+            columns={columns}
+            data={categories}
+            emptyMessage="Chưa có danh mục tin tức nào."
+            getRowKey={(row) => row.id}
+          />
+        </div>
       </div>
 
       <NewsCategoryDialog open={dialogOpen} onOpenChange={setDialogOpen} category={editingCategory} />

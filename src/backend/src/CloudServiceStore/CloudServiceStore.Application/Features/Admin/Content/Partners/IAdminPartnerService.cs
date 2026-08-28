@@ -1,10 +1,11 @@
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Content.Partners.Dtos;
 
 namespace CloudServiceStore.Application.Features.Admin.Content.Partners;
 
 public interface IAdminPartnerService
 {
-    Task<List<AdminPartnerDto>> GetListAsync(CancellationToken cancellationToken = default);
+    Task<PagedResult<AdminPartnerDto>> GetListAsync(PartnerQueryParams query, CancellationToken cancellationToken = default);
 
     Task<AdminPartnerDto> CreateAsync(CreatePartnerDto dto, CancellationToken cancellationToken = default);
 

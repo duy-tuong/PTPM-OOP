@@ -1,10 +1,11 @@
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Catalog.TldPricings.Dtos;
 
 namespace CloudServiceStore.Application.Features.Admin.Catalog.TldPricings;
 
 public interface IAdminTldPricingService
 {
-    Task<List<AdminTldPricingDto>> GetListAsync(CancellationToken cancellationToken = default);
+    Task<PagedResult<AdminTldPricingDto>> GetListAsync(TldPricingQueryParams query, CancellationToken cancellationToken = default);
 
     Task<AdminTldPricingDto> CreateAsync(CreateTldPricingDto dto, CancellationToken cancellationToken = default);
 

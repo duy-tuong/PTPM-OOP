@@ -10,6 +10,7 @@ import { Field, FieldError, FieldGroup } from "@/components/ui/field";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { notifyCustomerSessionChanged } from "@/lib/auth/customerSessionClient";
+import { PASSWORD_PATTERN, PASSWORD_POLICY_ERROR, PASSWORD_POLICY_HINT } from "@/lib/auth/passwordPolicy";
 
 interface ChangePasswordErrors {
   currentPassword?: string;
@@ -35,8 +36,8 @@ export function ChangePasswordForm() {
     }
     if (!newPassword) {
       nextErrors.newPassword = "Vui lòng nhập mật khẩu mới";
-    } else if (newPassword.length < 6) {
-      nextErrors.newPassword = "Mật khẩu mới phải có ít nhất 6 ký tự";
+    } else if (!PASSWORD_PATTERN.test(newPassword)) {
+      nextErrors.newPassword = PASSWORD_POLICY_ERROR;
     }
     if (!confirmPassword) {
       nextErrors.confirmPassword = "Vui lòng xác nhận mật khẩu mới";
@@ -102,7 +103,7 @@ export function ChangePasswordForm() {
                   onChange={setCurrentPassword}
                   autoComplete="current-password"
                   aria-invalid={!!errors.currentPassword}
-                  className="rounded-[8px] border-border/60 focus-visible:ring-indigo-500/10 focus-visible:border-indigo-500 transition-all shadow-sm bg-background"
+                  className="rounded-[8px] border-border/60 focus-visible:ring-primary/10 focus-visible:border-primary transition-all shadow-sm bg-background"
                 />
                 <FieldError errors={errors.currentPassword ? [{ message: errors.currentPassword }] : undefined} />
               </Field>
@@ -115,9 +116,13 @@ export function ChangePasswordForm() {
                   onChange={setNewPassword}
                   autoComplete="new-password"
                   aria-invalid={!!errors.newPassword}
-                  className="rounded-[8px] border-border/60 focus-visible:ring-indigo-500/10 focus-visible:border-indigo-500 transition-all shadow-sm bg-background"
+                  className="rounded-[8px] border-border/60 focus-visible:ring-primary/10 focus-visible:border-primary transition-all shadow-sm bg-background"
                 />
-                <FieldError errors={errors.newPassword ? [{ message: errors.newPassword }] : undefined} />
+                {errors.newPassword ? (
+                  <FieldError errors={[{ message: errors.newPassword }]} />
+                ) : (
+                  <p className="text-xs text-muted-foreground">{PASSWORD_POLICY_HINT}</p>
+                )}
               </Field>
 
               <Field>
@@ -128,7 +133,7 @@ export function ChangePasswordForm() {
                   onChange={setConfirmPassword}
                   autoComplete="new-password"
                   aria-invalid={!!errors.confirmPassword}
-                  className="rounded-[8px] border-border/60 focus-visible:ring-indigo-500/10 focus-visible:border-indigo-500 transition-all shadow-sm bg-background"
+                  className="rounded-[8px] border-border/60 focus-visible:ring-primary/10 focus-visible:border-primary transition-all shadow-sm bg-background"
                 />
                 <FieldError errors={errors.confirmPassword ? [{ message: errors.confirmPassword }] : undefined} />
               </Field>
@@ -141,7 +146,7 @@ export function ChangePasswordForm() {
               disabled={isSubmitting || (!currentPassword && !newPassword && !confirmPassword)} 
               className={cn(
                 "h-11 px-8 rounded-[8px] font-semibold transition-all w-full sm:w-auto",
-                (currentPassword || newPassword || confirmPassword) ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm" : "bg-muted text-muted-foreground shadow-none"
+                (currentPassword || newPassword || confirmPassword) ? "bg-primary hover:bg-primary-hover text-primary-foreground shadow-sm" : "bg-muted text-muted-foreground shadow-none"
               )}
             >
               {isSubmitting ? "Đang xử lý..." : "Lưu thay đổi"}

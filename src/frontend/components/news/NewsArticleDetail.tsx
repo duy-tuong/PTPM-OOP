@@ -14,8 +14,7 @@ import type { NewsArticleDetailDto, NewsArticleListItemDto, NewsCommentDto } fro
 
 // Bố cục "Tech Docs" 3 cột (TOC 20% - Nội dung 60% - Sidebar 20%) cho /tin-tuc/[slug]. Cột giữa bọc
 // max-w-prose (giới hạn ~65 ký tự/dòng cho dễ đọc). content là Markdown thật (Admin soạn qua
-// MarkdownEditor.tsx) - render qua markdownComponents dùng chung (lib/markdown-components.tsx, cũng
-// được AboutStory.tsx tái sử dụng).
+// MarkdownEditor.tsx) - render qua markdownComponents dùng chung (lib/markdown-components.tsx).
 
 export function NewsArticleDetail({
   article,

@@ -1,6 +1,9 @@
 "use client";
 
+import { useState, type KeyboardEvent } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ServicePlanStatus, SERVICE_PLAN_STATUS_LABELS } from "@/lib/types/enums";
 import type { AdminServiceCategoryDto } from "@/lib/types/admin";
@@ -13,6 +16,7 @@ interface ServicePlansFilterBarProps {
   currentIsFeatured?: string;
   currentStatus?: string;
   currentRegionId?: string;
+  currentSearch?: string;
 }
 
 const STATUS_FILTER_OPTIONS = Object.entries(ServicePlanStatus)
@@ -28,10 +32,12 @@ export function ServicePlansFilterBar({
   currentIsFeatured,
   currentStatus,
   currentRegionId,
+  currentSearch,
 }: ServicePlansFilterBarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [searchValue, setSearchValue] = useState(currentSearch ?? "");
 
   function updateParam(key: string, value: string | null) {
     const next = new URLSearchParams(searchParams.toString());
@@ -41,8 +47,26 @@ export function ServicePlansFilterBar({
     router.push(`${pathname}?${next.toString()}`);
   }
 
+  function handleSearchKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      updateParam("search", searchValue.trim() || null);
+    }
+  }
+
   return (
     <div className="flex flex-wrap items-center gap-4">
+      <div className="relative w-full max-w-xs">
+        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-zinc-400" />
+        <Input
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value)}
+          onKeyDown={handleSearchKeyDown}
+          placeholder="Tìm theo tên, slug hoặc SKU... Enter"
+          className="rounded-full bg-white pl-9 shadow-none ring-1 ring-zinc-950/5"
+        />
+      </div>
+
       <div className="text-sm font-medium text-zinc-500 mr-2 flex items-center gap-2">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-filter"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
         Bộ lọc:

@@ -1,9 +1,9 @@
 using CloudServiceStore.Application.Common.Exceptions;
 using CloudServiceStore.Application.Common.Interfaces;
+using CloudServiceStore.Application.Common.Models;
+using CloudServiceStore.Application.Common.Services;
 using CloudServiceStore.Application.Features.Admin.Sales.ConsultationRequests.Dtos;
 using CloudServiceStore.Domain.Entities.Sales;
-using CloudServiceStore.Domain.Entities.System;
-using CloudServiceStore.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace CloudServiceStore.Application.Features.Admin.Sales.ConsultationRequests;
@@ -11,22 +11,31 @@ namespace CloudServiceStore.Application.Features.Admin.Sales.ConsultationRequest
 public class AdminConsultationRequestService : IAdminConsultationRequestService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ConsultationStatusNotifier _consultationStatusNotifier;
 
-    public AdminConsultationRequestService(IUnitOfWork unitOfWork)
+    public AdminConsultationRequestService(IUnitOfWork unitOfWork, ConsultationStatusNotifier consultationStatusNotifier)
     {
         _unitOfWork = unitOfWork;
+        _consultationStatusNotifier = consultationStatusNotifier;
     }
 
-    public async Task<List<AdminConsultationRequestDto>> GetListAsync(CancellationToken cancellationToken = default)
+    public async Task<PagedResult<AdminConsultationRequestDto>> GetListAsync(ConsultationRequestQueryParams query, CancellationToken cancellationToken = default)
     {
         var repository = _unitOfWork.Repository<ConsultationRequest, int>();
 
-        var entities = await repository.Query()
+        var baseQuery = repository.Query()
             .Include(c => c.AssignedToUser)
-            .OrderByDescending(c => c.CreatedAt)
+            .Where(c => query.Search == null || c.RequestCode.Contains(query.Search) || c.FullName.Contains(query.Search) || c.Email.Contains(query.Search))
+            .OrderByDescending(c => c.CreatedAt);
+
+        var totalCount = await baseQuery.CountAsync(cancellationToken);
+        var entities = await baseQuery
+            .Skip((query.PageNumber - 1) * query.PageSize)
+            .Take(query.PageSize)
             .ToListAsync(cancellationToken);
 
-        return entities.Select(MapToDto).ToList();
+        var dtos = entities.Select(MapToDto).ToList();
+        return PagedResult<AdminConsultationRequestDto>.Create(dtos, totalCount, query.PageNumber, query.PageSize);
     }
 
     public async Task<AdminConsultationRequestDto> UpdateStatusAsync(int id, UpdateConsultationRequestStatusDto dto, Guid changedByUserId, CancellationToken cancellationToken = default)
@@ -49,17 +58,10 @@ public class AdminConsultationRequestService : IAdminConsultationRequestService
 
         repository.Update(entity);
 
-        var auditLog = new AuditLog
-        {
-            UserId = changedByUserId,
-            Action = AuditAction.StatusChange,
-            EntityName = nameof(ConsultationRequest),
-            EntityId = id.ToString(),
-            OldValues = oldStatus.ToString(),
-            NewValues = dto.NewStatus.ToString(),
-            Timestamp = DateTime.UtcNow
-        };
-        await _unitOfWork.Repository<AuditLog, long>().AddAsync(auditLog, cancellationToken);
+        // Observer pattern (mirror OrderRequestStatusTransitionService.cs) - AuditLogConsultationObserver/
+        // EmailConsultationObserver/NotificationConsultationObserver tự thêm việc vào cùng UnitOfWork -
+        // chỉ SaveChanges 1 lần dưới đây để gộp chung transaction.
+        await _consultationStatusNotifier.NotifyAsync(id, oldStatus, dto.NewStatus, changedByUserId, cancellationToken);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

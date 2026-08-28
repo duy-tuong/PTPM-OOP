@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Field, FieldError, FieldGroup } from "@/components/ui/field";
+import { ScrollReveal } from "@/components/home/ScrollReveal";
 import { cn } from "@/lib/utils";
 import { submitAffiliateApplication } from "@/lib/api/sales";
 
@@ -83,7 +84,7 @@ export function PartnerApplicationForm() {
 
   return (
     <section className="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:px-8">
-      <div className="glass-card rounded-3xl p-8 sm:p-10">
+      <ScrollReveal className="glass-card rounded-3xl p-8 sm:p-10">
         <h2 className="font-heading mb-8 text-center text-2xl font-bold sm:text-3xl">Đăng Ký Làm Đối Tác</h2>
 
         <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-6">
@@ -169,7 +170,7 @@ export function PartnerApplicationForm() {
             {isSubmitting ? "Đang gửi..." : "Gửi đăng ký"}
           </Button>
         </form>
-      </div>
+      </ScrollReveal>
     </section>
   );
 }

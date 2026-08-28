@@ -1,8 +1,9 @@
 import { apiFetch } from "../http";
-import type { AdminTestimonialDto, CreateTestimonialDto, UpdateTestimonialDto } from "@/lib/types/admin";
+import type { PagedResult } from "@/lib/types/common";
+import type { AdminTestimonialDto, CreateTestimonialDto, TestimonialQueryParams, UpdateTestimonialDto } from "@/lib/types/admin";
 
-export function getAdminTestimonials(baseUrl: string, token?: string) {
-  return apiFetch<AdminTestimonialDto[]>(baseUrl, "/admin/testimonials", "GET", { token });
+export function getAdminTestimonials(baseUrl: string, params: TestimonialQueryParams = {}, token?: string) {
+  return apiFetch<PagedResult<AdminTestimonialDto>>(baseUrl, "/admin/testimonials", "GET", { params, token });
 }
 
 export function createAdminTestimonial(baseUrl: string, dto: CreateTestimonialDto, token?: string) {

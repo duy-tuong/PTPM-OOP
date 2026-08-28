@@ -1,10 +1,11 @@
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Identity.Users.Dtos;
 
 namespace CloudServiceStore.Application.Features.Admin.Identity.Users;
 
 public interface IAdminUserService
 {
-    Task<List<AdminUserDto>> GetListAsync(CancellationToken cancellationToken = default);
+    Task<PagedResult<AdminUserDto>> GetListAsync(UserQueryParams query, CancellationToken cancellationToken = default);
 
     Task<AdminUserDto> CreateAsync(CreateUserDto dto, CancellationToken cancellationToken = default);
 

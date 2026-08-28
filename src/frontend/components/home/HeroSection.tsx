@@ -40,7 +40,7 @@ export function HeroSection() {
         <h1 className="font-heading text-4xl font-extrabold leading-[1.1] tracking-tight text-foreground sm:text-5xl lg:text-[68px]">
           Hạ tầng Cloud vững chắc
           <br />
-          <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">cho doanh nghiệp Việt</span>
+          <span className="text-gradient-primary">cho doanh nghiệp Việt</span>
         </h1>
 
         <p className="mx-auto max-w-[50ch] text-base leading-relaxed text-muted-foreground sm:text-lg">
@@ -52,7 +52,7 @@ export function HeroSection() {
             <Button
               size="lg"
               nativeButton={false}
-              className="h-12 gap-2 px-8 text-base font-semibold bg-blue-600 text-white hover:bg-blue-700 shadow-sm transition-all border-0 md:h-14 md:px-10"
+              className="h-12 gap-2 px-8 text-base font-semibold bg-primary text-primary-foreground hover:bg-primary-hover shadow-sm transition-all border-0 md:h-14 md:px-10"
               render={
                 <Link href="/dich-vu">
                   Khám phá dịch vụ
