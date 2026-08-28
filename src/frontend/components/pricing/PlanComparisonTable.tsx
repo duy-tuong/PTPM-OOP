@@ -26,8 +26,8 @@ export function PlanComparisonTable({ plans, period }: { plans: ServicePlanListI
   });
 
   return (
-    <div className="relative overflow-hidden rounded-[20px] border border-blue-100 bg-gradient-to-br from-[#EFF6FF] to-[#ECFEFF] p-6 shadow-sm dark:border-blue-900/50 dark:from-blue-950/40 dark:to-cyan-950/20 md:p-12">
-      <div className="overflow-hidden rounded-xl border border-blue-200/60 bg-white/50 shadow-sm dark:border-blue-900/50 dark:bg-zinc-900/40">
+    <div className="gradient-card relative overflow-hidden rounded-[20px] p-6 shadow-sm md:p-12">
+      <div className="overflow-hidden rounded-xl border border-border bg-card/50 shadow-sm">
         <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">

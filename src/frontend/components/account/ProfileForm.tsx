@@ -168,7 +168,7 @@ export function ProfileForm({ profile }: { profile: CustomerProfileDto }) {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   aria-invalid={!!errors.fullName}
-                  className="h-11 rounded-[8px] border-border/60 focus-visible:ring-indigo-500/10 focus-visible:border-indigo-500 transition-all shadow-sm bg-background"
+                  className="h-11 rounded-[8px] border-border/60 focus-visible:ring-primary/10 focus-visible:border-primary transition-all shadow-sm bg-background"
                 />
                 <FieldError errors={errors.fullName ? [{ message: errors.fullName }] : undefined} />
               </Field>
@@ -177,7 +177,7 @@ export function ProfileForm({ profile }: { profile: CustomerProfileDto }) {
                 <Label htmlFor="profile-email" className="text-[14px] font-medium flex items-center justify-between">
                   Email
                   {profile.isEmailVerified ? (
-                    <span className="text-indigo-600 dark:text-indigo-500 text-xs flex items-center gap-1">
+                    <span className="text-primary text-xs flex items-center gap-1">
                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                       Đã xác thực
                     </span>
@@ -208,7 +208,7 @@ export function ProfileForm({ profile }: { profile: CustomerProfileDto }) {
                     )}
                   </div>
                   {!profile.isEmailVerified && !showEmailForm && (
-                    <button type="button" className="text-left text-sm text-indigo-600 hover:underline">
+                    <button type="button" className="text-left text-sm text-primary hover:underline">
                       Gửi lại email xác thực
                     </button>
                   )}
@@ -226,7 +226,7 @@ export function ProfileForm({ profile }: { profile: CustomerProfileDto }) {
                         aria-invalid={!!emailError}
                         className="h-10 border-border/60 bg-background rounded-[8px]"
                       />
-                      <Button type="button" size="sm" disabled={isChangingEmail} onClick={handleChangeEmail} className="rounded-[8px] bg-indigo-600 hover:bg-indigo-700">
+                      <Button type="button" size="sm" disabled={isChangingEmail} onClick={handleChangeEmail} className="rounded-[8px] bg-primary hover:bg-primary-hover">
                         {isChangingEmail ? "Đang gửi..." : "Gửi yêu cầu"}
                       </Button>
                       <Button type="button" size="sm" variant="ghost" onClick={() => setShowEmailForm(false)} className="rounded-[8px]">
@@ -246,7 +246,7 @@ export function ProfileForm({ profile }: { profile: CustomerProfileDto }) {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   aria-invalid={!!errors.phone}
-                  className="h-11 rounded-[8px] border-border/60 focus-visible:ring-indigo-500/10 focus-visible:border-indigo-500 transition-all shadow-sm bg-background"
+                  className="h-11 rounded-[8px] border-border/60 focus-visible:ring-primary/10 focus-visible:border-primary transition-all shadow-sm bg-background"
                 />
                 <FieldError errors={errors.phone ? [{ message: errors.phone }] : undefined} />
               </Field>
@@ -268,7 +268,7 @@ export function ProfileForm({ profile }: { profile: CustomerProfileDto }) {
                       id="profile-company"
                       value={companyName}
                       onChange={(e) => setCompanyName(e.target.value)}
-                      className="h-11 rounded-[8px] border-border/60 focus-visible:ring-indigo-500/10 focus-visible:border-indigo-500 transition-all shadow-sm bg-background"
+                      className="h-11 rounded-[8px] border-border/60 focus-visible:ring-primary/10 focus-visible:border-primary transition-all shadow-sm bg-background"
                     />
                   </Field>
                   <Field>
@@ -277,7 +277,7 @@ export function ProfileForm({ profile }: { profile: CustomerProfileDto }) {
                       id="profile-taxcode"
                       value={taxCode}
                       onChange={(e) => setTaxCode(e.target.value)}
-                      className="h-11 rounded-[8px] border-border/60 focus-visible:ring-indigo-500/10 focus-visible:border-indigo-500 transition-all shadow-sm bg-background"
+                      className="h-11 rounded-[8px] border-border/60 focus-visible:ring-primary/10 focus-visible:border-primary transition-all shadow-sm bg-background"
                     />
                   </Field>
                 </FieldGroup>
@@ -310,7 +310,7 @@ export function ProfileForm({ profile }: { profile: CustomerProfileDto }) {
                 disabled={!isDirty || isSubmitting} 
                 className={cn(
                   "h-11 px-6 rounded-[8px] font-semibold transition-all flex-1 sm:flex-none",
-                  isDirty ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm" : "bg-muted text-muted-foreground shadow-none"
+                  isDirty ? "bg-primary hover:bg-primary-hover text-primary-foreground shadow-sm" : "bg-muted text-muted-foreground shadow-none"
                 )}
               >
                 {isSubmitting ? "Đang lưu..." : "Lưu thay đổi"}

@@ -45,7 +45,7 @@ export function AccountNav() {
   return (
     <div className="flex flex-col gap-6">
       <div className="hidden md:flex flex-col items-center text-center p-6 bg-card border border-border/50 rounded-2xl shadow-sm">
-        <div className="size-12 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-lg font-bold mb-3">
+        <div className="size-12 rounded-full bg-primary/10 text-primary flex items-center justify-center text-lg font-bold mb-3">
           {initials}
         </div>
         <h2 className="text-[15px] font-semibold text-foreground leading-tight">{fullName || "Thành viên"}</h2>
@@ -68,7 +68,7 @@ export function AccountNav() {
               className={cn(
                 "shrink-0 flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[14px] font-medium transition-all duration-150 relative",
                 active 
-                  ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400" 
+                  ? "bg-primary/10 text-primary" 
                   : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
               )}
             >

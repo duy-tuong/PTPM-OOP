@@ -50,17 +50,17 @@ export default async function AccountOverviewPage() {
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
         {/* Dịch vụ đang chạy */}
         <Link href="/khach-hang/dich-vu" className="block group">
-          <Card className="h-full bg-card border-border/60 shadow-sm group-hover:border-indigo-500/30 transition-all duration-200">
+          <Card className="h-full bg-card border-border/60 shadow-sm group-hover:border-primary/30 transition-all duration-200">
             <CardHeader className="flex flex-row items-start justify-between pb-2 space-y-0">
-              <div className="text-sm font-medium text-muted-foreground group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Dịch vụ đang chạy</div>
-              <HardDrives className="size-5 text-indigo-500/70" />
+              <div className="text-sm font-medium text-muted-foreground group-hover:text-primary transition-colors">Dịch vụ đang chạy</div>
+              <HardDrives className="size-5 text-primary/70" />
             </CardHeader>
             <CardContent>
               <div className="text-[32px] font-bold text-foreground leading-none mb-3">{stats.services}</div>
               <div className="text-[13px] text-muted-foreground flex items-center gap-1.5">
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                 </span>
                 Đang hoạt động
               </div>

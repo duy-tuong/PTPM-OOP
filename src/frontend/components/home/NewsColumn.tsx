@@ -35,21 +35,21 @@ export function NewsColumn({ articles }: { articles: NewsArticleListItemDto[] })
           <motion.div key={article.id} variants={itemVariants}>
             <Link
               href={`/tin-tuc/${article.slug}`}
-              className="group flex gap-5 rounded-xl border border-blue-200/60 bg-white/50 p-4 shadow-sm transition-all duration-300 hover:bg-white hover:shadow-md dark:border-blue-900/50 dark:bg-zinc-900/40 dark:hover:bg-zinc-900/80"
+              className="group flex gap-5 rounded-xl border border-border bg-card/50 p-4 shadow-sm transition-all duration-300 hover:bg-card hover:shadow-md"
             >
-              <div className="h-20 w-28 shrink-0 overflow-hidden rounded-md border border-blue-100 dark:border-blue-900/30">
+              <div className="h-20 w-28 shrink-0 overflow-hidden rounded-md border border-border">
                 <FallbackImage
                   src={article.thumbnailUrl}
                   alt={article.title}
                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  fallbackClassName="flex h-full w-full items-center justify-center bg-blue-50 dark:bg-blue-950/40 text-xs font-medium text-blue-600 dark:text-blue-400"
+                  fallbackClassName="flex h-full w-full items-center justify-center bg-primary/10 text-xs font-medium text-primary"
                 />
               </div>
               <div className="flex flex-col justify-center">
-                <span className="mb-1.5 text-[10px] font-bold tracking-widest text-blue-600 dark:text-blue-400 uppercase">
+                <span className="mb-1.5 text-[10px] font-bold tracking-widest text-primary uppercase">
                   {article.categoryName}
                 </span>
-                <h3 className="mb-2 text-sm font-semibold leading-tight text-foreground transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400 line-clamp-2">
+                <h3 className="mb-2 text-sm font-semibold leading-tight text-foreground transition-colors group-hover:text-primary line-clamp-2">
                   {article.title}
                 </h3>
                 <p className="text-xs font-medium text-muted-foreground">{formatDate(article.publishedAt)}</p>

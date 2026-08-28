@@ -148,7 +148,7 @@ export function Navbar() {
             >
               <ShoppingCart className="size-5" />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] leading-none font-bold text-white">
+                <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] leading-none font-bold text-primary-foreground">
                   {cartCount}
                 </span>
               )}
@@ -162,7 +162,7 @@ export function Navbar() {
                   className="group ml-1 rounded-full outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <Avatar className="size-9 transition-transform group-hover:scale-105 border border-border/50">
-                    <AvatarFallback className="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 font-medium text-xs">
+                    <AvatarFallback className="bg-primary/10 text-primary font-medium text-xs">
                       {getInitials(session.fullName)}
                     </AvatarFallback>
                   </Avatar>
@@ -207,7 +207,7 @@ export function Navbar() {
           <MagneticButton>
             <Button
               nativeButton={false}
-              className="rounded-full bg-blue-600 px-6 font-medium text-white hover:bg-blue-700 hover:shadow-md transition-all border-0"
+              className="rounded-full bg-primary px-6 font-medium text-primary-foreground hover:bg-primary-hover hover:shadow-md transition-all border-0"
               render={<Link href="/lien-he">Đặt dịch vụ</Link>}
             />
           </MagneticButton>
@@ -251,7 +251,7 @@ export function Navbar() {
                   Giỏ hàng
                 </span>
                 {cartCount > 0 && (
-                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-600 px-1.5 text-xs font-bold text-white">
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-bold text-primary-foreground">
                     {cartCount}
                   </span>
                 )}
@@ -292,7 +292,7 @@ export function Navbar() {
 
               <Button
                 nativeButton={false}
-                className="mt-4 rounded-full bg-blue-600 py-6 font-medium text-white hover:bg-blue-700 shadow-sm transition-all border-0"
+                className="mt-4 rounded-full bg-primary py-6 font-medium text-primary-foreground hover:bg-primary-hover shadow-sm transition-all border-0"
                 render={
                   <Link href="/lien-he" onClick={() => setOpen(false)}>
                     Đặt dịch vụ

@@ -41,7 +41,7 @@ function TestimonialCard({ testimonial }: { testimonial: TestimonialDto }) {
   const rating = testimonial.rating ?? 5;
 
   return (
-    <div className="group flex h-full flex-col justify-between rounded-[20px] border border-border bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/30 hover:shadow-md">
+    <div className="group flex h-full flex-col justify-between rounded-[20px] border border-border bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-md">
       {/* Rating */}
       <div className="mb-6 flex gap-1">
         {Array.from({ length: 5 }, (_, i) => (
@@ -60,7 +60,7 @@ function TestimonialCard({ testimonial }: { testimonial: TestimonialDto }) {
           src={testimonial.avatarUrl}
           alt={testimonial.displayName}
           className="size-12 shrink-0 rounded-full object-cover"
-          fallbackClassName="flex size-12 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700 dark:bg-blue-900/40 dark:text-blue-400"
+          fallbackClassName="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary/10 font-bold text-primary"
         />
         <div>
           <h4 className="text-sm font-bold text-foreground">{testimonial.displayName}</h4>

@@ -55,21 +55,21 @@ export async function ServicesBentoSection() {
                 <Link
                   href={`/dich-vu/${category.slug}`}
                   className={cn(
-                    "group/card flex h-full flex-col justify-between overflow-hidden rounded-[20px] bg-card border border-border shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/40 hover:shadow-md",
+                    "group/card flex h-full flex-col justify-between overflow-hidden rounded-[20px] bg-card border border-border shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-md",
                     isHero ? "p-8 sm:p-10" : "p-6 sm:p-8"
                   )}
                 >
                   <div>
                     <div
                       className={cn(
-                        "mb-5 inline-flex items-center justify-center overflow-hidden rounded-xl bg-muted/60 transition-colors duration-300 group-hover/card:bg-blue-50 dark:group-hover/card:bg-blue-900/20",
+                        "mb-5 inline-flex items-center justify-center overflow-hidden rounded-xl bg-muted/60 transition-colors duration-300 group-hover/card:bg-primary/10",
                         isHero ? "size-14" : "size-12"
                       )}
                     >
                       {isCurated ? (
                         <Icon
                           className={cn(
-                            "text-foreground transition-colors duration-300 group-hover/card:text-blue-600 dark:group-hover/card:text-blue-400",
+                            "text-foreground transition-colors duration-300 group-hover/card:text-primary",
                             isHero ? "size-7" : "size-6"
                           )}
                           weight="fill"
@@ -84,7 +84,7 @@ export async function ServicesBentoSection() {
                           fallback={
                             <Icon
                               className={cn(
-                                "text-foreground transition-colors duration-300 group-hover/card:text-blue-600 dark:group-hover/card:text-blue-400",
+                                "text-foreground transition-colors duration-300 group-hover/card:text-primary",
                                 isHero ? "size-7" : "size-6"
                               )}
                               weight="fill"
@@ -102,7 +102,7 @@ export async function ServicesBentoSection() {
                     </p>
                   </div>
 
-                  <div className="mt-8 flex items-center gap-1.5 text-sm font-semibold text-blue-600 dark:text-blue-400 opacity-80 transition-opacity duration-300 group-hover/card:opacity-100">
+                  <div className="mt-8 flex items-center gap-1.5 text-sm font-semibold text-primary opacity-80 transition-opacity duration-300 group-hover/card:opacity-100">
                     {isHero ? "Khám phá VPS" : "Tìm hiểu thêm"}
                     <ArrowRight className="size-4 transition-transform duration-300 group-hover/card:translate-x-1" weight="bold" />
                   </div>
@@ -115,10 +115,10 @@ export async function ServicesBentoSection() {
             <ScrollReveal delay={displayedCategories.length * 0.08}>
               <Link
                 href="/dich-vu"
-                className="group/card flex h-full flex-col items-center justify-center gap-3 rounded-[20px] border border-dashed border-border p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/40 hover:bg-blue-50/50 sm:p-8 dark:hover:bg-blue-900/10"
+                className="group/card flex h-full flex-col items-center justify-center gap-3 rounded-[20px] border border-dashed border-border p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:bg-primary/5 sm:p-8"
               >
-                <div className="inline-flex size-12 items-center justify-center rounded-xl bg-muted/60 transition-colors duration-300 group-hover/card:bg-blue-50 dark:group-hover/card:bg-blue-900/20">
-                  <ArrowRight className="size-6 text-foreground transition-colors duration-300 group-hover/card:text-blue-600 dark:group-hover/card:text-blue-400" weight="bold" />
+                <div className="inline-flex size-12 items-center justify-center rounded-xl bg-muted/60 transition-colors duration-300 group-hover/card:bg-primary/10">
+                  <ArrowRight className="size-6 text-foreground transition-colors duration-300 group-hover/card:text-primary" weight="bold" />
                 </div>
                 <div>
                   <h3 className="text-xl font-bold tracking-tight text-foreground">Xem tất cả dịch vụ</h3>

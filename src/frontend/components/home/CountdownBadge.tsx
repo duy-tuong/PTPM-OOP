@@ -19,8 +19,8 @@ function computeParts(ms: number): TimeParts {
 
 function TimeBlock({ value, label }: { value: number; label: string }) {
   return (
-    <div className="flex min-w-[56px] flex-col items-center justify-center gap-0.5 rounded-lg border border-blue-200/60 bg-white/60 px-2 py-1.5 shadow-sm dark:border-blue-800/50 dark:bg-blue-950/50">
-      <span className="font-mono text-xl font-extrabold text-blue-700 tabular-nums dark:text-blue-400">
+    <div className="flex min-w-[56px] flex-col items-center justify-center gap-0.5 rounded-lg border border-border bg-card/60 px-2 py-1.5 shadow-sm">
+      <span className="font-mono text-xl font-extrabold text-primary tabular-nums">
         {String(value).padStart(2, "0")}
       </span>
       <span className="text-[9px] font-bold tracking-widest text-muted-foreground uppercase">{label}</span>
@@ -49,9 +49,9 @@ export function CountdownBadge({ targetIso }: { targetIso: string }) {
   return (
     <div className="flex items-center gap-2">
       <TimeBlock value={parts.days} label="Ngày" />
-      <span className="font-mono text-lg font-bold text-blue-300 dark:text-blue-800/50">:</span>
+      <span className="font-mono text-lg font-bold text-primary/30">:</span>
       <TimeBlock value={parts.hours} label="Giờ" />
-      <span className="font-mono text-lg font-bold text-blue-300 dark:text-blue-800/50">:</span>
+      <span className="font-mono text-lg font-bold text-primary/30">:</span>
       <TimeBlock value={parts.minutes} label="Phút" />
     </div>
   );

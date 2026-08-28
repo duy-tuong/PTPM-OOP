@@ -10,7 +10,7 @@ export function FinalCtaSection() {
           {/* Subtle B2B gradient overlay */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue-900/40 via-transparent to-cyan-900/30"
+            className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/25 via-transparent to-accent-cyan/20"
           />
 
           <div className="relative z-10 mx-auto max-w-3xl flex flex-col items-center gap-6">
@@ -24,7 +24,7 @@ export function FinalCtaSection() {
             <div className="mt-6 flex w-full flex-col items-center justify-center gap-4 sm:w-auto sm:flex-row">
               <Button
                 nativeButton={false}
-                className="w-full h-14 rounded-xl bg-blue-600 px-10 text-lg font-bold text-white shadow-lg transition-all hover:-translate-y-0.5 hover:bg-blue-500 hover:shadow-xl sm:w-auto"
+                className="w-full h-14 rounded-xl bg-primary px-10 text-lg font-bold text-primary-foreground shadow-lg transition-all hover:-translate-y-0.5 hover:bg-primary-hover hover:shadow-xl sm:w-auto"
                 render={<Link href="/lien-he">Đặt dịch vụ</Link>}
               />
               <Button
