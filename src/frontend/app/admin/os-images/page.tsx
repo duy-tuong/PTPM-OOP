@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 };
 
 interface AdminOsImagesPageProps {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; search?: string }>;
 }
 
 export default async function AdminOsImagesPage({ searchParams }: AdminOsImagesPageProps) {
@@ -36,16 +36,23 @@ export default async function AdminOsImagesPage({ searchParams }: AdminOsImagesP
 
   const cookieStore = await cookies();
   const token = cookieStore.get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
-  const osImages = await getAdminOsImages(getApiUrl(), { pageNumber, pageSize: 20 }, token);
+  const osImages = await getAdminOsImages(
+    getApiUrl(),
+    { pageNumber, pageSize: 20, search: params.search || undefined },
+    token
+  );
 
   function buildPageHref(page: number) {
-    return `/admin/os-images?page=${page}`;
+    const search = new URLSearchParams();
+    if (params.search) search.set("search", params.search);
+    search.set("page", String(page));
+    return `/admin/os-images?${search.toString()}`;
   }
 
   return (
     <div className="min-h-full px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-[1400px] flex-col gap-6">
-        <OsImagesManager osImages={osImages.items} />
+        <OsImagesManager osImages={osImages.items} currentSearch={params.search} />
 
         {osImages.totalPages > 1 && (
           <Pagination>

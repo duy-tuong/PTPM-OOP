@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 };
 
 interface AdminNewsCategoriesPageProps {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; search?: string }>;
 }
 
 export default async function AdminNewsCategoriesPage({ searchParams }: AdminNewsCategoriesPageProps) {
@@ -28,16 +28,23 @@ export default async function AdminNewsCategoriesPage({ searchParams }: AdminNew
 
   const cookieStore = await cookies();
   const token = cookieStore.get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
-  const categories = await getAdminNewsCategories(getApiUrl(), { pageNumber, pageSize: 20 }, token);
+  const categories = await getAdminNewsCategories(
+    getApiUrl(),
+    { pageNumber, pageSize: 20, search: params.search || undefined },
+    token
+  );
 
   function buildPageHref(page: number) {
-    return `/admin/news-categories?page=${page}`;
+    const search = new URLSearchParams();
+    if (params.search) search.set("search", params.search);
+    search.set("page", String(page));
+    return `/admin/news-categories?${search.toString()}`;
   }
 
   return (
     <div className="min-h-full px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-[1400px] flex-col gap-6">
-        <NewsCategoriesManager categories={categories.items} />
+        <NewsCategoriesManager categories={categories.items} currentSearch={params.search} />
 
         {categories.totalPages > 1 && (
           <Pagination>

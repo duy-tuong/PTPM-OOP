@@ -31,6 +31,7 @@ public class AdminOrderRequestService : IAdminOrderRequestService
             .Include(o => o.AssignedToUser)
             .Where(o => query.Status == null || o.Status == query.Status)
             .Where(o => query.FlaggedOnly != true || o.IsFlaggedForReview)
+            .Where(o => query.Search == null || o.OrderCode.Contains(query.Search) || o.CustomerName.Contains(query.Search) || o.CustomerEmail.Contains(query.Search))
             .OrderByDescending(o => o.CreatedAt);
 
         var totalCount = await baseQuery.CountAsync(cancellationToken);

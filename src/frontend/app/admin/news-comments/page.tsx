@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 };
 
 interface AdminNewsCommentsPageProps {
-  searchParams: Promise<{ page?: string; isApproved?: string }>;
+  searchParams: Promise<{ page?: string; isApproved?: string; search?: string }>;
 }
 
 export default async function AdminNewsCommentsPage({ searchParams }: AdminNewsCommentsPageProps) {
@@ -36,6 +36,7 @@ export default async function AdminNewsCommentsPage({ searchParams }: AdminNewsC
       pageNumber,
       pageSize: 20,
       isApproved: params.isApproved === undefined ? undefined : params.isApproved === "true",
+      search: params.search || undefined,
     },
     token,
   );
@@ -43,6 +44,7 @@ export default async function AdminNewsCommentsPage({ searchParams }: AdminNewsC
   function buildPageHref(page: number) {
     const search = new URLSearchParams();
     if (params.isApproved) search.set("isApproved", params.isApproved);
+    if (params.search) search.set("search", params.search);
     search.set("page", String(page));
     return `/admin/news-comments?${search.toString()}`;
   }
@@ -57,7 +59,7 @@ export default async function AdminNewsCommentsPage({ searchParams }: AdminNewsC
 
         <div className="overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
           <div className="border-b border-zinc-100 bg-zinc-50/30 p-4">
-            <NewsCommentsFilterBar currentIsApproved={params.isApproved} />
+            <NewsCommentsFilterBar currentIsApproved={params.isApproved} currentSearch={params.search} />
           </div>
           <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0">
             <NewsCommentsTable comments={comments.items} />

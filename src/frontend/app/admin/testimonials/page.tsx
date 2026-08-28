@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 };
 
 interface AdminTestimonialsPageProps {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; search?: string }>;
 }
 
 export default async function AdminTestimonialsPage({ searchParams }: AdminTestimonialsPageProps) {
@@ -28,16 +28,19 @@ export default async function AdminTestimonialsPage({ searchParams }: AdminTesti
 
   const cookieStore = await cookies();
   const token = cookieStore.get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
-  const testimonials = await getAdminTestimonials(getApiUrl(), { pageNumber, pageSize: 20 }, token);
+  const testimonials = await getAdminTestimonials(getApiUrl(), { pageNumber, pageSize: 20, search: params.search || undefined }, token);
 
   function buildPageHref(page: number) {
-    return `/admin/testimonials?page=${page}`;
+    const search = new URLSearchParams();
+    if (params.search) search.set("search", params.search);
+    search.set("page", String(page));
+    return `/admin/testimonials?${search.toString()}`;
   }
 
   return (
     <div className="min-h-full px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-[1400px] flex-col gap-6">
-        <TestimonialsManager testimonials={testimonials.items} />
+        <TestimonialsManager testimonials={testimonials.items} currentSearch={params.search} />
 
         {testimonials.totalPages > 1 && (
           <Pagination>

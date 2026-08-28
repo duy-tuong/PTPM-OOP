@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 };
 
 interface AdminConsultationRequestsPageProps {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; search?: string }>;
 }
 
 export default async function AdminConsultationRequestsPage({ searchParams }: AdminConsultationRequestsPageProps) {
@@ -28,10 +28,17 @@ export default async function AdminConsultationRequestsPage({ searchParams }: Ad
 
   const cookieStore = await cookies();
   const token = cookieStore.get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
-  const requests = await getAdminConsultationRequests(getApiUrl(), { pageNumber, pageSize: 20 }, token);
+  const requests = await getAdminConsultationRequests(
+    getApiUrl(),
+    { pageNumber, pageSize: 20, search: params.search || undefined },
+    token,
+  );
 
   function buildPageHref(page: number) {
-    return `/admin/consultation-requests?page=${page}`;
+    const search = new URLSearchParams();
+    if (params.search) search.set("search", params.search);
+    search.set("page", String(page));
+    return `/admin/consultation-requests?${search.toString()}`;
   }
 
   return (
@@ -41,7 +48,7 @@ export default async function AdminConsultationRequestsPage({ searchParams }: Ad
           <h1 className="font-heading text-2xl font-semibold tracking-tight text-zinc-900">Yêu cầu tư vấn</h1>
           <p className="mt-1 text-[14px] text-zinc-500">Quản lý yêu cầu tư vấn từ khách hàng và cập nhật trạng thái xử lý.</p>
         </div>
-        <ConsultationRequestsManager requests={requests.items} />
+        <ConsultationRequestsManager requests={requests.items} currentSearch={params.search} />
 
         {requests.totalPages > 1 && (
           <Pagination>

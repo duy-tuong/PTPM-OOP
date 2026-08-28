@@ -24,6 +24,7 @@ public class AdminPromotionService : IAdminPromotionService
         var baseQuery = repository.Query()
             .Include(p => p.Scopes).ThenInclude(s => s.ServiceCategory)
             .Include(p => p.Scopes).ThenInclude(s => s.ServicePlan)
+            .Where(p => query.Search == null || p.Code.Contains(query.Search) || p.Name.Contains(query.Search))
             .OrderByDescending(p => p.StartDate);
 
         var totalCount = await baseQuery.CountAsync(cancellationToken);

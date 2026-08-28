@@ -7,6 +7,7 @@ import { DataTable, type DataTableColumn } from "@/components/admin/DataTable";
 import { ConfirmDeleteButton } from "@/components/admin/ConfirmDeleteButton";
 import { PromotionStatusBadge } from "@/components/admin/promotions/PromotionStatusBadge";
 import { PromotionDialog } from "@/components/admin/promotions/PromotionDialog";
+import { PromotionsFilterBar } from "@/components/admin/promotions/PromotionsFilterBar";
 import { deletePromotionAction } from "@/app/admin/promotions/actions";
 import { DISCOUNT_TYPE_LABELS } from "@/lib/types/enums";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -16,11 +17,12 @@ interface PromotionsManagerProps {
   promotions: AdminPromotionDto[];
   categories: AdminServiceCategoryDto[];
   plans: AdminServicePlanDto[];
+  currentSearch?: string;
 }
 
 // `promotions` là 1 TRANG (page.tsx đã phân trang qua getAdminPromotions) - Sửa chỉ prefill từ record
 // đã có sẵn trong mảng của trang hiện tại, không fetch lại theo id.
-export function PromotionsManager({ promotions, categories, plans }: PromotionsManagerProps) {
+export function PromotionsManager({ promotions, categories, plans, currentSearch }: PromotionsManagerProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPromotion, setEditingPromotion] = useState<AdminPromotionDto | null>(null);
 
@@ -132,13 +134,18 @@ export function PromotionsManager({ promotions, categories, plans }: PromotionsM
         </Button>
       </div>
 
-      <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0 overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
-        <DataTable
-          columns={columns}
-          data={promotions}
-          emptyMessage="Chưa có chương trình khuyến mãi nào."
-          getRowKey={(row) => row.id}
-        />
+      <div className="overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
+        <div className="border-b border-zinc-100 bg-zinc-50/30 p-4">
+          <PromotionsFilterBar currentSearch={currentSearch} />
+        </div>
+        <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0">
+          <DataTable
+            columns={columns}
+            data={promotions}
+            emptyMessage="Chưa có chương trình khuyến mãi nào."
+            getRowKey={(row) => row.id}
+          />
+        </div>
       </div>
 
       <PromotionDialog

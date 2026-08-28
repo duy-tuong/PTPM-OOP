@@ -20,7 +20,9 @@ public class AdminNewsCategoryService : IAdminNewsCategoryService
     {
         var repository = _unitOfWork.Repository<NewsCategory, int>();
 
-        var baseQuery = repository.Query().OrderBy(c => c.DisplayOrder);
+        var baseQuery = repository.Query()
+            .Where(c => query.Search == null || c.Name.Contains(query.Search) || c.Slug.Contains(query.Search))
+            .OrderBy(c => c.DisplayOrder);
 
         var totalCount = await baseQuery.CountAsync(cancellationToken);
         var entities = await baseQuery

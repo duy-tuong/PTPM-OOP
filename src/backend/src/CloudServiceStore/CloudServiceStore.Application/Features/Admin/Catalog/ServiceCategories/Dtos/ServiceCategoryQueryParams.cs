@@ -4,4 +4,6 @@ namespace CloudServiceStore.Application.Features.Admin.Catalog.ServiceCategories
 
 public class ServiceCategoryQueryParams : PaginationParams
 {
+    // Tìm theo tên hoặc slug danh mục dịch vụ.
+    public string? Search { get; set; }
 }

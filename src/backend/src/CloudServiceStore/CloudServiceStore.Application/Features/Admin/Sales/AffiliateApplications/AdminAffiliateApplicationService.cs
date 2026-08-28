@@ -24,6 +24,7 @@ public class AdminAffiliateApplicationService : IAdminAffiliateApplicationServic
 
         var baseQuery = repository.Query()
             .Include(a => a.ReviewedByUser)
+            .Where(a => query.Search == null || a.FullName.Contains(query.Search) || a.Email.Contains(query.Search) || a.Phone.Contains(query.Search))
             .OrderByDescending(a => a.CreatedAt);
 
         var totalCount = await baseQuery.CountAsync(cancellationToken);

@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 };
 
 interface AdminAddonsPageProps {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; search?: string }>;
 }
 
 export default async function AdminAddonsPage({ searchParams }: AdminAddonsPageProps) {
@@ -37,16 +37,23 @@ export default async function AdminAddonsPage({ searchParams }: AdminAddonsPageP
 
   const cookieStore = await cookies();
   const token = cookieStore.get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
-  const addons = await getAdminAddons(getApiUrl(), { pageNumber, pageSize: 20 }, token);
+  const addons = await getAdminAddons(
+    getApiUrl(),
+    { pageNumber, pageSize: 20, search: params.search || undefined },
+    token
+  );
 
   function buildPageHref(page: number) {
-    return `/admin/addons?page=${page}`;
+    const search = new URLSearchParams();
+    if (params.search) search.set("search", params.search);
+    search.set("page", String(page));
+    return `/admin/addons?${search.toString()}`;
   }
 
   return (
     <div className="min-h-full px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-[1400px] flex-col gap-6">
-        <AddonsManager addons={addons.items} />
+        <AddonsManager addons={addons.items} currentSearch={params.search} />
 
         {addons.totalPages > 1 && (
           <Pagination>

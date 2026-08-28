@@ -7,17 +7,19 @@ import { DataTable, type DataTableColumn } from "@/components/admin/DataTable";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { ConfirmDeleteButton } from "@/components/admin/ConfirmDeleteButton";
 import { FaqDialog } from "@/components/admin/faqs/FaqDialog";
+import { FaqsFilterBar } from "@/components/admin/faqs/FaqsFilterBar";
 import { deleteFaqAction } from "@/app/admin/faqs/actions";
 import type { AdminFaqDto, AdminServiceCategoryDto } from "@/lib/types/admin";
 
 interface FaqsManagerProps {
   faqs: AdminFaqDto[];
   categories: AdminServiceCategoryDto[];
+  currentSearch?: string;
 }
 
 // unpaged-list-in-Dialog - mirror ServiceCategoriesManager. ServiceCategoryId là optional nên bảng
 // hiện "Tất cả danh mục" khi null (map qua categories đã fetch song song ở page.tsx).
-export function FaqsManager({ faqs, categories }: FaqsManagerProps) {
+export function FaqsManager({ faqs, categories, currentSearch }: FaqsManagerProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingFaq, setEditingFaq] = useState<AdminFaqDto | null>(null);
 
@@ -103,8 +105,13 @@ export function FaqsManager({ faqs, categories }: FaqsManagerProps) {
         </Button>
       </div>
 
-      <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0 overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
-        <DataTable columns={columns} data={faqs} emptyMessage="Chưa có câu hỏi nào." getRowKey={(row) => row.id} />
+      <div className="overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
+        <div className="border-b border-zinc-100 bg-zinc-50/30 p-4">
+          <FaqsFilterBar currentSearch={currentSearch} />
+        </div>
+        <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0">
+          <DataTable columns={columns} data={faqs} emptyMessage="Chưa có câu hỏi nào." getRowKey={(row) => row.id} />
+        </div>
       </div>
 
       <FaqDialog open={dialogOpen} onOpenChange={setDialogOpen} faq={editingFaq} categories={categories} />

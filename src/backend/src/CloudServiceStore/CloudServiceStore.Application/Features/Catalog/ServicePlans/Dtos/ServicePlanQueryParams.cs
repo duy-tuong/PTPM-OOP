@@ -15,4 +15,8 @@ public class ServicePlanQueryParams : PaginationParams
     // Region thuần trang trí (xem Region.cs) - dùng ở cả 2 bên (Admin lọc quản lý, storefront lọc
     // theo Datacenter khách muốn xem).
     public string? RegionId { get; set; }
+
+    // Tìm theo tên, slug hoặc SKU gói dịch vụ - chỉ AdminServicePlanService dùng (trang quản lý), public
+    // ServicePlanService bỏ qua field này.
+    public string? Search { get; set; }
 }

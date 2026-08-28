@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 };
 
 interface AdminServiceCategoriesPageProps {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; search?: string }>;
 }
 
 export default async function AdminServiceCategoriesPage({ searchParams }: AdminServiceCategoriesPageProps) {
@@ -41,16 +41,23 @@ export default async function AdminServiceCategoriesPage({ searchParams }: Admin
 
   const cookieStore = await cookies();
   const token = cookieStore.get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
-  const categories = await getAdminServiceCategories(getApiUrl(), { pageNumber, pageSize: 20 }, token);
+  const categories = await getAdminServiceCategories(
+    getApiUrl(),
+    { pageNumber, pageSize: 20, search: params.search || undefined },
+    token
+  );
 
   function buildPageHref(page: number) {
-    return `/admin/service-categories?page=${page}`;
+    const search = new URLSearchParams();
+    if (params.search) search.set("search", params.search);
+    search.set("page", String(page));
+    return `/admin/service-categories?${search.toString()}`;
   }
 
   return (
     <div className="min-h-full px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-[1400px] flex-col gap-6">
-        <ServiceCategoriesManager categories={categories.items} canManage={canManage} />
+        <ServiceCategoriesManager categories={categories.items} canManage={canManage} currentSearch={params.search} />
 
         {categories.totalPages > 1 && (
           <Pagination>

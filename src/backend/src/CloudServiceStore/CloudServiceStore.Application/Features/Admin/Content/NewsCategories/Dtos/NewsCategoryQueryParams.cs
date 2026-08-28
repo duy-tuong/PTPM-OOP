@@ -4,4 +4,6 @@ namespace CloudServiceStore.Application.Features.Admin.Content.NewsCategories.Dt
 
 public class NewsCategoryQueryParams : PaginationParams
 {
+    // Tìm theo tên hoặc slug danh mục tin tức.
+    public string? Search { get; set; }
 }

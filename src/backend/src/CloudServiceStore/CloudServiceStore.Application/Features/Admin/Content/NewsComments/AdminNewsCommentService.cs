@@ -25,6 +25,9 @@ public class AdminNewsCommentService : IAdminNewsCommentService
             .Include(c => c.Customer)
             .Where(c => query.NewsArticleId == null || c.NewsArticleId == query.NewsArticleId)
             .Where(c => query.IsApproved == null || c.IsApproved == query.IsApproved)
+            .Where(c => query.Search == null || c.Content.Contains(query.Search)
+                || (c.AuthorName != null && c.AuthorName.Contains(query.Search))
+                || (c.Customer != null && c.Customer.FullName.Contains(query.Search)))
             .OrderByDescending(c => c.CreatedAt);
 
         var totalCount = await baseQuery.CountAsync(cancellationToken);

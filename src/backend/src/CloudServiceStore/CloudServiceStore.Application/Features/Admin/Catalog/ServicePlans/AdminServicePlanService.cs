@@ -37,6 +37,7 @@ public class AdminServicePlanService : IAdminServicePlanService
                 && (query.IsFeatured == null || p.IsFeatured == query.IsFeatured)
                 && (query.Status == null || p.Status == query.Status)
                 && (query.RegionId == null || p.RegionId == query.RegionId))
+            .Where(p => query.Search == null || p.Name.Contains(query.Search) || p.Slug.Contains(query.Search) || (p.Sku != null && p.Sku.Contains(query.Search)))
             .OrderBy(p => p.DisplayOrder);
 
         var totalCount = await baseQuery.CountAsync(cancellationToken);

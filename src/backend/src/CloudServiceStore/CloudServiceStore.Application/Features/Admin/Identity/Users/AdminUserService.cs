@@ -28,6 +28,7 @@ public class AdminUserService : IAdminUserService
 
         var baseQuery = repository.Query()
             .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
+            .Where(u => query.Search == null || u.Username.Contains(query.Search) || u.Email.Contains(query.Search) || u.FullName.Contains(query.Search))
             .OrderBy(u => u.Username);
 
         var totalCount = await baseQuery.CountAsync(cancellationToken);

@@ -7,14 +7,20 @@ import { DataTable, type DataTableColumn } from "@/components/admin/DataTable";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { ConfirmDeleteButton } from "@/components/admin/ConfirmDeleteButton";
 import { TestimonialDialog } from "@/components/admin/testimonials/TestimonialDialog";
+import { TestimonialsFilterBar } from "@/components/admin/testimonials/TestimonialsFilterBar";
 import { deleteTestimonialAction } from "@/app/admin/testimonials/actions";
 import { FallbackImage } from "@/components/shared/FallbackImage";
 import { cn } from "@/lib/utils";
 import type { AdminTestimonialDto } from "@/lib/types/admin";
 
+interface TestimonialsManagerProps {
+  testimonials: AdminTestimonialDto[];
+  currentSearch?: string;
+}
+
 // `testimonials` là 1 TRANG (page.tsx đã phân trang qua getAdminTestimonials) - Sửa chỉ prefill
 // từ record đã có sẵn trong mảng của trang hiện tại, không fetch lại theo id.
-export function TestimonialsManager({ testimonials }: { testimonials: AdminTestimonialDto[] }) {
+export function TestimonialsManager({ testimonials, currentSearch }: TestimonialsManagerProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTestimonial, setEditingTestimonial] = useState<AdminTestimonialDto | null>(null);
 
@@ -118,13 +124,18 @@ export function TestimonialsManager({ testimonials }: { testimonials: AdminTesti
         </Button>
       </div>
 
-      <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0 overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
-        <DataTable
-          columns={columns}
-          data={testimonials}
-          emptyMessage="Chưa có đánh giá nào."
-          getRowKey={(row) => row.id}
-        />
+      <div className="overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
+        <div className="border-b border-zinc-100 bg-zinc-50/30 p-4">
+          <TestimonialsFilterBar currentSearch={currentSearch} />
+        </div>
+        <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0">
+          <DataTable
+            columns={columns}
+            data={testimonials}
+            emptyMessage="Chưa có đánh giá nào."
+            getRowKey={(row) => row.id}
+          />
+        </div>
       </div>
 
       <TestimonialDialog open={dialogOpen} onOpenChange={setDialogOpen} testimonial={editingTestimonial} />

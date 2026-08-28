@@ -10,12 +10,13 @@ import { ConfirmDeleteButton } from "@/components/admin/ConfirmDeleteButton";
 import { UserDialog } from "@/components/admin/users/UserDialog";
 import { ResetPasswordDialog } from "@/components/admin/users/ResetPasswordDialog";
 import { deleteUserAction } from "@/app/admin/users/actions";
+import { UsersFilterBar } from "@/components/admin/users/UsersFilterBar";
 import { formatDate } from "@/lib/utils";
 import type { AdminUserDto } from "@/lib/types/admin";
 
 // `users` là 1 TRANG (page.tsx đã phân trang qua getAdminUsers) - Sửa chỉ prefill từ record đã có sẵn
 // trong mảng của trang hiện tại, không fetch lại theo id. Cộng 1 Dialog phụ cho đặt lại mật khẩu.
-export function UsersManager({ users }: { users: AdminUserDto[] }) {
+export function UsersManager({ users, currentSearch }: { users: AdminUserDto[]; currentSearch?: string }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<AdminUserDto | null>(null);
   const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
@@ -115,8 +116,13 @@ export function UsersManager({ users }: { users: AdminUserDto[] }) {
         </Button>
       </div>
 
-      <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0 overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
-        <DataTable columns={columns} data={users} emptyMessage="Chưa có nhân viên nào." getRowKey={(row) => row.id} />
+      <div className="overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
+        <div className="border-b border-zinc-100 bg-zinc-50/30 p-4">
+          <UsersFilterBar currentSearch={currentSearch} />
+        </div>
+        <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0">
+          <DataTable columns={columns} data={users} emptyMessage="Chưa có nhân viên nào." getRowKey={(row) => row.id} />
+        </div>
       </div>
 
       <UserDialog open={dialogOpen} onOpenChange={setDialogOpen} user={editingUser} />

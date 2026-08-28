@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 };
 
 interface AdminTldPricingPageProps {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; search?: string }>;
 }
 
 export default async function AdminTldPricingPage({ searchParams }: AdminTldPricingPageProps) {
@@ -42,18 +42,25 @@ export default async function AdminTldPricingPage({ searchParams }: AdminTldPric
   // pageSize lớn để lấy gần như toàn bộ danh mục cho <Select> "Danh mục áp dụng khuyến mãi" - dự án quy
   // mô nhỏ, chưa cần endpoint "lấy tất cả không phân trang" riêng cho việc này.
   const [tldPricing, categories] = await Promise.all([
-    getAdminTldPricing(baseUrl, { pageNumber, pageSize: 20 }, token),
+    getAdminTldPricing(baseUrl, { pageNumber, pageSize: 20, search: params.search || undefined }, token),
     getAdminServiceCategories(baseUrl, { pageSize: 100 }, token),
   ]);
 
   function buildPageHref(page: number) {
-    return `/admin/tld-pricing?page=${page}`;
+    const search = new URLSearchParams();
+    if (params.search) search.set("search", params.search);
+    search.set("page", String(page));
+    return `/admin/tld-pricing?${search.toString()}`;
   }
 
   return (
     <div className="min-h-full px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-[1400px] flex-col gap-6">
-        <TldPricingManager tldPricing={tldPricing.items} categories={categories.items} />
+        <TldPricingManager
+          tldPricing={tldPricing.items}
+          categories={categories.items}
+          currentSearch={params.search}
+        />
 
         {tldPricing.totalPages > 1 && (
           <Pagination>

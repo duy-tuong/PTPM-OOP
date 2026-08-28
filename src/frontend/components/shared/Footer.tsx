@@ -40,7 +40,7 @@ export async function Footer() {
     <footer className="relative z-10 border-t border-border/50 bg-muted pt-16 pb-8">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-6 lg:gap-8">
-          
+
           {/* Logo & Intro */}
           <div className="lg:col-span-2">
             <Logo />

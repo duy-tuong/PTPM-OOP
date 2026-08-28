@@ -76,7 +76,7 @@ export function Navbar() {
       requestAnimationFrame(() => {
         const y = window.scrollY;
         const delta = y - lastY;
-        
+
         // Handle scroll state for styling
         setScrolled(y > 20);
 
@@ -84,7 +84,7 @@ export function Navbar() {
         if (y < 80) setHidden(false);
         else if (delta > 8) setHidden(true);
         else if (delta < -8) setHidden(false);
-        
+
         lastY = y;
         ticking = false;
       });
@@ -108,8 +108,8 @@ export function Navbar() {
       className={cn(
         "fixed inset-x-0 top-4 z-40 mx-auto w-[calc(100%-2rem)] max-w-6xl rounded-[24px] transition-all duration-300",
         hidden ? "-translate-y-24 opacity-0" : "translate-y-0 opacity-100",
-        scrolled 
-          ? "bg-muted/80 backdrop-blur-md border border-border/50 shadow-sm" 
+        scrolled
+          ? "bg-muted/80 backdrop-blur-md border border-border/50 shadow-sm"
           : "bg-muted/40 backdrop-blur-sm border border-transparent"
       )}
     >
@@ -121,7 +121,7 @@ export function Navbar() {
         <nav className="hidden items-center justify-center gap-6 lg:gap-8 lg:flex">
           {NAV_LINKS.map((link) => {
             const isActive = pathname === link.href || (link.href !== '/' && pathname?.startsWith(link.href));
-            
+
             return (
               <Link
                 key={link.href}

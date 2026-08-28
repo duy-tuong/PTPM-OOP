@@ -22,6 +22,7 @@ public class AdminFaqService : IAdminFaqService
         var repository = _unitOfWork.Repository<Faq, int>();
 
         var baseQuery = repository.Query()
+            .Where(f => query.Search == null || f.Question.Contains(query.Search) || f.Answer.Contains(query.Search))
             .OrderBy(f => f.DisplayOrder);
 
         var totalCount = await baseQuery.CountAsync(cancellationToken);

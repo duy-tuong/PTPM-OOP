@@ -7,6 +7,7 @@ import { DataTable, type DataTableColumn } from "@/components/admin/DataTable";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { ConfirmDeleteButton } from "@/components/admin/ConfirmDeleteButton";
 import { ServiceCategoryDialog } from "@/components/admin/service-categories/ServiceCategoryDialog";
+import { ServiceCategoriesFilterBar } from "@/components/admin/service-categories/ServiceCategoriesFilterBar";
 import { deleteServiceCategoryAction } from "@/app/admin/service-categories/actions";
 import { FallbackImage } from "@/components/shared/FallbackImage";
 import type { AdminServiceCategoryDto } from "@/lib/types/admin";
@@ -20,9 +21,11 @@ import type { AdminServiceCategoryDto } from "@/lib/types/admin";
 export function ServiceCategoriesManager({
   categories,
   canManage,
+  currentSearch,
 }: {
   categories: AdminServiceCategoryDto[];
   canManage: boolean;
+  currentSearch?: string;
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<AdminServiceCategoryDto | null>(null);
@@ -103,13 +106,18 @@ export function ServiceCategoriesManager({
         )}
       </div>
 
-      <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0 overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
-        <DataTable
-          columns={columns}
-          data={categories}
-          emptyMessage="Chưa có danh mục dịch vụ nào."
-          getRowKey={(row) => row.id}
-        />
+      <div className="overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
+        <div className="border-b border-zinc-100 bg-zinc-50/30 p-4">
+          <ServiceCategoriesFilterBar currentSearch={currentSearch} />
+        </div>
+        <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0">
+          <DataTable
+            columns={columns}
+            data={categories}
+            emptyMessage="Chưa có danh mục dịch vụ nào."
+            getRowKey={(row) => row.id}
+          />
+        </div>
       </div>
 
       <ServiceCategoryDialog open={dialogOpen} onOpenChange={setDialogOpen} category={editingCategory} />

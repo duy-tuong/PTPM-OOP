@@ -25,6 +25,7 @@ public class AdminConsultationRequestService : IAdminConsultationRequestService
 
         var baseQuery = repository.Query()
             .Include(c => c.AssignedToUser)
+            .Where(c => query.Search == null || c.RequestCode.Contains(query.Search) || c.FullName.Contains(query.Search) || c.Email.Contains(query.Search))
             .OrderByDescending(c => c.CreatedAt);
 
         var totalCount = await baseQuery.CountAsync(cancellationToken);

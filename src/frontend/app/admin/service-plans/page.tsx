@@ -26,7 +26,14 @@ export const metadata: Metadata = {
 };
 
 interface AdminServicePlansPageProps {
-  searchParams: Promise<{ page?: string; categorySlug?: string; isFeatured?: string; status?: string; regionId?: string }>;
+  searchParams: Promise<{
+    page?: string;
+    categorySlug?: string;
+    isFeatured?: string;
+    status?: string;
+    regionId?: string;
+    search?: string;
+  }>;
 }
 
 export default async function AdminServicePlansPage({ searchParams }: AdminServicePlansPageProps) {
@@ -46,6 +53,7 @@ export default async function AdminServicePlansPage({ searchParams }: AdminServi
         isFeatured: params.isFeatured === "true" ? true : undefined,
         status: params.status ? (Number(params.status) as ServicePlanStatus) : undefined,
         regionId: params.regionId || undefined,
+        search: params.search || undefined,
       },
       token,
     ),
@@ -63,6 +71,7 @@ export default async function AdminServicePlansPage({ searchParams }: AdminServi
     if (params.isFeatured) search.set("isFeatured", params.isFeatured);
     if (params.status) search.set("status", params.status);
     if (params.regionId) search.set("regionId", params.regionId);
+    if (params.search) search.set("search", params.search);
     search.set("page", String(page));
     return `/admin/service-plans?${search.toString()}`;
   }
@@ -96,6 +105,7 @@ export default async function AdminServicePlansPage({ searchParams }: AdminServi
               currentIsFeatured={params.isFeatured}
               currentStatus={params.status}
               currentRegionId={params.regionId}
+              currentSearch={params.search}
             />
           </div>
           <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0">

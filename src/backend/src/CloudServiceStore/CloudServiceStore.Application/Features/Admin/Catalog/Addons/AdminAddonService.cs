@@ -21,7 +21,9 @@ public class AdminAddonService : IAdminAddonService
     {
         var repository = _unitOfWork.Repository<Addon, int>();
 
-        var baseQuery = repository.Query().OrderBy(a => a.Name);
+        var baseQuery = repository.Query()
+            .Where(a => query.Search == null || a.Name.Contains(query.Search) || a.Sku.Contains(query.Search))
+            .OrderBy(a => a.Name);
 
         var totalCount = await baseQuery.CountAsync(cancellationToken);
         var entities = await baseQuery

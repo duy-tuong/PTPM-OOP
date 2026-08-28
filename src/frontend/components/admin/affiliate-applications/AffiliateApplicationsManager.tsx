@@ -6,12 +6,18 @@ import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/admin/DataTable";
 import { AffiliateStatusBadge } from "@/components/admin/AffiliateStatusBadge";
 import { AffiliateStatusDialog } from "@/components/admin/affiliate-applications/AffiliateStatusDialog";
+import { AffiliateApplicationsFilterBar } from "@/components/admin/affiliate-applications/AffiliateApplicationsFilterBar";
 import { formatDate } from "@/lib/utils";
 import type { AdminAffiliateApplicationDto } from "@/lib/types/admin";
 
+interface AffiliateApplicationsManagerProps {
+  applications: AdminAffiliateApplicationDto[];
+  currentSearch?: string;
+}
+
 // Nhận danh sách của trang hiện tại (đã phân trang server-side qua PagedResult<T> - xem
 // app/admin/affiliate-applications/page.tsx).
-export function AffiliateApplicationsManager({ applications }: { applications: AdminAffiliateApplicationDto[] }) {
+export function AffiliateApplicationsManager({ applications, currentSearch }: AffiliateApplicationsManagerProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState<AdminAffiliateApplicationDto | null>(null);
 
@@ -96,13 +102,18 @@ export function AffiliateApplicationsManager({ applications }: { applications: A
 
   return (
     <>
-      <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0 overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
-        <DataTable
-          columns={columns}
-          data={applications}
-          emptyMessage="Chưa có đăng ký affiliate nào."
-          getRowKey={(row) => row.id}
-        />
+      <div className="overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
+        <div className="border-b border-zinc-100 bg-zinc-50/30 p-4">
+          <AffiliateApplicationsFilterBar currentSearch={currentSearch} />
+        </div>
+        <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0">
+          <DataTable
+            columns={columns}
+            data={applications}
+            emptyMessage="Chưa có đăng ký affiliate nào."
+            getRowKey={(row) => row.id}
+          />
+        </div>
       </div>
       <AffiliateStatusDialog open={dialogOpen} onOpenChange={setDialogOpen} application={selectedApplication} />
     </>

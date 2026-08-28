@@ -22,7 +22,9 @@ public class AdminOsImageService : IAdminOsImageService
     {
         var repository = _unitOfWork.Repository<OsImage, int>();
 
-        var baseQuery = repository.Query().OrderBy(o => o.DisplayOrder).ThenBy(o => o.Name);
+        var baseQuery = repository.Query()
+            .Where(o => query.Search == null || o.Name.Contains(query.Search) || o.Slug.Contains(query.Search))
+            .OrderBy(o => o.DisplayOrder).ThenBy(o => o.Name);
 
         var totalCount = await baseQuery.CountAsync(cancellationToken);
         var entities = await baseQuery

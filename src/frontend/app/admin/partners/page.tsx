@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 };
 
 interface AdminPartnersPageProps {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; search?: string }>;
 }
 
 export default async function AdminPartnersPage({ searchParams }: AdminPartnersPageProps) {
@@ -28,16 +28,19 @@ export default async function AdminPartnersPage({ searchParams }: AdminPartnersP
 
   const cookieStore = await cookies();
   const token = cookieStore.get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
-  const partners = await getAdminPartners(getApiUrl(), { pageNumber, pageSize: 20 }, token);
+  const partners = await getAdminPartners(getApiUrl(), { pageNumber, pageSize: 20, search: params.search || undefined }, token);
 
   function buildPageHref(page: number) {
-    return `/admin/partners?page=${page}`;
+    const search = new URLSearchParams();
+    if (params.search) search.set("search", params.search);
+    search.set("page", String(page));
+    return `/admin/partners?${search.toString()}`;
   }
 
   return (
     <div className="min-h-full px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-[1400px] flex-col gap-6">
-        <PartnersManager partners={partners.items} />
+        <PartnersManager partners={partners.items} currentSearch={params.search} />
 
         {partners.totalPages > 1 && (
           <Pagination>

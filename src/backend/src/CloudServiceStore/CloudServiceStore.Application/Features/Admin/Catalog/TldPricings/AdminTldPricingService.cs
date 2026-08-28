@@ -21,6 +21,7 @@ public class AdminTldPricingService : IAdminTldPricingService
         var repository = _unitOfWork.Repository<TldPricing, int>();
 
         var baseQuery = repository.Query()
+            .Where(t => query.Search == null || t.Tld.Contains(query.Search))
             .OrderBy(t => t.Tld);
 
         var totalCount = await baseQuery.CountAsync(cancellationToken);

@@ -16,13 +16,14 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { ContentPagesTable } from "@/components/admin/content-pages/ContentPagesTable";
+import { ContentPagesFilterBar } from "@/components/admin/content-pages/ContentPagesFilterBar";
 
 export const metadata: Metadata = {
   title: "Quản lý trang nội dung",
 };
 
 interface AdminContentPagesPageProps {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; search?: string }>;
 }
 
 export default async function AdminContentPagesPage({ searchParams }: AdminContentPagesPageProps) {
@@ -31,10 +32,17 @@ export default async function AdminContentPagesPage({ searchParams }: AdminConte
 
   const cookieStore = await cookies();
   const token = cookieStore.get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
-  const pages = await getAdminContentPages(getApiUrl(), { pageNumber, pageSize: 20 }, token);
+  const pages = await getAdminContentPages(
+    getApiUrl(),
+    { pageNumber, pageSize: 20, search: params.search || undefined },
+    token,
+  );
 
   function buildPageHref(page: number) {
-    return `/admin/content-pages?page=${page}`;
+    const search = new URLSearchParams();
+    if (params.search) search.set("search", params.search);
+    search.set("page", String(page));
+    return `/admin/content-pages?${search.toString()}`;
   }
 
   return (
@@ -59,8 +67,13 @@ export default async function AdminContentPagesPage({ searchParams }: AdminConte
           />
         </div>
 
-        <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0 overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
-          <ContentPagesTable pages={pages.items} />
+        <div className="overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
+          <div className="border-b border-zinc-100 bg-zinc-50/30 p-4">
+            <ContentPagesFilterBar currentSearch={params.search} />
+          </div>
+          <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0">
+            <ContentPagesTable pages={pages.items} />
+          </div>
         </div>
 
         {pages.totalPages > 1 && (

@@ -15,6 +15,7 @@ using CloudServiceStore.Application.Features.Admin.Marketing.Promotions;
 using CloudServiceStore.Application.Features.Admin.Reporting.AuditLogs;
 using CloudServiceStore.Application.Features.Admin.Reporting.DashboardStats;
 using CloudServiceStore.Application.Features.Admin.Reporting.RevenueAnalytics;
+using CloudServiceStore.Application.Features.Admin.Search;
 using CloudServiceStore.Application.Features.Admin.Sales.AffiliateApplications;
 using CloudServiceStore.Application.Features.Admin.Sales.ConsultationRequests;
 using CloudServiceStore.Application.Features.Admin.Sales.OrderRequests;
@@ -83,6 +84,7 @@ public static class DependencyInjection
         services.AddScoped<IAdminOsImageService, AdminOsImageService>();
         services.AddScoped<IAdminTldPricingService, AdminTldPricingService>();
         services.AddScoped<IAdminPromotionService, AdminPromotionService>();
+        services.AddScoped<IAdminSearchService, AdminSearchService>();
 
         services.AddScoped<IAdminNewsCategoryService, AdminNewsCategoryService>();
         services.AddScoped<IAdminNewsArticleService, AdminNewsArticleService>();

@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 };
 
 interface AdminPromotionsPageProps {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; search?: string }>;
 }
 
 export default async function AdminPromotionsPage({ searchParams }: AdminPromotionsPageProps) {
@@ -44,19 +44,27 @@ export default async function AdminPromotionsPage({ searchParams }: AdminPromoti
   // nhỏ, chưa cần endpoint "lấy tất cả không phân trang" riêng cho việc này (ServiceCategories/
   // ServicePlans giờ đã phân trang mặc định 20/trang cho chính trang quản lý của chúng).
   const [promotions, categories, plans] = await Promise.all([
-    getAdminPromotions(baseUrl, { pageNumber, pageSize: 20 }, token),
+    getAdminPromotions(baseUrl, { pageNumber, pageSize: 20, search: params.search || undefined }, token),
     getAdminServiceCategories(baseUrl, { pageSize: 100 }, token),
     getAdminServicePlans(baseUrl, { pageSize: 100 }, token),
   ]);
 
   function buildPageHref(page: number) {
-    return `/admin/promotions?page=${page}`;
+    const search = new URLSearchParams();
+    if (params.search) search.set("search", params.search);
+    search.set("page", String(page));
+    return `/admin/promotions?${search.toString()}`;
   }
 
   return (
     <div className="min-h-full px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-[1400px] flex-col gap-6">
-        <PromotionsManager promotions={promotions.items} categories={categories.items} plans={plans.items} />
+        <PromotionsManager
+          promotions={promotions.items}
+          categories={categories.items}
+          plans={plans.items}
+          currentSearch={params.search}
+        />
 
         {promotions.totalPages > 1 && (
           <Pagination>

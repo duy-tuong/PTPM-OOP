@@ -20,7 +20,9 @@ public class AdminContentPageService : IAdminContentPageService
     {
         var repository = _unitOfWork.Repository<ContentPage, int>();
 
-        var baseQuery = repository.Query().OrderBy(p => p.DisplayOrder);
+        var baseQuery = repository.Query()
+            .Where(p => query.Search == null || p.Title.Contains(query.Search) || p.Slug.Contains(query.Search))
+            .OrderBy(p => p.DisplayOrder);
 
         var totalCount = await baseQuery.CountAsync(cancellationToken);
         var entities = await baseQuery

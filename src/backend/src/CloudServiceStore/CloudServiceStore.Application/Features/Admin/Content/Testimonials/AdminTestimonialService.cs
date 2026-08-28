@@ -21,6 +21,7 @@ public class AdminTestimonialService : IAdminTestimonialService
         var repository = _unitOfWork.Repository<Testimonial, int>();
 
         var baseQuery = repository.Query()
+            .Where(t => query.Search == null || t.DisplayName.Contains(query.Search) || t.Content.Contains(query.Search))
             .OrderBy(t => t.DisplayOrder);
 
         var totalCount = await baseQuery.CountAsync(cancellationToken);

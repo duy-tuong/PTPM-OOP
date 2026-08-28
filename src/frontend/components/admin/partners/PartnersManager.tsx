@@ -7,13 +7,19 @@ import { DataTable, type DataTableColumn } from "@/components/admin/DataTable";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { ConfirmDeleteButton } from "@/components/admin/ConfirmDeleteButton";
 import { PartnerDialog } from "@/components/admin/partners/PartnerDialog";
+import { PartnersFilterBar } from "@/components/admin/partners/PartnersFilterBar";
 import { deletePartnerAction } from "@/app/admin/partners/actions";
 import { FallbackImage } from "@/components/shared/FallbackImage";
 import type { AdminPartnerDto } from "@/lib/types/admin";
 
+interface PartnersManagerProps {
+  partners: AdminPartnerDto[];
+  currentSearch?: string;
+}
+
 // `partners` là 1 TRANG (page.tsx đã phân trang qua getAdminPartners) - Sửa chỉ prefill từ record
 // đã có sẵn trong mảng của trang hiện tại, không fetch lại theo id.
-export function PartnersManager({ partners }: { partners: AdminPartnerDto[] }) {
+export function PartnersManager({ partners, currentSearch }: PartnersManagerProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPartner, setEditingPartner] = useState<AdminPartnerDto | null>(null);
 
@@ -94,8 +100,13 @@ export function PartnersManager({ partners }: { partners: AdminPartnerDto[] }) {
         </Button>
       </div>
 
-      <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0 overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
-        <DataTable columns={columns} data={partners} emptyMessage="Chưa có đối tác nào." getRowKey={(row) => row.id} />
+      <div className="overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
+        <div className="border-b border-zinc-100 bg-zinc-50/30 p-4">
+          <PartnersFilterBar currentSearch={currentSearch} />
+        </div>
+        <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0">
+          <DataTable columns={columns} data={partners} emptyMessage="Chưa có đối tác nào." getRowKey={(row) => row.id} />
+        </div>
       </div>
 
       <PartnerDialog open={dialogOpen} onOpenChange={setDialogOpen} partner={editingPartner} />

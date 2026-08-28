@@ -21,6 +21,7 @@ public class AdminPartnerService : IAdminPartnerService
         var repository = _unitOfWork.Repository<Partner, int>();
 
         var baseQuery = repository.Query()
+            .Where(p => query.Search == null || p.Name.Contains(query.Search))
             .OrderBy(p => p.DisplayOrder);
 
         var totalCount = await baseQuery.CountAsync(cancellationToken);

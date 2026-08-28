@@ -18,8 +18,10 @@ import type {
 
 // ---- Admin Catalog: Service Categories ----
 // Khớp Application/Features/Admin/Catalog/ServiceCategories/Dtos/*.cs
-// Không thêm field lọc riêng nào - chỉ cần phân trang thuần.
-export type ServiceCategoryQueryParams = PaginationParams;
+export interface ServiceCategoryQueryParams extends PaginationParams {
+  // Tìm theo tên hoặc slug danh mục dịch vụ.
+  search?: string;
+}
 
 export interface AdminServiceCategoryDto {
   id: number;
@@ -143,8 +145,10 @@ export type UpdateServicePlanDto = CreateServicePlanDto;
 
 // ---- Admin Catalog: Addons ----
 // Khớp Application/Features/Admin/Catalog/Addons/Dtos/*.cs
-// Không thêm field lọc riêng nào - chỉ cần phân trang thuần.
-export type AddonQueryParams = PaginationParams;
+export interface AddonQueryParams extends PaginationParams {
+  // Tìm theo tên hoặc SKU của addon.
+  search?: string;
+}
 
 export interface AdminAddonDto {
   id: number;
@@ -172,8 +176,10 @@ export type UpdateAddonDto = CreateAddonDto;
 
 // ---- Admin Catalog: OS Images ----
 // Khớp Application/Features/Admin/Catalog/OsImages/Dtos/*.cs (Đợt 3, Phần 11)
-// Không thêm field lọc riêng nào - chỉ cần phân trang thuần.
-export type OsImageQueryParams = PaginationParams;
+export interface OsImageQueryParams extends PaginationParams {
+  // Tìm theo tên hoặc slug hệ điều hành.
+  search?: string;
+}
 
 export interface AdminOsImageDto {
   id: number;
@@ -214,7 +220,10 @@ export interface PromotionScopeInputDto {
 }
 
 // Không thêm field lọc riêng nào - chỉ cần phân trang thuần.
-export type PromotionQueryParams = PaginationParams;
+export interface PromotionQueryParams extends PaginationParams {
+  // Tìm theo mã hoặc tên khuyến mãi.
+  search?: string;
+}
 
 export interface AdminPromotionDto {
   id: number;
@@ -254,8 +263,10 @@ export type UpdatePromotionDto = CreatePromotionDto;
 
 // ---- Admin Content: Content Pages ----
 // Khớp Application/Features/Admin/Content/ContentPages/Dtos/*.cs
-// Không thêm field lọc riêng nào - chỉ cần phân trang thuần.
-export type ContentPageQueryParams = PaginationParams;
+export interface ContentPageQueryParams extends PaginationParams {
+  // Tìm theo tiêu đề hoặc slug trang nội dung.
+  search?: string;
+}
 
 export interface AdminContentPageDto {
   id: number;
@@ -284,7 +295,10 @@ export type UpdateContentPageDto = CreateContentPageDto;
 
 // ---- Admin Content: FAQs ----
 // Khớp Application/Features/Admin/Content/Faqs/Dtos/*.cs
-export type FaqQueryParams = PaginationParams;
+export interface FaqQueryParams extends PaginationParams {
+  // Tìm theo câu hỏi hoặc câu trả lời.
+  search?: string;
+}
 
 export interface AdminFaqDto {
   id: number;
@@ -307,8 +321,10 @@ export type UpdateFaqDto = CreateFaqDto;
 
 // ---- Admin Content: News Categories ----
 // Khớp Application/Features/Admin/Content/NewsCategories/Dtos/*.cs
-// Không thêm field lọc riêng nào - chỉ cần phân trang thuần.
-export type NewsCategoryQueryParams = PaginationParams;
+export interface NewsCategoryQueryParams extends PaginationParams {
+  // Tìm theo tên hoặc slug danh mục tin tức.
+  search?: string;
+}
 
 export interface AdminNewsCategoryDto {
   id: number;
@@ -368,6 +384,8 @@ export interface AdminServicePlanQueryParams extends PaginationParams {
   isFeatured?: boolean;
   status?: ServicePlanStatus;
   regionId?: string;
+  // Tìm theo tên, slug hoặc SKU gói dịch vụ.
+  search?: string;
 }
 
 export interface AdminNewsArticleQueryParams extends PaginationParams {
@@ -403,6 +421,8 @@ export interface OrderRequestQueryParams extends PaginationParams {
   status?: OrderRequestStatus;
   // Fraud Review (Đợt 2, Phần 9) - true = chỉ đơn bị gắn cờ nghi vấn.
   flaggedOnly?: boolean;
+  // Tìm theo mã đơn hoặc tên/email khách hàng.
+  search?: string;
 }
 
 export interface UpdateOrderRequestStatusDto {
@@ -411,7 +431,10 @@ export interface UpdateOrderRequestStatusDto {
 
 // ---- Admin Sales: Consultation Requests ----
 // Khớp Application/Features/Admin/Sales/ConsultationRequests/Dtos/*.cs
-export type ConsultationRequestQueryParams = PaginationParams;
+export interface ConsultationRequestQueryParams extends PaginationParams {
+  // Tìm theo mã yêu cầu, tên hoặc email khách.
+  search?: string;
+}
 
 export interface AdminConsultationRequestDto {
   id: number;
@@ -433,7 +456,10 @@ export interface UpdateConsultationRequestStatusDto {
 
 // ---- Admin Sales: Affiliate Applications ----
 // Khớp Application/Features/Admin/Sales/AffiliateApplications/Dtos/*.cs
-export type AffiliateApplicationQueryParams = PaginationParams;
+export interface AffiliateApplicationQueryParams extends PaginationParams {
+  // Tìm theo họ tên, email hoặc số điện thoại.
+  search?: string;
+}
 
 export interface AdminAffiliateApplicationDto {
   id: number;
@@ -466,6 +492,25 @@ export interface TopServicePlanStatDto {
   servicePlanId: number;
   servicePlanName: string;
   requestCount: number;
+}
+
+// ---- Admin: Tìm kiếm toàn cục (Command Palette) ----
+// Khớp Application/Features/Admin/Search/Dtos/AdminSearchResultDto.cs
+export interface AdminSearchResultItemDto {
+  id: string;
+  title: string;
+  subtitle?: string | null;
+  url: string;
+}
+
+export interface AdminSearchResultDto {
+  customers: AdminSearchResultItemDto[];
+  orderRequests: AdminSearchResultItemDto[];
+  consultationRequests: AdminSearchResultItemDto[];
+  users: AdminSearchResultItemDto[];
+  servicePlans: AdminSearchResultItemDto[];
+  newsArticles: AdminSearchResultItemDto[];
+  promotions: AdminSearchResultItemDto[];
 }
 
 export interface DashboardStatsDto {
@@ -529,7 +574,10 @@ export interface AdminAuditLogDto {
 
 // ---- Admin Content: Testimonials ----
 // Khớp Application/Features/Admin/Content/Testimonials/Dtos/*.cs
-export type TestimonialQueryParams = PaginationParams;
+export interface TestimonialQueryParams extends PaginationParams {
+  // Tìm theo tên người đánh giá hoặc nội dung nhận xét.
+  search?: string;
+}
 
 export interface AdminTestimonialDto {
   id: number;
@@ -556,7 +604,10 @@ export type UpdateTestimonialDto = CreateTestimonialDto;
 
 // ---- Admin Content: Partners ----
 // Khớp Application/Features/Admin/Content/Partners/Dtos/*.cs
-export type PartnerQueryParams = PaginationParams;
+export interface PartnerQueryParams extends PaginationParams {
+  // Tìm theo tên đối tác.
+  search?: string;
+}
 
 export interface AdminPartnerDto {
   id: number;
@@ -579,7 +630,10 @@ export type UpdatePartnerDto = CreatePartnerDto;
 
 // ---- Admin Catalog: TLD Pricing ----
 // Khớp Application/Features/Admin/Catalog/TldPricings/Dtos/*.cs
-export type TldPricingQueryParams = PaginationParams;
+export interface TldPricingQueryParams extends PaginationParams {
+  // Tìm theo đuôi tên miền.
+  search?: string;
+}
 
 export interface AdminTldPricingDto {
   id: number;
@@ -621,6 +675,8 @@ export interface AdminNewsCommentDto {
 export interface NewsCommentQueryParams extends PaginationParams {
   newsArticleId?: number;
   isApproved?: boolean;
+  // Tìm theo nội dung bình luận, tên người gửi hoặc họ tên khách hàng.
+  search?: string;
 }
 
 export interface UpdateNewsCommentApprovalDto {
@@ -673,7 +729,10 @@ export interface UpdateCustomerActiveStatusDto {
 // ---- Admin Identity: Users (nhân viên - Admin/Editor) ----
 // Khớp Application/Features/Admin/Identity/Users/Dtos/*.cs
 // Không thêm field lọc riêng nào - chỉ cần phân trang thuần.
-export type UserQueryParams = PaginationParams;
+export interface UserQueryParams extends PaginationParams {
+  // Tìm theo tên đăng nhập, email hoặc họ tên.
+  search?: string;
+}
 
 export interface AdminUserDto {
   id: string;

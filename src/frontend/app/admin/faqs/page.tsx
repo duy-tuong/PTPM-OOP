@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 };
 
 interface AdminFaqsPageProps {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; search?: string }>;
 }
 
 export default async function AdminFaqsPage({ searchParams }: AdminFaqsPageProps) {
@@ -32,20 +32,23 @@ export default async function AdminFaqsPage({ searchParams }: AdminFaqsPageProps
   const baseUrl = getApiUrl();
 
   const [faqs, categories] = await Promise.all([
-    getAdminFaqs(baseUrl, { pageNumber, pageSize: 20 }, token),
+    getAdminFaqs(baseUrl, { pageNumber, pageSize: 20, search: params.search || undefined }, token),
     // pageSize lớn để lấy gần như toàn bộ danh mục cho <Select> chọn category của FAQ - dự án quy mô
     // nhỏ, chưa cần endpoint "lấy tất cả không phân trang" riêng cho việc này.
     getAdminServiceCategories(baseUrl, { pageSize: 100 }, token),
   ]);
 
   function buildPageHref(page: number) {
-    return `/admin/faqs?page=${page}`;
+    const search = new URLSearchParams();
+    if (params.search) search.set("search", params.search);
+    search.set("page", String(page));
+    return `/admin/faqs?${search.toString()}`;
   }
 
   return (
     <div className="min-h-full px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-[1400px] flex-col gap-6">
-        <FaqsManager faqs={faqs.items} categories={categories.items} />
+        <FaqsManager faqs={faqs.items} categories={categories.items} currentSearch={params.search} />
 
         {faqs.totalPages > 1 && (
           <Pagination>
