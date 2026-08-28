@@ -9,8 +9,8 @@ import { ConsultationStatusDialog } from "@/components/admin/consultation-reques
 import { formatDate } from "@/lib/utils";
 import type { AdminConsultationRequestDto } from "@/lib/types/admin";
 
-// Backend không hỗ trợ filter/phân trang cho resource này (List<T> phẳng) - render nguyên danh
-// sách, không tự chế UI filter hứa hẹn chức năng không có thật.
+// Nhận danh sách của trang hiện tại (đã phân trang server-side qua PagedResult<T> - xem
+// app/admin/consultation-requests/page.tsx) - không tự chế UI filter hứa hẹn chức năng không có thật.
 export function ConsultationRequestsManager({ requests }: { requests: AdminConsultationRequestDto[] }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<AdminConsultationRequestDto | null>(null);

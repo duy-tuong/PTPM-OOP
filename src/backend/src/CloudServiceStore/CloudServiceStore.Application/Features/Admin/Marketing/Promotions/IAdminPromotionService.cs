@@ -1,10 +1,11 @@
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Marketing.Promotions.Dtos;
 
 namespace CloudServiceStore.Application.Features.Admin.Marketing.Promotions;
 
 public interface IAdminPromotionService
 {
-    Task<List<AdminPromotionDto>> GetListAsync(CancellationToken cancellationToken = default);
+    Task<PagedResult<AdminPromotionDto>> GetListAsync(PromotionQueryParams query, CancellationToken cancellationToken = default);
 
     Task<AdminPromotionDto> CreateAsync(CreatePromotionDto dto, CancellationToken cancellationToken = default);
 

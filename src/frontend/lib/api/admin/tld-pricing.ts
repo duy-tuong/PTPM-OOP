@@ -1,8 +1,9 @@
 import { apiFetch } from "../http";
-import type { AdminTldPricingDto, CreateTldPricingDto, UpdateTldPricingDto } from "@/lib/types/admin";
+import type { PagedResult } from "@/lib/types/common";
+import type { AdminTldPricingDto, CreateTldPricingDto, TldPricingQueryParams, UpdateTldPricingDto } from "@/lib/types/admin";
 
-export function getAdminTldPricing(baseUrl: string, token?: string) {
-  return apiFetch<AdminTldPricingDto[]>(baseUrl, "/admin/tld-pricing", "GET", { token });
+export function getAdminTldPricing(baseUrl: string, params: TldPricingQueryParams = {}, token?: string) {
+  return apiFetch<PagedResult<AdminTldPricingDto>>(baseUrl, "/admin/tld-pricing", "GET", { params, token });
 }
 
 export function createAdminTldPricing(baseUrl: string, dto: CreateTldPricingDto, token?: string) {

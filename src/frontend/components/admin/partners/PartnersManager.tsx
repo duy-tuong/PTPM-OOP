@@ -11,7 +11,8 @@ import { deletePartnerAction } from "@/app/admin/partners/actions";
 import { FallbackImage } from "@/components/shared/FallbackImage";
 import type { AdminPartnerDto } from "@/lib/types/admin";
 
-// unpaged-list-in-Dialog - mirror ServiceCategoriesManager.tsx (Phase 6.7).
+// `partners` là 1 TRANG (page.tsx đã phân trang qua getAdminPartners) - Sửa chỉ prefill từ record
+// đã có sẵn trong mảng của trang hiện tại, không fetch lại theo id.
 export function PartnersManager({ partners }: { partners: AdminPartnerDto[] }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPartner, setEditingPartner] = useState<AdminPartnerDto | null>(null);

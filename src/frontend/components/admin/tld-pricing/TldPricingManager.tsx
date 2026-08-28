@@ -16,7 +16,8 @@ interface TldPricingManagerProps {
   categories: AdminServiceCategoryDto[];
 }
 
-// unpaged-list-in-Dialog - mirror ServiceCategoriesManager.tsx (Phase 6.7). ServiceCategoryId chỉ
+// `tldPricing` là 1 TRANG (page.tsx đã phân trang qua getAdminTldPricing) - Sửa chỉ prefill từ
+// record đã có sẵn trong mảng của trang hiện tại, không fetch lại theo id. ServiceCategoryId chỉ
 // lưu id (không kèm tên, khớp AdminServicePlanDto.categoryId) - map tên qua categories đã fetch
 // song song ở page.tsx.
 export function TldPricingManager({ tldPricing, categories }: TldPricingManagerProps) {

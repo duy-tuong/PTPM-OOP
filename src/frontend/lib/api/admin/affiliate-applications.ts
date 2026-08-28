@@ -1,9 +1,9 @@
 import { apiFetch } from "../http";
-import type { AdminAffiliateApplicationDto, UpdateAffiliateApplicationStatusDto } from "@/lib/types/admin";
+import type { PagedResult } from "@/lib/types/common";
+import type { AdminAffiliateApplicationDto, AffiliateApplicationQueryParams, UpdateAffiliateApplicationStatusDto } from "@/lib/types/admin";
 
-// Không phân trang - controller trả List<T> phẳng (khác OrderRequests dùng PagedResult<T>).
-export function getAdminAffiliateApplications(baseUrl: string, token?: string) {
-  return apiFetch<AdminAffiliateApplicationDto[]>(baseUrl, "/admin/affiliate-applications", "GET", { token });
+export function getAdminAffiliateApplications(baseUrl: string, params: AffiliateApplicationQueryParams = {}, token?: string) {
+  return apiFetch<PagedResult<AdminAffiliateApplicationDto>>(baseUrl, "/admin/affiliate-applications", "GET", { params, token });
 }
 
 export function updateAdminAffiliateApplicationStatus(

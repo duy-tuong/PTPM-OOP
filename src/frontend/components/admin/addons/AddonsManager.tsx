@@ -12,8 +12,8 @@ import { ADDON_TYPE_LABELS, ADDON_BILLING_TYPE_LABELS } from "@/lib/types/enums"
 import { formatCurrency } from "@/lib/utils";
 import type { AdminAddonDto } from "@/lib/types/admin";
 
-// unpaged-list-in-Dialog: getAdminAddons trả về danh sách phẳng (không phân trang), khớp
-// ServiceCategoriesManager.tsx - Addon là danh mục nhỏ, không cần phân trang.
+// `addons` là 1 TRANG (page.tsx đã phân trang qua getAdminAddons) - Sửa chỉ prefill từ record đã có
+// sẵn trong mảng của trang hiện tại, không fetch lại theo id.
 export function AddonsManager({ addons }: { addons: AdminAddonDto[] }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingAddon, setEditingAddon] = useState<AdminAddonDto | null>(null);

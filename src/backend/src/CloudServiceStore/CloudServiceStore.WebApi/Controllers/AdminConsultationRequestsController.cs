@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Sales.ConsultationRequests;
 using CloudServiceStore.Application.Features.Admin.Sales.ConsultationRequests.Dtos;
 using Microsoft.AspNetCore.Authorization;
@@ -19,9 +20,9 @@ public class AdminConsultationRequestsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<AdminConsultationRequestDto>>> GetList(CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResult<AdminConsultationRequestDto>>> GetList([FromQuery] ConsultationRequestQueryParams query, CancellationToken cancellationToken)
     {
-        return Ok(await _service.GetListAsync(cancellationToken));
+        return Ok(await _service.GetListAsync(query, cancellationToken));
     }
 
     [HttpPut("{id:int}/status")]

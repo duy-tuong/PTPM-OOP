@@ -1,3 +1,4 @@
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Catalog.TldPricings;
 using CloudServiceStore.Application.Features.Admin.Catalog.TldPricings.Dtos;
 using Microsoft.AspNetCore.Authorization;
@@ -18,9 +19,9 @@ public class AdminTldPricingController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<AdminTldPricingDto>>> GetList(CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResult<AdminTldPricingDto>>> GetList([FromQuery] TldPricingQueryParams query, CancellationToken cancellationToken)
     {
-        return Ok(await _service.GetListAsync(cancellationToken));
+        return Ok(await _service.GetListAsync(query, cancellationToken));
     }
 
     [HttpPost]

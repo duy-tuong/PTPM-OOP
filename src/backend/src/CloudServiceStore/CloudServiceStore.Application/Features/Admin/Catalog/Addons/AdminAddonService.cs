@@ -1,5 +1,6 @@
 using CloudServiceStore.Application.Common.Exceptions;
 using CloudServiceStore.Application.Common.Interfaces;
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Catalog.Addons.Dtos;
 using CloudServiceStore.Domain.Entities.Catalog;
 using CloudServiceStore.Domain.Entities.Sales;
@@ -16,15 +17,20 @@ public class AdminAddonService : IAdminAddonService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<List<AdminAddonDto>> GetListAsync(CancellationToken cancellationToken = default)
+    public async Task<PagedResult<AdminAddonDto>> GetListAsync(AddonQueryParams query, CancellationToken cancellationToken = default)
     {
         var repository = _unitOfWork.Repository<Addon, int>();
 
-        var entities = await repository.Query()
-            .OrderBy(a => a.Name)
+        var baseQuery = repository.Query().OrderBy(a => a.Name);
+
+        var totalCount = await baseQuery.CountAsync(cancellationToken);
+        var entities = await baseQuery
+            .Skip((query.PageNumber - 1) * query.PageSize)
+            .Take(query.PageSize)
             .ToListAsync(cancellationToken);
 
-        return entities.Select(MapToDto).ToList();
+        var dtos = entities.Select(MapToDto).ToList();
+        return PagedResult<AdminAddonDto>.Create(dtos, totalCount, query.PageNumber, query.PageSize);
     }
 
     public async Task<AdminAddonDto> GetByIdAsync(int id, CancellationToken cancellationToken = default)

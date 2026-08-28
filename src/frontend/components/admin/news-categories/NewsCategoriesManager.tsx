@@ -10,8 +10,8 @@ import { NewsCategoryDialog } from "@/components/admin/news-categories/NewsCateg
 import { deleteNewsCategoryAction } from "@/app/admin/news-categories/actions";
 import type { AdminNewsCategoryDto } from "@/lib/types/admin";
 
-// unpaged-list-in-Dialog: getAdminNewsCategories trả về danh sách phẳng (không phân trang) - Sửa
-// chỉ prefill từ record đã có sẵn trong mảng, không fetch lại theo id. Mirror ServiceCategoriesManager.
+// `categories` là 1 TRANG (page.tsx đã phân trang qua getAdminNewsCategories) - Sửa chỉ prefill từ
+// record đã có sẵn trong mảng của trang hiện tại, không fetch lại theo id.
 export function NewsCategoriesManager({ categories }: { categories: AdminNewsCategoryDto[] }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<AdminNewsCategoryDto | null>(null);

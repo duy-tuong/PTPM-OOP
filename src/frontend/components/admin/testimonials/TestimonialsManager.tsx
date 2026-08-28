@@ -12,7 +12,8 @@ import { FallbackImage } from "@/components/shared/FallbackImage";
 import { cn } from "@/lib/utils";
 import type { AdminTestimonialDto } from "@/lib/types/admin";
 
-// unpaged-list-in-Dialog - mirror ServiceCategoriesManager.tsx (Phase 6.7).
+// `testimonials` là 1 TRANG (page.tsx đã phân trang qua getAdminTestimonials) - Sửa chỉ prefill
+// từ record đã có sẵn trong mảng của trang hiện tại, không fetch lại theo id.
 export function TestimonialsManager({ testimonials }: { testimonials: AdminTestimonialDto[] }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTestimonial, setEditingTestimonial] = useState<AdminTestimonialDto | null>(null);

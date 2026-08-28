@@ -54,8 +54,9 @@ export default async function AdminCustomersPage({ searchParams }: AdminCustomer
       },
       token,
     ),
-    // Nguồn cho select filter "Sales phụ trách" - tái dùng nguyên GET /admin/users.
-    getAdminUsers(baseUrl, token),
+    // Nguồn cho select filter "Sales phụ trách" - tái dùng nguyên GET /admin/users, pageSize lớn để lấy
+    // gần như toàn bộ nhân viên (dự án quy mô nhỏ, chưa cần endpoint không phân trang riêng).
+    getAdminUsers(baseUrl, { pageSize: 100 }, token),
   ]);
 
   function buildPageHref(page: number) {
@@ -81,7 +82,7 @@ export default async function AdminCustomersPage({ searchParams }: AdminCustomer
               currentSearch={params.search}
               currentCustomerType={params.customerType}
               currentSalesRepUserId={params.salesRepUserId}
-              salesReps={salesReps}
+              salesReps={salesReps.items}
             />
           </div>
           <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0">

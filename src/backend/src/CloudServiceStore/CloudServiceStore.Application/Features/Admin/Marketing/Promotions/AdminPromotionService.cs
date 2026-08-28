@@ -1,5 +1,6 @@
 using CloudServiceStore.Application.Common.Exceptions;
 using CloudServiceStore.Application.Common.Interfaces;
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Marketing.Promotions.Dtos;
 using CloudServiceStore.Domain.Entities.Marketing;
 using CloudServiceStore.Domain.Enums;
@@ -16,17 +17,23 @@ public class AdminPromotionService : IAdminPromotionService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<List<AdminPromotionDto>> GetListAsync(CancellationToken cancellationToken = default)
+    public async Task<PagedResult<AdminPromotionDto>> GetListAsync(PromotionQueryParams query, CancellationToken cancellationToken = default)
     {
         var repository = _unitOfWork.Repository<Promotion, int>();
 
-        var entities = await repository.Query()
+        var baseQuery = repository.Query()
             .Include(p => p.Scopes).ThenInclude(s => s.ServiceCategory)
             .Include(p => p.Scopes).ThenInclude(s => s.ServicePlan)
-            .OrderByDescending(p => p.StartDate)
+            .OrderByDescending(p => p.StartDate);
+
+        var totalCount = await baseQuery.CountAsync(cancellationToken);
+        var entities = await baseQuery
+            .Skip((query.PageNumber - 1) * query.PageSize)
+            .Take(query.PageSize)
             .ToListAsync(cancellationToken);
 
-        return entities.Select(MapToDto).ToList();
+        var dtos = entities.Select(MapToDto).ToList();
+        return PagedResult<AdminPromotionDto>.Create(dtos, totalCount, query.PageNumber, query.PageSize);
     }
 
     public async Task<AdminPromotionDto> CreateAsync(CreatePromotionDto dto, CancellationToken cancellationToken = default)

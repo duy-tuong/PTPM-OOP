@@ -1,10 +1,11 @@
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Catalog.Addons.Dtos;
 
 namespace CloudServiceStore.Application.Features.Admin.Catalog.Addons;
 
 public interface IAdminAddonService
 {
-    Task<List<AdminAddonDto>> GetListAsync(CancellationToken cancellationToken = default);
+    Task<PagedResult<AdminAddonDto>> GetListAsync(AddonQueryParams query, CancellationToken cancellationToken = default);
 
     Task<AdminAddonDto> GetByIdAsync(int id, CancellationToken cancellationToken = default);
 

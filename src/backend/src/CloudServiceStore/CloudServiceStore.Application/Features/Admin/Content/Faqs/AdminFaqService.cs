@@ -1,5 +1,6 @@
 using CloudServiceStore.Application.Common.Exceptions;
 using CloudServiceStore.Application.Common.Interfaces;
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Content.Faqs.Dtos;
 using CloudServiceStore.Domain.Entities.Catalog;
 using CloudServiceStore.Domain.Entities.Content;
@@ -16,15 +17,21 @@ public class AdminFaqService : IAdminFaqService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<List<AdminFaqDto>> GetListAsync(CancellationToken cancellationToken = default)
+    public async Task<PagedResult<AdminFaqDto>> GetListAsync(FaqQueryParams query, CancellationToken cancellationToken = default)
     {
         var repository = _unitOfWork.Repository<Faq, int>();
 
-        var entities = await repository.Query()
-            .OrderBy(f => f.DisplayOrder)
+        var baseQuery = repository.Query()
+            .OrderBy(f => f.DisplayOrder);
+
+        var totalCount = await baseQuery.CountAsync(cancellationToken);
+        var entities = await baseQuery
+            .Skip((query.PageNumber - 1) * query.PageSize)
+            .Take(query.PageSize)
             .ToListAsync(cancellationToken);
 
-        return entities.Select(MapToDto).ToList();
+        var dtos = entities.Select(MapToDto).ToList();
+        return PagedResult<AdminFaqDto>.Create(dtos, totalCount, query.PageNumber, query.PageSize);
     }
 
     public async Task<AdminFaqDto> CreateAsync(CreateFaqDto dto, CancellationToken cancellationToken = default)

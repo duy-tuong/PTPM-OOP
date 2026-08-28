@@ -6,16 +6,36 @@ import { getApiUrl } from "@/lib/api/config";
 import { getAdminContentPages } from "@/lib/api/admin/content-pages";
 import { ADMIN_ACCESS_TOKEN_COOKIE } from "@/lib/auth/adminAuthCookies";
 import { Button } from "@/components/ui/button";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { ContentPagesTable } from "@/components/admin/content-pages/ContentPagesTable";
 
 export const metadata: Metadata = {
   title: "Quản lý trang nội dung",
 };
 
-export default async function AdminContentPagesPage() {
+interface AdminContentPagesPageProps {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default async function AdminContentPagesPage({ searchParams }: AdminContentPagesPageProps) {
+  const params = await searchParams;
+  const pageNumber = Number(params.page) > 0 ? Number(params.page) : 1;
+
   const cookieStore = await cookies();
   const token = cookieStore.get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
-  const pages = await getAdminContentPages(getApiUrl(), token);
+  const pages = await getAdminContentPages(getApiUrl(), { pageNumber, pageSize: 20 }, token);
+
+  function buildPageHref(page: number) {
+    return `/admin/content-pages?page=${page}`;
+  }
 
   return (
     <div className="min-h-full px-4 py-8 sm:px-6 lg:px-8">
@@ -40,8 +60,54 @@ export default async function AdminContentPagesPage() {
         </div>
 
         <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0 overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
-          <ContentPagesTable pages={pages} />
+          <ContentPagesTable pages={pages.items} />
         </div>
+
+        {pages.totalPages > 1 && (
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  href={buildPageHref(Math.max(1, pageNumber - 1))}
+                  aria-disabled={!pages.hasPreviousPage}
+                />
+              </PaginationItem>
+              {(() => {
+                const total = pages.totalPages;
+                const current = pageNumber;
+                let pageList: (number | string)[] = [];
+
+                if (total <= 7) {
+                  pageList = Array.from({ length: total }, (_, i) => i + 1);
+                } else if (current <= 3) {
+                  pageList = [1, 2, 3, 4, "...", total];
+                } else if (current >= total - 2) {
+                  pageList = [1, "...", total - 3, total - 2, total - 1, total];
+                } else {
+                  pageList = [1, "...", current - 1, current, current + 1, "...", total];
+                }
+
+                return pageList.map((page, index) => (
+                  <PaginationItem key={`${page}-${index}`}>
+                    {page === "..." ? (
+                      <PaginationEllipsis />
+                    ) : (
+                      <PaginationLink href={buildPageHref(page as number)} isActive={page === pageNumber}>
+                        {page}
+                      </PaginationLink>
+                    )}
+                  </PaginationItem>
+                ));
+              })()}
+              <PaginationItem>
+                <PaginationNext
+                  href={buildPageHref(Math.min(pages.totalPages, pageNumber + 1))}
+                  aria-disabled={!pages.hasNextPage}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        )}
       </div>
     </div>
   );

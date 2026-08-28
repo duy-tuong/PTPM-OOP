@@ -1,5 +1,6 @@
 using CloudServiceStore.Application.Common.Exceptions;
 using CloudServiceStore.Application.Common.Interfaces;
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Catalog.ServiceCategories.Dtos;
 using CloudServiceStore.Domain.Entities.Catalog;
 using Microsoft.EntityFrameworkCore;
@@ -15,15 +16,20 @@ public class AdminServiceCategoryService : IAdminServiceCategoryService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<List<AdminServiceCategoryDto>> GetListAsync(CancellationToken cancellationToken = default)
+    public async Task<PagedResult<AdminServiceCategoryDto>> GetListAsync(ServiceCategoryQueryParams query, CancellationToken cancellationToken = default)
     {
         var repository = _unitOfWork.Repository<ServiceCategory, int>();
 
-        var entities = await repository.Query()
-            .OrderBy(c => c.DisplayOrder)
+        var baseQuery = repository.Query().OrderBy(c => c.DisplayOrder);
+
+        var totalCount = await baseQuery.CountAsync(cancellationToken);
+        var entities = await baseQuery
+            .Skip((query.PageNumber - 1) * query.PageSize)
+            .Take(query.PageSize)
             .ToListAsync(cancellationToken);
 
-        return entities.Select(MapToDto).ToList();
+        var dtos = entities.Select(MapToDto).ToList();
+        return PagedResult<AdminServiceCategoryDto>.Create(dtos, totalCount, query.PageNumber, query.PageSize);
     }
 
     public async Task<AdminServiceCategoryDto> CreateAsync(CreateServiceCategoryDto dto, CancellationToken cancellationToken = default)

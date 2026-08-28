@@ -13,8 +13,8 @@ import { deleteUserAction } from "@/app/admin/users/actions";
 import { formatDate } from "@/lib/utils";
 import type { AdminUserDto } from "@/lib/types/admin";
 
-// unpaged-list-in-Dialog: getAdminUsers trả về danh sách phẳng (không phân trang, số lượng nhân viên
-// nhỏ) - mirror ServiceCategoriesManager.tsx, cộng 1 Dialog phụ cho đặt lại mật khẩu.
+// `users` là 1 TRANG (page.tsx đã phân trang qua getAdminUsers) - Sửa chỉ prefill từ record đã có sẵn
+// trong mảng của trang hiện tại, không fetch lại theo id. Cộng 1 Dialog phụ cho đặt lại mật khẩu.
 export function UsersManager({ users }: { users: AdminUserDto[] }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<AdminUserDto | null>(null);

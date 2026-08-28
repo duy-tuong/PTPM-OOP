@@ -1,5 +1,6 @@
 using CloudServiceStore.Application.Common.Exceptions;
 using CloudServiceStore.Application.Common.Interfaces;
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Common.Services;
 using CloudServiceStore.Application.Features.Admin.Sales.ConsultationRequests.Dtos;
 using CloudServiceStore.Domain.Entities.Sales;
@@ -18,16 +19,22 @@ public class AdminConsultationRequestService : IAdminConsultationRequestService
         _consultationStatusNotifier = consultationStatusNotifier;
     }
 
-    public async Task<List<AdminConsultationRequestDto>> GetListAsync(CancellationToken cancellationToken = default)
+    public async Task<PagedResult<AdminConsultationRequestDto>> GetListAsync(ConsultationRequestQueryParams query, CancellationToken cancellationToken = default)
     {
         var repository = _unitOfWork.Repository<ConsultationRequest, int>();
 
-        var entities = await repository.Query()
+        var baseQuery = repository.Query()
             .Include(c => c.AssignedToUser)
-            .OrderByDescending(c => c.CreatedAt)
+            .OrderByDescending(c => c.CreatedAt);
+
+        var totalCount = await baseQuery.CountAsync(cancellationToken);
+        var entities = await baseQuery
+            .Skip((query.PageNumber - 1) * query.PageSize)
+            .Take(query.PageSize)
             .ToListAsync(cancellationToken);
 
-        return entities.Select(MapToDto).ToList();
+        var dtos = entities.Select(MapToDto).ToList();
+        return PagedResult<AdminConsultationRequestDto>.Create(dtos, totalCount, query.PageNumber, query.PageSize);
     }
 
     public async Task<AdminConsultationRequestDto> UpdateStatusAsync(int id, UpdateConsultationRequestStatusDto dto, Guid changedByUserId, CancellationToken cancellationToken = default)

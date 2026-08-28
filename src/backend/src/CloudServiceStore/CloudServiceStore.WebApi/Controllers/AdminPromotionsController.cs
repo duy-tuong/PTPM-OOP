@@ -1,3 +1,4 @@
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Marketing.Promotions;
 using CloudServiceStore.Application.Features.Admin.Marketing.Promotions.Dtos;
 using Microsoft.AspNetCore.Authorization;
@@ -18,9 +19,9 @@ public class AdminPromotionsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<AdminPromotionDto>>> GetList(CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResult<AdminPromotionDto>>> GetList([FromQuery] PromotionQueryParams query, CancellationToken cancellationToken)
     {
-        return Ok(await _service.GetListAsync(cancellationToken));
+        return Ok(await _service.GetListAsync(query, cancellationToken));
     }
 
     [HttpPost]

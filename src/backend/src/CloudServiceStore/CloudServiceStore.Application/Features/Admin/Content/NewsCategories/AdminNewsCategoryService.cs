@@ -1,5 +1,6 @@
 using CloudServiceStore.Application.Common.Exceptions;
 using CloudServiceStore.Application.Common.Interfaces;
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Content.NewsCategories.Dtos;
 using CloudServiceStore.Domain.Entities.Content;
 using Microsoft.EntityFrameworkCore;
@@ -15,15 +16,20 @@ public class AdminNewsCategoryService : IAdminNewsCategoryService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<List<AdminNewsCategoryDto>> GetListAsync(CancellationToken cancellationToken = default)
+    public async Task<PagedResult<AdminNewsCategoryDto>> GetListAsync(NewsCategoryQueryParams query, CancellationToken cancellationToken = default)
     {
         var repository = _unitOfWork.Repository<NewsCategory, int>();
 
-        var entities = await repository.Query()
-            .OrderBy(c => c.DisplayOrder)
+        var baseQuery = repository.Query().OrderBy(c => c.DisplayOrder);
+
+        var totalCount = await baseQuery.CountAsync(cancellationToken);
+        var entities = await baseQuery
+            .Skip((query.PageNumber - 1) * query.PageSize)
+            .Take(query.PageSize)
             .ToListAsync(cancellationToken);
 
-        return entities.Select(MapToDto).ToList();
+        var dtos = entities.Select(MapToDto).ToList();
+        return PagedResult<AdminNewsCategoryDto>.Create(dtos, totalCount, query.PageNumber, query.PageSize);
     }
 
     public async Task<AdminNewsCategoryDto> CreateAsync(CreateNewsCategoryDto dto, CancellationToken cancellationToken = default)

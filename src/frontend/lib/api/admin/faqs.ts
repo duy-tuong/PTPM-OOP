@@ -1,8 +1,9 @@
 import { apiFetch } from "../http";
-import type { AdminFaqDto, CreateFaqDto, UpdateFaqDto } from "@/lib/types/admin";
+import type { PagedResult } from "@/lib/types/common";
+import type { AdminFaqDto, CreateFaqDto, FaqQueryParams, UpdateFaqDto } from "@/lib/types/admin";
 
-export function getAdminFaqs(baseUrl: string, token?: string) {
-  return apiFetch<AdminFaqDto[]>(baseUrl, "/admin/faqs", "GET", { token });
+export function getAdminFaqs(baseUrl: string, params: FaqQueryParams = {}, token?: string) {
+  return apiFetch<PagedResult<AdminFaqDto>>(baseUrl, "/admin/faqs", "GET", { params, token });
 }
 
 export function createAdminFaq(baseUrl: string, dto: CreateFaqDto, token?: string) {

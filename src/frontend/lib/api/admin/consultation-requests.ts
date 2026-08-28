@@ -1,9 +1,9 @@
 import { apiFetch } from "../http";
-import type { AdminConsultationRequestDto, UpdateConsultationRequestStatusDto } from "@/lib/types/admin";
+import type { PagedResult } from "@/lib/types/common";
+import type { AdminConsultationRequestDto, ConsultationRequestQueryParams, UpdateConsultationRequestStatusDto } from "@/lib/types/admin";
 
-// Không phân trang - controller trả List<T> phẳng (khác OrderRequests dùng PagedResult<T>).
-export function getAdminConsultationRequests(baseUrl: string, token?: string) {
-  return apiFetch<AdminConsultationRequestDto[]>(baseUrl, "/admin/consultation-requests", "GET", { token });
+export function getAdminConsultationRequests(baseUrl: string, params: ConsultationRequestQueryParams = {}, token?: string) {
+  return apiFetch<PagedResult<AdminConsultationRequestDto>>(baseUrl, "/admin/consultation-requests", "GET", { params, token });
 }
 
 export function updateAdminConsultationRequestStatus(

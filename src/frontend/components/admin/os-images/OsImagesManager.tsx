@@ -12,8 +12,8 @@ import { OS_FAMILY_LABELS } from "@/lib/types/enums";
 import { formatCurrency } from "@/lib/utils";
 import type { AdminOsImageDto } from "@/lib/types/admin";
 
-// unpaged-list-in-Dialog: getAdminOsImages trả về danh sách phẳng (không phân trang), mirror
-// AddonsManager.tsx - OS Image là danh mục nhỏ, không cần phân trang.
+// `osImages` là 1 TRANG (page.tsx đã phân trang qua getAdminOsImages) - Sửa chỉ prefill từ record đã
+// có sẵn trong mảng của trang hiện tại, không fetch lại theo id.
 export function OsImagesManager({ osImages }: { osImages: AdminOsImageDto[] }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingOsImage, setEditingOsImage] = useState<AdminOsImageDto | null>(null);

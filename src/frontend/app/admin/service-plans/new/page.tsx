@@ -15,11 +15,13 @@ export const metadata: Metadata = {
 export default async function AdminNewServicePlanPage() {
   const cookieStore = await cookies();
   const token = cookieStore.get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
+  // pageSize lớn để lấy gần như toàn bộ danh mục/addon/OS image cho các <Select> chọn trong form - dự
+  // án quy mô nhỏ, chưa cần endpoint "lấy tất cả không phân trang" riêng cho việc này.
   const [categories, regions, addons, osImages] = await Promise.all([
-    getAdminServiceCategories(getApiUrl(), token),
+    getAdminServiceCategories(getApiUrl(), { pageSize: 100 }, token),
     getRegions(),
-    getAdminAddons(getApiUrl(), token),
-    getAdminOsImages(getApiUrl(), token),
+    getAdminAddons(getApiUrl(), { pageSize: 100 }, token),
+    getAdminOsImages(getApiUrl(), { pageSize: 100 }, token),
   ]);
 
   return (
@@ -29,7 +31,7 @@ export default async function AdminNewServicePlanPage() {
           <h1 className="font-heading text-2xl font-semibold tracking-tight text-zinc-900">Thêm gói dịch vụ</h1>
           <p className="mt-1 text-[14px] text-zinc-500">Điền thông tin cơ bản, tính năng và mức giá cho gói mới.</p>
         </div>
-        <ServicePlanForm mode="create" categories={categories} regions={regions} availableAddons={addons} availableOsImages={osImages} />
+        <ServicePlanForm mode="create" categories={categories.items} regions={regions} availableAddons={addons.items} availableOsImages={osImages.items} />
       </div>
     </div>
   );

@@ -49,11 +49,13 @@ export default async function AdminServicePlansPage({ searchParams }: AdminServi
       },
       token,
     ),
-    getAdminServiceCategories(baseUrl, token),
+    // pageSize lớn để lấy gần như toàn bộ danh mục cho filter/dropdown - dự án quy mô nhỏ, chưa cần
+    // endpoint "lấy tất cả không phân trang" riêng cho việc này.
+    getAdminServiceCategories(baseUrl, { pageSize: 100 }, token),
     getRegions({ revalidate: 3600 }),
   ]);
 
-  const categoryNameById = new Map(categories.map((category) => [category.id, category.name]));
+  const categoryNameById = new Map(categories.items.map((category) => [category.id, category.name]));
 
   function buildPageHref(page: number) {
     const search = new URLSearchParams();
@@ -88,7 +90,7 @@ export default async function AdminServicePlansPage({ searchParams }: AdminServi
         <div className="overflow-hidden rounded-[24px] border border-zinc-200/60 bg-white shadow-sm ring-1 ring-zinc-950/5">
           <div className="border-b border-zinc-100 bg-zinc-50/30 p-4">
             <ServicePlansFilterBar
-              categories={categories}
+              categories={categories.items}
               regions={regions}
               currentCategorySlug={params.categorySlug}
               currentIsFeatured={params.isFeatured}

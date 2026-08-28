@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Content.ContentPages;
 using CloudServiceStore.Application.Features.Admin.Content.ContentPages.Dtos;
 using Microsoft.AspNetCore.Authorization;
@@ -19,9 +20,9 @@ public class AdminContentPagesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<AdminContentPageDto>>> GetList(CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResult<AdminContentPageDto>>> GetList([FromQuery] ContentPageQueryParams query, CancellationToken cancellationToken)
     {
-        return Ok(await _service.GetListAsync(cancellationToken));
+        return Ok(await _service.GetListAsync(query, cancellationToken));
     }
 
     [HttpPost]

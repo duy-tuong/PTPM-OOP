@@ -5,27 +5,93 @@ import { getAdminOsImages } from "@/lib/api/admin/os-images";
 import { ADMIN_ACCESS_TOKEN_COOKIE } from "@/lib/auth/adminAuthCookies";
 import { getAdminSession } from "@/lib/auth/adminSession";
 import { AccessDenied } from "@/components/admin/AccessDenied";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { OsImagesManager } from "@/components/admin/os-images/OsImagesManager";
 
 export const metadata: Metadata = {
   title: "Quản lý hệ điều hành",
 };
 
-export default async function AdminOsImagesPage() {
+interface AdminOsImagesPageProps {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default async function AdminOsImagesPage({ searchParams }: AdminOsImagesPageProps) {
   // GET /admin/os-images chỉ [Authorize(Roles="Admin")] - chặn trước khi gọi API, khớp trang addons.
   const session = await getAdminSession();
   if (!session?.roles.includes("Admin")) {
     return <AccessDenied />;
   }
 
+  const params = await searchParams;
+  const pageNumber = Number(params.page) > 0 ? Number(params.page) : 1;
+
   const cookieStore = await cookies();
   const token = cookieStore.get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
-  const osImages = await getAdminOsImages(getApiUrl(), token);
+  const osImages = await getAdminOsImages(getApiUrl(), { pageNumber, pageSize: 20 }, token);
+
+  function buildPageHref(page: number) {
+    return `/admin/os-images?page=${page}`;
+  }
 
   return (
     <div className="min-h-full px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-[1400px] flex-col gap-6">
-        <OsImagesManager osImages={osImages} />
+        <OsImagesManager osImages={osImages.items} />
+
+        {osImages.totalPages > 1 && (
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  href={buildPageHref(Math.max(1, pageNumber - 1))}
+                  aria-disabled={!osImages.hasPreviousPage}
+                />
+              </PaginationItem>
+              {(() => {
+                const total = osImages.totalPages;
+                const current = pageNumber;
+                let pages: (number | string)[] = [];
+
+                if (total <= 7) {
+                  pages = Array.from({ length: total }, (_, i) => i + 1);
+                } else if (current <= 3) {
+                  pages = [1, 2, 3, 4, "...", total];
+                } else if (current >= total - 2) {
+                  pages = [1, "...", total - 3, total - 2, total - 1, total];
+                } else {
+                  pages = [1, "...", current - 1, current, current + 1, "...", total];
+                }
+
+                return pages.map((page, index) => (
+                  <PaginationItem key={`${page}-${index}`}>
+                    {page === "..." ? (
+                      <PaginationEllipsis />
+                    ) : (
+                      <PaginationLink href={buildPageHref(page as number)} isActive={page === pageNumber}>
+                        {page}
+                      </PaginationLink>
+                    )}
+                  </PaginationItem>
+                ));
+              })()}
+              <PaginationItem>
+                <PaginationNext
+                  href={buildPageHref(Math.min(osImages.totalPages, pageNumber + 1))}
+                  aria-disabled={!osImages.hasNextPage}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        )}
       </div>
     </div>
   );

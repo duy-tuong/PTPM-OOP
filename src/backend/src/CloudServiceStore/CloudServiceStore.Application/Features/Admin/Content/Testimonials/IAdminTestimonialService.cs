@@ -1,10 +1,11 @@
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Content.Testimonials.Dtos;
 
 namespace CloudServiceStore.Application.Features.Admin.Content.Testimonials;
 
 public interface IAdminTestimonialService
 {
-    Task<List<AdminTestimonialDto>> GetListAsync(CancellationToken cancellationToken = default);
+    Task<PagedResult<AdminTestimonialDto>> GetListAsync(TestimonialQueryParams query, CancellationToken cancellationToken = default);
 
     Task<AdminTestimonialDto> CreateAsync(CreateTestimonialDto dto, CancellationToken cancellationToken = default);
 

@@ -1,8 +1,9 @@
 import { apiFetch } from "../http";
-import type { AdminOsImageDto, CreateOsImageDto, UpdateOsImageDto } from "@/lib/types/admin";
+import type { PagedResult } from "@/lib/types/common";
+import type { AdminOsImageDto, CreateOsImageDto, OsImageQueryParams, UpdateOsImageDto } from "@/lib/types/admin";
 
-export function getAdminOsImages(baseUrl: string, token?: string) {
-  return apiFetch<AdminOsImageDto[]>(baseUrl, "/admin/os-images", "GET", { token });
+export function getAdminOsImages(baseUrl: string, params: OsImageQueryParams = {}, token?: string) {
+  return apiFetch<PagedResult<AdminOsImageDto>>(baseUrl, "/admin/os-images", "GET", { params, token });
 }
 
 export function createAdminOsImage(baseUrl: string, dto: CreateOsImageDto, token?: string) {

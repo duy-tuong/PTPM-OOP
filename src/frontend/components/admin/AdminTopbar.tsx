@@ -83,7 +83,7 @@ export function AdminTopbar({ session, onMenuClick }: { session: SessionUser; on
               </AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 rounded-2xl border-zinc-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
+          <DropdownMenuContent align="end" className="w-56 shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
             <DropdownMenuGroup>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">

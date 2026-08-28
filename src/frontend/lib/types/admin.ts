@@ -18,6 +18,9 @@ import type {
 
 // ---- Admin Catalog: Service Categories ----
 // Khớp Application/Features/Admin/Catalog/ServiceCategories/Dtos/*.cs
+// Không thêm field lọc riêng nào - chỉ cần phân trang thuần.
+export type ServiceCategoryQueryParams = PaginationParams;
+
 export interface AdminServiceCategoryDto {
   id: number;
   name: string;
@@ -140,6 +143,9 @@ export type UpdateServicePlanDto = CreateServicePlanDto;
 
 // ---- Admin Catalog: Addons ----
 // Khớp Application/Features/Admin/Catalog/Addons/Dtos/*.cs
+// Không thêm field lọc riêng nào - chỉ cần phân trang thuần.
+export type AddonQueryParams = PaginationParams;
+
 export interface AdminAddonDto {
   id: number;
   name: string;
@@ -166,6 +172,9 @@ export type UpdateAddonDto = CreateAddonDto;
 
 // ---- Admin Catalog: OS Images ----
 // Khớp Application/Features/Admin/Catalog/OsImages/Dtos/*.cs (Đợt 3, Phần 11)
+// Không thêm field lọc riêng nào - chỉ cần phân trang thuần.
+export type OsImageQueryParams = PaginationParams;
+
 export interface AdminOsImageDto {
   id: number;
   name: string;
@@ -203,6 +212,9 @@ export interface PromotionScopeInputDto {
   serviceCategoryId?: number;
   servicePlanId?: number;
 }
+
+// Không thêm field lọc riêng nào - chỉ cần phân trang thuần.
+export type PromotionQueryParams = PaginationParams;
 
 export interface AdminPromotionDto {
   id: number;
@@ -242,6 +254,9 @@ export type UpdatePromotionDto = CreatePromotionDto;
 
 // ---- Admin Content: Content Pages ----
 // Khớp Application/Features/Admin/Content/ContentPages/Dtos/*.cs
+// Không thêm field lọc riêng nào - chỉ cần phân trang thuần.
+export type ContentPageQueryParams = PaginationParams;
+
 export interface AdminContentPageDto {
   id: number;
   slug: string;
@@ -269,6 +284,8 @@ export type UpdateContentPageDto = CreateContentPageDto;
 
 // ---- Admin Content: FAQs ----
 // Khớp Application/Features/Admin/Content/Faqs/Dtos/*.cs
+export type FaqQueryParams = PaginationParams;
+
 export interface AdminFaqDto {
   id: number;
   question: string;
@@ -290,6 +307,9 @@ export type UpdateFaqDto = CreateFaqDto;
 
 // ---- Admin Content: News Categories ----
 // Khớp Application/Features/Admin/Content/NewsCategories/Dtos/*.cs
+// Không thêm field lọc riêng nào - chỉ cần phân trang thuần.
+export type NewsCategoryQueryParams = PaginationParams;
+
 export interface AdminNewsCategoryDto {
   id: number;
   name: string;
@@ -391,6 +411,8 @@ export interface UpdateOrderRequestStatusDto {
 
 // ---- Admin Sales: Consultation Requests ----
 // Khớp Application/Features/Admin/Sales/ConsultationRequests/Dtos/*.cs
+export type ConsultationRequestQueryParams = PaginationParams;
+
 export interface AdminConsultationRequestDto {
   id: number;
   requestCode: string;
@@ -411,6 +433,8 @@ export interface UpdateConsultationRequestStatusDto {
 
 // ---- Admin Sales: Affiliate Applications ----
 // Khớp Application/Features/Admin/Sales/AffiliateApplications/Dtos/*.cs
+export type AffiliateApplicationQueryParams = PaginationParams;
+
 export interface AdminAffiliateApplicationDto {
   id: number;
   fullName: string;
@@ -505,6 +529,8 @@ export interface AdminAuditLogDto {
 
 // ---- Admin Content: Testimonials ----
 // Khớp Application/Features/Admin/Content/Testimonials/Dtos/*.cs
+export type TestimonialQueryParams = PaginationParams;
+
 export interface AdminTestimonialDto {
   id: number;
   displayName: string;
@@ -530,6 +556,8 @@ export type UpdateTestimonialDto = CreateTestimonialDto;
 
 // ---- Admin Content: Partners ----
 // Khớp Application/Features/Admin/Content/Partners/Dtos/*.cs
+export type PartnerQueryParams = PaginationParams;
+
 export interface AdminPartnerDto {
   id: number;
   name: string;
@@ -551,6 +579,8 @@ export type UpdatePartnerDto = CreatePartnerDto;
 
 // ---- Admin Catalog: TLD Pricing ----
 // Khớp Application/Features/Admin/Catalog/TldPricings/Dtos/*.cs
+export type TldPricingQueryParams = PaginationParams;
+
 export interface AdminTldPricingDto {
   id: number;
   tld: string;
@@ -642,6 +672,9 @@ export interface UpdateCustomerActiveStatusDto {
 
 // ---- Admin Identity: Users (nhân viên - Admin/Editor) ----
 // Khớp Application/Features/Admin/Identity/Users/Dtos/*.cs
+// Không thêm field lọc riêng nào - chỉ cần phân trang thuần.
+export type UserQueryParams = PaginationParams;
+
 export interface AdminUserDto {
   id: string;
   username: string;

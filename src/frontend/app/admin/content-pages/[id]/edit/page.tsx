@@ -19,10 +19,10 @@ export default async function AdminEditContentPagePage({ params }: AdminEditCont
   const cookieStore = await cookies();
   const token = cookieStore.get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
 
-  // Không có API GET /admin/content-pages/{id} (list phẳng, không phân trang) - lấy nguyên list rồi
-  // tự tìm theo id. Chấp nhận được vì số Content Page rất ít (vài trang tĩnh).
-  const pages = await getAdminContentPages(getApiUrl(), token);
-  const page = pages.find((p) => p.id === Number(id));
+  // Không có API GET /admin/content-pages/{id} - lấy 1 trang list (pageSize lớn để chắc chắn phủ hết,
+  // dự án quy mô nhỏ chỉ có vài trang tĩnh) rồi tự tìm theo id.
+  const pages = await getAdminContentPages(getApiUrl(), { pageSize: 100 }, token);
+  const page = pages.items.find((p) => p.id === Number(id));
 
   if (!page) notFound();
 

@@ -9,7 +9,8 @@ import { AffiliateStatusDialog } from "@/components/admin/affiliate-applications
 import { formatDate } from "@/lib/utils";
 import type { AdminAffiliateApplicationDto } from "@/lib/types/admin";
 
-// Backend không hỗ trợ filter/phân trang cho resource này (List<T> phẳng) - render nguyên danh sách.
+// Nhận danh sách của trang hiện tại (đã phân trang server-side qua PagedResult<T> - xem
+// app/admin/affiliate-applications/page.tsx).
 export function AffiliateApplicationsManager({ applications }: { applications: AdminAffiliateApplicationDto[] }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState<AdminAffiliateApplicationDto | null>(null);

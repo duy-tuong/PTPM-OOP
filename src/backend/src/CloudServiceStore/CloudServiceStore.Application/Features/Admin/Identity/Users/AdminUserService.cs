@@ -1,5 +1,6 @@
 using CloudServiceStore.Application.Common.Exceptions;
 using CloudServiceStore.Application.Common.Interfaces;
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Identity.Users.Dtos;
 using CloudServiceStore.Domain.Entities.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -21,16 +22,22 @@ public class AdminUserService : IAdminUserService
         _passwordHasher = passwordHasher;
     }
 
-    public async Task<List<AdminUserDto>> GetListAsync(CancellationToken cancellationToken = default)
+    public async Task<PagedResult<AdminUserDto>> GetListAsync(UserQueryParams query, CancellationToken cancellationToken = default)
     {
         var repository = _unitOfWork.Repository<AppUser, Guid>();
 
-        var entities = await repository.Query()
+        var baseQuery = repository.Query()
             .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
-            .OrderBy(u => u.Username)
+            .OrderBy(u => u.Username);
+
+        var totalCount = await baseQuery.CountAsync(cancellationToken);
+        var entities = await baseQuery
+            .Skip((query.PageNumber - 1) * query.PageSize)
+            .Take(query.PageSize)
             .ToListAsync(cancellationToken);
 
-        return entities.Select(MapToDto).ToList();
+        var dtos = entities.Select(MapToDto).ToList();
+        return PagedResult<AdminUserDto>.Create(dtos, totalCount, query.PageNumber, query.PageSize);
     }
 
     public async Task<AdminUserDto> CreateAsync(CreateUserDto dto, CancellationToken cancellationToken = default)

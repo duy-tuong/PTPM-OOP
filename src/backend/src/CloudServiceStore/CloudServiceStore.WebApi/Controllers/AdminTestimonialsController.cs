@@ -1,3 +1,4 @@
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Content.Testimonials;
 using CloudServiceStore.Application.Features.Admin.Content.Testimonials.Dtos;
 using Microsoft.AspNetCore.Authorization;
@@ -18,9 +19,9 @@ public class AdminTestimonialsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<AdminTestimonialDto>>> GetList(CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResult<AdminTestimonialDto>>> GetList([FromQuery] TestimonialQueryParams query, CancellationToken cancellationToken)
     {
-        return Ok(await _service.GetListAsync(cancellationToken));
+        return Ok(await _service.GetListAsync(query, cancellationToken));
     }
 
     [HttpPost]

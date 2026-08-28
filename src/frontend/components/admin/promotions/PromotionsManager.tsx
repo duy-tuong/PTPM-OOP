@@ -18,8 +18,8 @@ interface PromotionsManagerProps {
   plans: AdminServicePlanDto[];
 }
 
-// unpaged-list-in-Dialog: getAdminPromotions trả về danh sách phẳng (không phân trang) - Sửa chỉ
-// prefill từ record đã có sẵn trong mảng, không fetch lại theo id.
+// `promotions` là 1 TRANG (page.tsx đã phân trang qua getAdminPromotions) - Sửa chỉ prefill từ record
+// đã có sẵn trong mảng của trang hiện tại, không fetch lại theo id.
 export function PromotionsManager({ promotions, categories, plans }: PromotionsManagerProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPromotion, setEditingPromotion] = useState<AdminPromotionDto | null>(null);

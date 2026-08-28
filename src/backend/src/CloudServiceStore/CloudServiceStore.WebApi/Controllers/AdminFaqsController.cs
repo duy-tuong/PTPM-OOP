@@ -1,3 +1,4 @@
+using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Content.Faqs;
 using CloudServiceStore.Application.Features.Admin.Content.Faqs.Dtos;
 using Microsoft.AspNetCore.Authorization;
@@ -18,9 +19,9 @@ public class AdminFaqsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<AdminFaqDto>>> GetList(CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResult<AdminFaqDto>>> GetList([FromQuery] FaqQueryParams query, CancellationToken cancellationToken)
     {
-        return Ok(await _service.GetListAsync(cancellationToken));
+        return Ok(await _service.GetListAsync(query, cancellationToken));
     }
 
     [HttpPost]
