@@ -39,10 +39,10 @@ export function LoginForm() {
     } else if (!EMAIL_PATTERN.test(email)) {
       nextErrors.email = "Email không đúng định dạng";
     }
+    // Cố tình KHÔNG kiểm tra độ mạnh ở đây (khác Register/ResetPassword/ChangePassword) - tài khoản tạo
+    // trước khi có PASSWORD_PATTERN vẫn phải đăng nhập được bằng mật khẩu cũ, chỉ cần không rỗng.
     if (!password) {
       nextErrors.password = "Vui lòng nhập mật khẩu";
-    } else if (password.length < 6) {
-      nextErrors.password = "Mật khẩu phải có ít nhất 6 ký tự";
     }
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;

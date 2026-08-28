@@ -10,6 +10,7 @@ import { Field, FieldError, FieldGroup } from "@/components/ui/field";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { notifyCustomerSessionChanged } from "@/lib/auth/customerSessionClient";
+import { PASSWORD_PATTERN, PASSWORD_POLICY_ERROR, PASSWORD_POLICY_HINT } from "@/lib/auth/passwordPolicy";
 
 interface ChangePasswordErrors {
   currentPassword?: string;
@@ -35,8 +36,8 @@ export function ChangePasswordForm() {
     }
     if (!newPassword) {
       nextErrors.newPassword = "Vui lòng nhập mật khẩu mới";
-    } else if (newPassword.length < 6) {
-      nextErrors.newPassword = "Mật khẩu mới phải có ít nhất 6 ký tự";
+    } else if (!PASSWORD_PATTERN.test(newPassword)) {
+      nextErrors.newPassword = PASSWORD_POLICY_ERROR;
     }
     if (!confirmPassword) {
       nextErrors.confirmPassword = "Vui lòng xác nhận mật khẩu mới";
@@ -117,7 +118,11 @@ export function ChangePasswordForm() {
                   aria-invalid={!!errors.newPassword}
                   className="rounded-[8px] border-border/60 focus-visible:ring-indigo-500/10 focus-visible:border-indigo-500 transition-all shadow-sm bg-background"
                 />
-                <FieldError errors={errors.newPassword ? [{ message: errors.newPassword }] : undefined} />
+                {errors.newPassword ? (
+                  <FieldError errors={[{ message: errors.newPassword }]} />
+                ) : (
+                  <p className="text-xs text-muted-foreground">{PASSWORD_POLICY_HINT}</p>
+                )}
               </Field>
 
               <Field>

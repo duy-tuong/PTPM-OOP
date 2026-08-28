@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Field, FieldError, FieldGroup } from "@/components/ui/field";
 import { PasswordInput } from "@/components/auth/PasswordInput";
+import { PASSWORD_PATTERN, PASSWORD_POLICY_ERROR, PASSWORD_POLICY_HINT } from "@/lib/auth/passwordPolicy";
 
 interface ResetPasswordErrors {
   newPassword?: string;
@@ -25,8 +26,8 @@ export function ResetPasswordForm({ token }: { token: string }) {
     const nextErrors: ResetPasswordErrors = {};
     if (!newPassword) {
       nextErrors.newPassword = "Vui lòng nhập mật khẩu mới";
-    } else if (newPassword.length < 6) {
-      nextErrors.newPassword = "Mật khẩu mới phải có ít nhất 6 ký tự";
+    } else if (!PASSWORD_PATTERN.test(newPassword)) {
+      nextErrors.newPassword = PASSWORD_POLICY_ERROR;
     }
     if (!confirmPassword) {
       nextErrors.confirmPassword = "Vui lòng xác nhận mật khẩu mới";
@@ -75,7 +76,11 @@ export function ResetPasswordForm({ token }: { token: string }) {
             autoComplete="new-password"
             aria-invalid={!!errors.newPassword}
           />
-          <FieldError errors={errors.newPassword ? [{ message: errors.newPassword }] : undefined} />
+          {errors.newPassword ? (
+            <FieldError errors={[{ message: errors.newPassword }]} />
+          ) : (
+            <p className="text-xs text-muted-foreground">{PASSWORD_POLICY_HINT}</p>
+          )}
         </Field>
 
         <Field>
