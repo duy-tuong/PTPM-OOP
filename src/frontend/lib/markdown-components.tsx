@@ -1,7 +1,7 @@
 import type { Components } from "react-markdown";
 import { slugify } from "@/lib/utils";
 
-// Bộ style Markdown dùng chung cho mọi nơi render nội dung CMS thật (NewsArticleDetail.tsx, AboutStory.tsx)
+// Bộ style Markdown dùng chung cho mọi nơi render nội dung CMS thật (NewsArticleDetail.tsx)
 // - heading gắn id bằng đúng slugify() dùng để trích headings ở page.tsx (extractHeadings) nên link Mục
 // lục (nếu có) luôn khớp đúng vị trí. Toàn bộ màu dùng token (--foreground/--muted/--primary/--border) để
 // tự đảo theo Light/Dark, không dùng prose/prose-invert (chưa cài Tailwind Typography trong dự án).

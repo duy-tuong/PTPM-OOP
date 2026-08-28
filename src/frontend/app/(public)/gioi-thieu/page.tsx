@@ -1,41 +1,42 @@
 import type { Metadata } from "next";
-import { getContentPageBySlug } from "@/lib/api/content";
-import { safeFetch } from "@/lib/api/safe";
 import { AboutHero } from "@/components/about/AboutHero";
-import { AboutStory } from "@/components/about/AboutStory";
+import { AboutWhatIs } from "@/components/about/AboutWhatIs";
+import { AboutWhyExists } from "@/components/about/AboutWhyExists";
+import { AboutTimeline } from "@/components/about/AboutTimeline";
+import { AboutMissionVision } from "@/components/about/AboutMissionVision";
 import { AboutValuesBento } from "@/components/about/AboutValuesBento";
-import { TrustStrip } from "@/components/home/TrustStrip";
-import { TestimonialsGridSection } from "@/components/home/TestimonialsGridSection";
-import type { ContentPageDto } from "@/lib/types/content";
+import { AboutAudience } from "@/components/about/AboutAudience";
+import { AboutEcosystem } from "@/components/about/AboutEcosystem";
+import { AboutApproach } from "@/components/about/AboutApproach";
+import { AboutPeople } from "@/components/about/AboutPeople";
+import { AboutFutureDirection } from "@/components/about/AboutFutureDirection";
+import { AboutClosing } from "@/components/about/AboutClosing";
 
-const ABOUT_SLUG = "gioi-thieu";
+export const metadata: Metadata = {
+  title: "Giới thiệu Cloudverse | Hạ tầng Cloud cho thế giới số",
+  description: "Khám phá Cloudverse, câu chuyện, sứ mệnh, tầm nhìn và định hướng xây dựng nền tảng hạ tầng số.",
+};
 
-// ContentPage("gioi-thieu") là dữ liệu phụ trợ cho 1 route CỐ ĐỊNH (không phải slug động trên URL như
-// /tin-tuc/[slug]) - dùng safeFetch + ẩn khối Story nếu rỗng, không notFound() cả trang khi admin lỡ xoá.
-// TrustStrip/TestimonialsGridSection tự fetch getPartners()/getTestimonials() bên trong, không fetch lại
-// ở đây.
-function loadAboutPage() {
-  return safeFetch<ContentPageDto | null>(() => getContentPageBySlug(ABOUT_SLUG, { revalidate: 3600 }), null);
-}
-
-export async function generateMetadata(): Promise<Metadata> {
-  const page = await loadAboutPage();
-  return {
-    title: page?.metaTitle ?? "Giới thiệu",
-    description: page?.metaDescription ?? "Tìm hiểu về Cloudverse - nền tảng hạ tầng Cloud cho doanh nghiệp Việt.",
-  };
-}
-
-export default async function AboutPage() {
-  const page = await loadAboutPage();
-
+// Trang "Giới thiệu" - THIẾT KẾ LẠI TOÀN BỘ, nội dung tĩnh 100% (lib/constants/about.ts), KHÔNG gọi
+// backend/database/API nào - đây là trang kể câu chuyện thương hiệu (khác trang chủ/dịch vụ/bảng giá,
+// vốn đã có nhiệm vụ bán sản phẩm), nội dung gần như không đổi nên không cần CMS đứng sau. Đổi nội dung
+// thật của Cloudverse (timeline, câu chuyện...) thì sửa trực tiếp lib/constants/about.ts rồi deploy lại.
+// Component KHÔNG async, không fetch gì - Next tự static-prerender toàn trang.
+export default function AboutPage() {
   return (
     <>
-      <AboutHero description={page?.metaDescription} />
-      <AboutStory page={page} />
+      <AboutHero />
+      <AboutWhatIs />
+      <AboutWhyExists />
+      <AboutTimeline />
+      {/* <AboutMissionVision /> */}
       <AboutValuesBento />
-      <TrustStrip />
-      <TestimonialsGridSection />
+      {/* <AboutAudience /> */}
+      {/* <AboutEcosystem /> */}
+      <AboutApproach />
+      <AboutPeople />
+      <AboutFutureDirection />
+      <AboutClosing />
     </>
   );
 }
