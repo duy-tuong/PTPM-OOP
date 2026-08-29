@@ -1,5 +1,6 @@
 "use client";
 
+
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { OrderStatusBadge } from "@/components/admin/OrderStatusBadge";
@@ -9,9 +10,15 @@ import { getOrderByCodePublic } from "@/lib/api/sales";
 import { ORDER_ITEM_KIND_LABELS } from "@/lib/utils/orderItems";
 import type { OrderLookupDto } from "@/lib/types/sales";
 
+
 // Đơn còn ở 1 trong 3 trạng thái này = chưa thanh toán, còn cần hiện QR/nút PayOS + tiếp tục poll.
 const BEFORE_PAID_STATUSES = new Set(["New", "Contacted", "Confirmed"]);
+// Đợt 13, Phần 2 (B1) - trước đây poll dừng NGAY khi vào Paid, trong khi Paid->Provisioning->Completed
+// vẫn tự chạy ngầm ở OrderAutoProvisioningBackgroundService - khách ở lại đúng trang này sẽ không bao
+// giờ thấy cập nhật trừ khi tự F5. Chỉ dừng poll khi đơn vào 1 trong 2 trạng thái KẾT THÚC thật sự.
+const FINAL_STATUSES = new Set(["Completed", "Cancelled"]);
 const POLL_INTERVAL_MS = 3000;
+
 
 // Toàn bộ khối "mã đơn + trạng thái + tóm tắt + thanh toán" gộp vào 1 Client Component (thay vì chỉ mỗi
 // phần QR) để badge trạng thái ở đầu card cùng cập nhật đồng bộ với phần thanh toán bên dưới khi poll -
@@ -25,9 +32,12 @@ export function PaymentStatusPanel({
 }) {
   const [order, setOrder] = useState(initialOrder);
   const isBeforePaid = BEFORE_PAID_STATUSES.has(order.status);
+  const isFinal = FINAL_STATUSES.has(order.status);
+
 
   useEffect(() => {
-    if (!isBeforePaid) return;
+    if (isFinal) return;
+
 
     let cancelled = false;
     async function pollOrderStatus() {
@@ -41,12 +51,14 @@ export function PaymentStatusPanel({
       }
     }
 
+
     const intervalId = setInterval(pollOrderStatus, POLL_INTERVAL_MS);
     return () => {
       cancelled = true;
       clearInterval(intervalId);
     };
-  }, [isBeforePaid, initialOrder.orderCode]);
+  }, [isFinal, initialOrder.orderCode]);
+
 
   return (
     <div className="flex flex-col gap-6 rounded-2xl border border-border bg-card p-6">
@@ -57,6 +69,7 @@ export function PaymentStatusPanel({
         </div>
         <OrderStatusBadge status={order.status} />
       </div>
+
 
       <div className="rounded-xl border border-border bg-muted/40 p-4">
         <ul className="flex flex-col gap-2 text-sm">
@@ -96,6 +109,7 @@ export function PaymentStatusPanel({
         </div>
       </div>
 
+
       {isBeforePaid ? (
         <>
           {paymentQuery === "success" && (
@@ -109,6 +123,7 @@ export function PaymentStatusPanel({
               Bạn đã huỷ giao dịch trên PayOS. Có thể quét lại mã QR hoặc bấm nút bên dưới để thử lại.
             </div>
           )}
+
 
           <div className="flex flex-col items-center gap-4 rounded-xl border border-primary/40 bg-primary/5 p-6 text-center">
             <h2 className="font-heading text-base font-semibold text-foreground">Quét mã để thanh toán</h2>
@@ -150,12 +165,34 @@ export function PaymentStatusPanel({
         <div className="rounded-xl border border-destructive/40 bg-destructive/5 p-4 text-sm text-foreground">
           Đơn hàng này đã bị huỷ, không cần thanh toán nữa.
         </div>
-      ) : (
+      ) : order.status === "Completed" ? (
+        // Đợt 13, Phần 2 (B2) - trước đây dùng chung 1 câu "đang xử lý" cho cả Paid/Provisioning/
+        // Completed, khách quay lại sau khi dịch vụ đã bàn giao xong vẫn thấy y hệt câu "đang xử lý",
+        // sai lệch thực tế. Tách riêng nhánh Completed.
         <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/5 p-4 text-sm text-foreground">
-          Đã ghi nhận thanh toán thành công. Cảm ơn bạn - Cloudverse đang xử lý các bước tiếp theo, xem chi
-          tiết bàn giao dịch vụ tại mục &quot;Đơn hàng của tôi&quot; sau khi đăng nhập.
+          🎉 Dịch vụ đã bàn giao xong! Xem thông tin bàn giao (IP/mật khẩu hoặc chi tiết gói) tại mục
+          &quot;Đơn hàng của tôi&quot;.
+        </div>
+      ) : (
+        // Còn lại: Paid/Provisioning - thật sự đang xử lý ngầm (OrderAutoProvisioningBackgroundService),
+        // trang vẫn đang poll (xem isFinal ở trên) nên thêm chỉ báo "đang cập nhật" giống khối chờ QR.
+        <div className="flex flex-col gap-3 rounded-xl border border-primary/40 bg-primary/5 p-4 text-sm text-foreground">
+          {/* Đợt 13, Phần 2 (B3) - trước đây luôn nói "sau khi đăng nhập" dù khách có thể đang đăng
+              nhập sẵn - bỏ giả định trạng thái đăng nhập, câu chữ trung tính đúng trong mọi trường hợp. */}
+          <p>
+            Đã ghi nhận thanh toán thành công. Cảm ơn bạn - Cloudverse đang xử lý các bước tiếp theo, xem
+            chi tiết bàn giao dịch vụ tại mục &quot;Đơn hàng của tôi&quot;.
+          </p>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span className="relative flex size-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/60" />
+              <span className="relative inline-flex size-2 rounded-full bg-primary" />
+            </span>
+            Trang tự cập nhật khi hoàn tất bàn giao
+          </div>
         </div>
       )}
     </div>
   );
 }
+
