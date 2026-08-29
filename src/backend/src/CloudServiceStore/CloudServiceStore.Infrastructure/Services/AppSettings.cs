@@ -1,7 +1,9 @@
-using CloudServiceStore.Application.Common.Interfaces;
+ using CloudServiceStore.Application.Common.Interfaces;
 using Microsoft.Extensions.Configuration;
 
+
 namespace CloudServiceStore.Infrastructure.Services;
+
 
 // Application layer không tham chiếu Microsoft.Extensions.Configuration trực tiếp (đúng Clean
 // Architecture) - đọc IConfiguration ở đây (Infrastructure), expose ra Application qua IAppSettings,
@@ -18,19 +20,24 @@ public class AppSettings : IAppSettings
     public int DunningSuspendAfterDays { get; }
     public int DunningTerminationWarningAfterDays { get; }
     public int DunningTerminateAfterDays { get; }
+    public int StaleOrderCancelAfterDays { get; }
+
 
     public int FraudMaxQuantityPerLine { get; }
     public int FraudMaxOrdersPerWindow { get; }
     public int FraudOrderWindowMinutes { get; }
     public decimal FraudNewCustomerHighValueThreshold { get; }
 
+
     public string PayOsClientId { get; }
     public string PayOsApiKey { get; }
     public string PayOsChecksumKey { get; }
 
+
     public string ResendApiKey { get; }
     public string EmailFromAddress { get; }
     public string EmailFromName { get; }
+
 
     public AppSettings(IConfiguration configuration)
     {
@@ -53,6 +60,12 @@ public class AppSettings : IAppSettings
         DunningSuspendAfterDays = int.TryParse(configuration["App:DunningSuspendAfterDays"], out var suspendDays) ? suspendDays : 3;
         DunningTerminationWarningAfterDays = int.TryParse(configuration["App:DunningTerminationWarningAfterDays"], out var warningDays) ? warningDays : 7;
         DunningTerminateAfterDays = int.TryParse(configuration["App:DunningTerminateAfterDays"], out var terminateDays) ? terminateDays : 14;
+        // Đợt 13, Phần 3 (C2) - số ngày kể từ CreatedAt mà đơn "New" (chưa liên hệ/chưa thanh toán) vẫn
+        // đứng yên thì StaleOrderCleanupBackgroundService tự huỷ - mặc định 3 ngày, DÀI HƠN ngưỡng cảnh
+        // báo "Chờ lâu" ở bảng Admin (2 ngày, xem STALE_ORDER_DAYS trong orderItems.ts) để Admin có cửa
+        // sổ thấy cảnh báo trước khi hệ thống tự huỷ.
+        StaleOrderCancelAfterDays = int.TryParse(configuration["App:StaleOrderCancelAfterDays"], out var staleDays) ? staleDays : 3;
+
 
         // Fraud Review (Đợt 2, Phần 9) - ngưỡng 3 rule cấu hình được, mặc định khớp mô tả nghiệp vụ đã
         // chốt với người dùng - xem OrderRequestService.EvaluateFraudRiskAsync.
@@ -61,6 +74,7 @@ public class AppSettings : IAppSettings
         FraudOrderWindowMinutes = int.TryParse(configuration["App:FraudOrderWindowMinutes"], out var windowMinutes) ? windowMinutes : 10;
         FraudNewCustomerHighValueThreshold = decimal.TryParse(configuration["App:FraudNewCustomerHighValueThreshold"], out var highValue) ? highValue : 10000000m;
 
+
         // Khoá PayOS/Resend - để rỗng trong appsettings.json committed, giá trị thật injected qua .env
         // lúc deploy (xem docker-compose.yml). Rỗng = PayOsPaymentGatewayService/ResendEmailService coi
         // như chưa cấu hình, DI fallback về hành vi cũ (LoggingEmailService cho email, xem
@@ -68,6 +82,7 @@ public class AppSettings : IAppSettings
         PayOsClientId = configuration["App:PayOsClientId"] ?? string.Empty;
         PayOsApiKey = configuration["App:PayOsApiKey"] ?? string.Empty;
         PayOsChecksumKey = configuration["App:PayOsChecksumKey"] ?? string.Empty;
+
 
         ResendApiKey = configuration["App:ResendApiKey"] ?? string.Empty;
         EmailFromAddress = configuration["App:EmailFromAddress"] ?? "onboarding@resend.dev";

@@ -1,4 +1,5 @@
-namespace CloudServiceStore.Application.Common.Interfaces;
+ namespace CloudServiceStore.Application.Common.Interfaces;
+
 
 public interface IAppSettings
 {
@@ -12,17 +13,24 @@ public interface IAppSettings
     int DunningSuspendAfterDays { get; }
     int DunningTerminationWarningAfterDays { get; }
     int DunningTerminateAfterDays { get; }
+    int StaleOrderCancelAfterDays { get; }
+
 
     int FraudMaxQuantityPerLine { get; }
     int FraudMaxOrdersPerWindow { get; }
     int FraudOrderWindowMinutes { get; }
     decimal FraudNewCustomerHighValueThreshold { get; }
 
+
     string PayOsClientId { get; }
     string PayOsApiKey { get; }
     string PayOsChecksumKey { get; }
+
 
     string ResendApiKey { get; }
     string EmailFromAddress { get; }
     string EmailFromName { get; }
 }
+
+
+
