@@ -17,7 +17,7 @@ async function loadData(token: string) {
       getMyServices({ pageNumber: 1, pageSize: 1 }, token),
       getMyConsultationRequests({ pageNumber: 1, pageSize: 1 }, token),
     ]);
-    
+
     return {
       profile,
       stats: {
@@ -44,9 +44,9 @@ export default async function AccountOverviewPage() {
 
   return (
     <div className="flex flex-col gap-10">
-      <div className="mb-2">
+      {/* <div className="mb-2">
         <h2 className="text-lg font-semibold text-foreground">Tổng quan</h2>
-      </div>
+      </div> */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
         {/* Dịch vụ đang chạy */}
         <Link href="/khach-hang/dich-vu" className="block group">
@@ -67,7 +67,7 @@ export default async function AccountOverviewPage() {
             </CardContent>
           </Card>
         </Link>
-        
+
         {/* Tổng đơn hàng */}
         <Link href="/khach-hang/don-hang" className="block group">
           <Card className="h-full bg-card border-border/60 shadow-sm group-hover:border-slate-400/50 transition-all duration-200">
@@ -84,7 +84,7 @@ export default async function AccountOverviewPage() {
             </CardContent>
           </Card>
         </Link>
-        
+
         {/* Yêu cầu tư vấn */}
         <Link href="/khach-hang/yeu-cau-tu-van" className="block group">
           <Card className="h-full bg-card border-border/60 shadow-sm group-hover:border-slate-400/50 transition-all duration-200">

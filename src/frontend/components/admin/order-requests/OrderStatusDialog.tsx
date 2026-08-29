@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Field, FieldGroup } from "@/components/ui/field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { OrderItemConfigSummary } from "@/components/account/OrderItemConfigSummary";
+import { ProvisioningDetailsCard } from "@/components/account/ProvisioningDetailsCard";
 import { updateOrderRequestStatusAction, assignOrderRequestAction } from "@/app/admin/order-requests/actions";
 import { OrderRequestStatus, ORDER_REQUEST_STATUS_LABELS } from "@/lib/types/enums";
 import { formatOrderItemLabel } from "@/lib/utils/orderItems";
@@ -108,12 +110,33 @@ export function OrderStatusDialog({ open, onOpenChange, order, staffUsers }: Ord
               <span className="text-zinc-500">Khách hàng</span>
               <span className="font-medium text-zinc-900">{order.customerName}</span>
             </div>
-            <div className="mt-1 flex flex-col gap-1">
+            <div className="mt-1 flex flex-col gap-2">
               <span className="text-zinc-500">Sản phẩm</span>
-              <ul className="flex flex-col gap-0.5">
+              {/* Đợt 10, Phần 5 - trước đây chỉ in "tên x số lượng" (formatOrderItemLabel), Admin không
+                  xem được OS/Hostname/Tags/cấu hình Custom/Add-ons/thông tin bàn giao (IP, mật khẩu
+                  root...) của đơn qua bất kỳ đâu trong UI dù backend đã trả về đầy đủ - dùng lại đúng 2
+                  component đã dùng cho phía khách hàng để không lệch dữ liệu hiển thị giữa 2 phía. */}
+              <ul className="flex flex-col gap-2">
                 {order.items.map((item) => (
-                  <li key={item.id} className="font-medium text-zinc-900">
-                    {formatOrderItemLabel(item)}
+                  <li key={item.id} className="rounded-xl border border-zinc-200/60 bg-white px-3 py-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="font-medium text-zinc-900">{formatOrderItemLabel(item)}</span>
+                      <span className="font-mono text-xs text-zinc-500">{formatCurrency(item.lineTotal)}</span>
+                    </div>
+                    {item.hostname && <p className="mt-1 text-xs text-zinc-500">Hostname: {item.hostname}</p>}
+                    {item.tags && <p className="text-xs text-zinc-500">Tags: {item.tags}</p>}
+                    <OrderItemConfigSummary
+                      osImageName={item.osImageName}
+                      chosenVcpu={item.chosenVcpu}
+                      chosenRamMb={item.chosenRamMb}
+                      chosenDiskGb={item.chosenDiskGb}
+                      addons={item.addons}
+                    />
+                    <ProvisioningDetailsCard
+                      provisionedIpAddress={item.provisionedIpAddress}
+                      provisionedRootPassword={item.provisionedRootPassword}
+                      provisionedNameservers={item.provisionedNameservers}
+                    />
                   </li>
                 ))}
               </ul>

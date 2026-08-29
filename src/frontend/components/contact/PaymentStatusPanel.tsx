@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { OrderStatusBadge } from "@/components/admin/OrderStatusBadge";
+import { OrderItemConfigSummary } from "@/components/account/OrderItemConfigSummary";
 import { formatCurrency } from "@/lib/utils";
 import { getOrderByCodePublic } from "@/lib/api/sales";
 import { ORDER_ITEM_KIND_LABELS } from "@/lib/utils/orderItems";
@@ -77,19 +78,13 @@ export function PaymentStatusPanel({
                   Số tiền trên là phần phụ thu do đổi gói (không phải giá đầy đủ của {item.productName}).
                 </p>
               )}
-              {item.chosenVcpu != null && item.chosenRamMb != null && item.chosenDiskGb != null && (
-                <p className="pl-0 text-xs text-muted-foreground">
-                  {item.chosenVcpu} vCPU - {(item.chosenRamMb / 1024).toFixed(item.chosenRamMb % 1024 === 0 ? 0 : 1)} GB RAM - {item.chosenDiskGb} GB Disk
-                </p>
-              )}
-              {item.addons.map((addon) => (
-                <div key={addon.addonId} className="flex items-center justify-between gap-3 pl-4 text-xs text-muted-foreground">
-                  <span>
-                    + {addon.addonName} x{addon.quantity}
-                  </span>
-                  <span>{formatCurrency(addon.lineTotal)}</span>
-                </div>
-              ))}
+              <OrderItemConfigSummary
+                osImageName={item.osImageName}
+                chosenVcpu={item.chosenVcpu}
+                chosenRamMb={item.chosenRamMb}
+                chosenDiskGb={item.chosenDiskGb}
+                addons={item.addons}
+              />
             </li>
           ))}
         </ul>

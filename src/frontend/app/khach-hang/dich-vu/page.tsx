@@ -2,10 +2,7 @@ import { redirect } from "next/navigation";
 import { getCustomerAccessToken } from "@/lib/auth/customerSession";
 import { getMyServices } from "@/lib/api/customer";
 import { ApiError } from "@/lib/api/http";
-import { OrderStatusBadge } from "@/components/admin/OrderStatusBadge";
-import { LifecycleStatusBadge } from "@/components/admin/LifecycleStatusBadge";
-import { RenewServiceDialog } from "@/components/account/RenewServiceDialog";
-import { PlanChangeDialog } from "@/components/account/PlanChangeDialog";
+import { MyServiceRow } from "@/components/account/MyServiceRow";
 import {
   Pagination,
   PaginationContent,
@@ -16,8 +13,6 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { formatDate } from "@/lib/utils";
-import type { MyServiceItemDto } from "@/lib/types/sales";
 
 export const metadata = { title: "Dịch vụ đang chạy" };
 
@@ -28,12 +23,6 @@ function buildPageList(current: number, total: number): (number | string)[] {
   if (current <= 3) return [1, 2, 3, 4, "...", total];
   if (current >= total - 2) return [1, "...", total - 3, total - 2, total - 1, total];
   return [1, "...", current - 1, current, current + 1, "...", total];
-}
-
-function formatServiceName(item: MyServiceItemDto): string {
-  if (item.servicePlanName) return item.servicePlanName;
-  if (item.domainName && item.tldName) return `${item.domainName}${item.tldName}`;
-  return "Dịch vụ";
 }
 
 // Khác /khach-hang/don-hang (lịch sử đơn/thanh toán): trang này liệt kê dịch vụ ĐANG SỐNG theo từng
@@ -86,41 +75,7 @@ export default async function MyServicesPage({
                 </thead>
                 <tbody className="divide-y divide-border">
                   {result.items.map((item) => (
-                    <tr key={item.itemId} className="group transition-colors hover:bg-muted/50">
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col">
-                          <span className="font-medium text-foreground">{formatServiceName(item)}</span>
-                          {item.osImageName && <span className="text-xs text-muted-foreground">{item.osImageName}</span>}
-                          {(item.provisionedIpAddress || item.provisionedNameservers) && (
-                            <span className="mt-1 font-mono text-xs text-muted-foreground bg-muted w-fit px-2 py-0.5 rounded-md">
-                              {item.provisionedIpAddress ? `IP: ${item.provisionedIpAddress}` : `NS: ${item.provisionedNameservers}`}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-muted-foreground font-mono text-xs">{item.orderCode}</td>
-                      <td className="px-6 py-4">
-                        <OrderStatusBadge status={item.orderStatus} />
-                      </td>
-                      <td className="px-6 py-4 text-muted-foreground">{item.expiresAt ? formatDate(item.expiresAt) : "-"}</td>
-                      <td className="px-6 py-4">
-                        <LifecycleStatusBadge status={item.lifecycleStatus} />
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex justify-end gap-2">
-                          {/* Dịch vụ đã bị hủy (Dunning, Phần 8) - backend từ chối gia hạn/đổi gói qua
-                              luồng thông thường, ẩn luôn nút để tránh khách bấm rồi gặp lỗi. */}
-                          {item.lifecycleStatus !== "Terminated" && (
-                            <>
-                              {item.expiresAt && item.servicePlanId && item.servicePlanPackageType === "Fixed" && (
-                                <PlanChangeDialog item={item} />
-                              )}
-                              {item.expiresAt && <RenewServiceDialog item={item} />}
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
+                    <MyServiceRow key={item.itemId} item={item} />
                   ))}
                 </tbody>
               </table>

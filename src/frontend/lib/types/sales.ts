@@ -225,8 +225,15 @@ export interface MyServiceItemDto {
   lifecycleStatus: string;
   // Hệ điều hành đã chọn lúc mua (Đợt 3, Phần 11) - null nếu không chọn.
   osImageName?: string | null;
-  // Hostname bàn giao (Đợt 3, Phần 12) - null nếu không nhập.
+  // Hostname/Tags bàn giao (Đợt 3, Phần 12) - null nếu không nhập.
   hostname?: string | null;
+  tags?: string | null;
+  // Cấu hình gói Custom (Đợt 1, Phần 5) - null nếu là gói Fixed (Đợt 10, Phần 4 mới thêm ở DTO này).
+  chosenVcpu?: number | null;
+  chosenRamMb?: number | null;
+  chosenDiskGb?: number | null;
+  // Add-ons đã mua kèm (Đợt 1, Phần 4 - Đợt 10, Phần 4 mới thêm ở DTO này).
+  addons: OrderItemAddonDto[];
   provisionedIpAddress?: string | null;
   provisionedRootPassword?: string | null;
   provisionedNameservers?: string | null;

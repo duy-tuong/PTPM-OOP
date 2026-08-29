@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { CaretDown } from "@phosphor-icons/react";
 import { OrderStatusBadge } from "@/components/admin/OrderStatusBadge";
+import { OrderItemConfigSummary } from "@/components/account/OrderItemConfigSummary";
+import { ProvisioningDetailsCard } from "@/components/account/ProvisioningDetailsCard";
 import { formatOrderItemLabel, formatOrderProductSummary } from "@/lib/utils/orderItems";
 import { cn, formatCurrency, formatDate } from "@/lib/utils";
 import type { MyOrderRequestDto } from "@/lib/types/sales";
@@ -47,44 +49,23 @@ export function MyOrderRow({ order }: { order: MyOrderRequestDto }) {
                     <span className="text-muted-foreground">{formatCurrency(item.lineTotal)}</span>
                   </div>
 
-                  {item.hostname && (
-                    <p className="mt-1 text-xs text-muted-foreground">Hostname: {item.hostname}</p>
-                  )}
+                  <div className="mt-1 flex flex-col gap-0.5">
+                    {item.hostname && <p className="text-xs text-muted-foreground">Hostname: {item.hostname}</p>}
+                    {item.tags && <p className="text-xs text-muted-foreground">Tags: {item.tags}</p>}
+                    <OrderItemConfigSummary
+                      osImageName={item.osImageName}
+                      chosenVcpu={item.chosenVcpu}
+                      chosenRamMb={item.chosenRamMb}
+                      chosenDiskGb={item.chosenDiskGb}
+                      addons={item.addons}
+                    />
+                  </div>
 
-                  {(item.provisionedIpAddress || item.provisionedNameservers) && (
-                    <div className="mt-3 rounded-md border border-primary/30 bg-primary/5 px-3 py-2">
-                      <p className="text-xs font-medium text-foreground">Thông tin bàn giao</p>
-                      <dl className="mt-1.5 flex flex-col gap-1 font-mono text-xs">
-                        {item.provisionedIpAddress && (
-                          <div className="flex items-center gap-2">
-                            <dt className="text-muted-foreground">IP:</dt>
-                            <dd className="text-foreground">{item.provisionedIpAddress}</dd>
-                          </div>
-                        )}
-                        {item.provisionedIpAddress &&
-                          (item.provisionedRootPassword ? (
-                            <div className="flex items-center gap-2">
-                              <dt className="text-muted-foreground">Mật khẩu root:</dt>
-                              <dd className="text-foreground">{item.provisionedRootPassword}</dd>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <dt className="text-muted-foreground">Đăng nhập:</dt>
-                              <dd className="text-foreground">Bằng SSH Key đã lưu</dd>
-                            </div>
-                          ))}
-                        {item.provisionedNameservers && (
-                          <div className="flex items-center gap-2">
-                            <dt className="text-muted-foreground">Nameserver:</dt>
-                            <dd className="text-foreground">{item.provisionedNameservers}</dd>
-                          </div>
-                        )}
-                      </dl>
-                      <p className="mt-2 text-[11px] text-muted-foreground">
-                        Dữ liệu mô phỏng cho mục đích demo, không phải hạ tầng thật.
-                      </p>
-                    </div>
-                  )}
+                  <ProvisioningDetailsCard
+                    provisionedIpAddress={item.provisionedIpAddress}
+                    provisionedRootPassword={item.provisionedRootPassword}
+                    provisionedNameservers={item.provisionedNameservers}
+                  />
                 </li>
               ))}
             </ul>
