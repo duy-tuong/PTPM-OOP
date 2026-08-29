@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { getApiUrl } from "@/lib/api/config";
 import { getAdminOrderRequests } from "@/lib/api/admin/order-requests";
+import { getAdminUsers } from "@/lib/api/admin/users";
 import { getAdminSession } from "@/lib/auth/adminSession";
 import { ADMIN_ACCESS_TOKEN_COOKIE } from "@/lib/auth/adminAuthCookies";
 import {
@@ -52,6 +53,11 @@ export default async function AdminOrderRequestsPage({ searchParams }: AdminOrde
 
   const isAdmin = session?.roles.includes("Admin") ?? false;
 
+  // Danh sách nhân viên (Đợt 10, Phần 1 - gán người phụ trách) - GET /admin/users chỉ [Authorize(Roles=
+  // "Admin")], khác resource order-requests cho phép cả Admin/Editor (mirror lý do ExportButton chỉ hiện
+  // với Admin) - Editor không thấy Select "Người phụ trách" trong OrderStatusDialog.
+  const staffUsers = isAdmin ? (await getAdminUsers(baseUrl, { pageSize: 100 }, token)).items : [];
+
   function buildPageHref(page: number) {
     const search = new URLSearchParams();
     if (params.status) search.set("status", params.status);
@@ -81,7 +87,7 @@ export default async function AdminOrderRequestsPage({ searchParams }: AdminOrde
             />
           </div>
           <div className="[&>div]:border-0 [&>div]:shadow-none [&>div]:rounded-none [&>div]:ring-0">
-            <OrderRequestsTable orders={orders.items} />
+            <OrderRequestsTable orders={orders.items} staffUsers={staffUsers} />
           </div>
         </div>
 

@@ -1,6 +1,11 @@
 import { apiFetch, ApiError } from "../http";
 import type { PagedResult } from "@/lib/types/common";
-import type { AdminOrderRequestDto, OrderRequestQueryParams, UpdateOrderRequestStatusDto } from "@/lib/types/admin";
+import type {
+  AdminOrderRequestDto,
+  AssignOrderRequestDto,
+  OrderRequestQueryParams,
+  UpdateOrderRequestStatusDto,
+} from "@/lib/types/admin";
 import type { OrderRequestStatus } from "@/lib/types/enums";
 
 export function getAdminOrderRequests(baseUrl: string, params: OrderRequestQueryParams = {}, token?: string) {
@@ -14,6 +19,16 @@ export function updateAdminOrderRequestStatus(baseUrl: string, id: number, dto: 
 // Dunning Automation (Đợt 2, Phần 8) - itemId là OrderRequestItem.Id (không phải id đơn hàng).
 export function liftAdminOrderRequestItemSuspension(baseUrl: string, itemId: number, token?: string) {
   return apiFetch<AdminOrderRequestDto>(baseUrl, `/admin/order-requests/items/${itemId}/lift-suspension`, "POST", { token });
+}
+
+// Gán/gỡ người phụ trách thủ công (Đợt 10, Phần 1).
+export function assignAdminOrderRequest(baseUrl: string, id: number, dto: AssignOrderRequestDto, token?: string) {
+  return apiFetch<AdminOrderRequestDto>(baseUrl, `/admin/order-requests/${id}/assign`, "PUT", { body: dto, token });
+}
+
+// Gỡ cờ Fraud Review thủ công sau khi Admin đã xác minh đơn không gian lận (Đợt 10, Phần 2).
+export function clearAdminOrderRequestFraudFlag(baseUrl: string, id: number, token?: string) {
+  return apiFetch<AdminOrderRequestDto>(baseUrl, `/admin/order-requests/${id}/clear-flag`, "POST", { token });
 }
 
 // Export Excel trả về file nhị phân (không phải JSON) nên không dùng apiFetch chung - tự fetch

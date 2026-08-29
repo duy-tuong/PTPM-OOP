@@ -41,6 +41,20 @@ public class AdminOrderRequestsController : ControllerBase
         return Ok(await _service.LiftSuspensionAsync(itemId, cancellationToken));
     }
 
+    // Gán/gỡ người phụ trách thủ công (Đợt 10, Phần 1).
+    [HttpPut("{id:int}/assign")]
+    public async Task<ActionResult<AdminOrderRequestDto>> Assign(int id, AssignOrderRequestDto dto, CancellationToken cancellationToken)
+    {
+        return Ok(await _service.AssignAsync(id, dto, cancellationToken));
+    }
+
+    // Gỡ cờ Fraud Review thủ công sau khi Admin đã xác minh đơn không gian lận (Đợt 10, Phần 2).
+    [HttpPost("{id:int}/clear-flag")]
+    public async Task<ActionResult<AdminOrderRequestDto>> ClearFraudFlag(int id, CancellationToken cancellationToken)
+    {
+        return Ok(await _service.ClearFraudFlagAsync(id, cancellationToken));
+    }
+
     // Xuất Excel chỉ dành cho Admin (mục 3.2.7 đề bài), khác quyền mặc định Admin,Editor của cả controller.
     [HttpGet("export")]
     [Authorize(Roles = "Admin")]

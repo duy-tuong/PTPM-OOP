@@ -8,13 +8,22 @@ import { OrderStatusBadge } from "@/components/admin/OrderStatusBadge";
 import { LifecycleStatusBadge } from "@/components/admin/LifecycleStatusBadge";
 import { OrderStatusDialog } from "@/components/admin/order-requests/OrderStatusDialog";
 import { LiftSuspensionButton } from "@/components/admin/order-requests/LiftSuspensionButton";
+import { ClearFlagButton } from "@/components/admin/order-requests/ClearFlagButton";
 import { formatOrderProductSummary, getWorstLifecycleStatus, getFirstSuspendedItemId } from "@/lib/utils/orderItems";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import type { AdminOrderRequestDto } from "@/lib/types/admin";
+import type { AdminOrderRequestDto, AdminUserDto } from "@/lib/types/admin";
 
 // Không có Create/Delete cho resource này - Dialog chỉ dùng để đổi trạng thái, mirror pattern
 // Manager của Phase 6.7/6.8 nhưng rút gọn.
-export function OrderRequestsTable({ orders }: { orders: AdminOrderRequestDto[] }) {
+export function OrderRequestsTable({
+  orders,
+  staffUsers,
+}: {
+  orders: AdminOrderRequestDto[];
+  // Rỗng nếu người xem không phải Admin (xem comment ở page.tsx) - OrderStatusDialog tự ẩn Select
+  // "Người phụ trách" khi mảng này rỗng.
+  staffUsers: AdminUserDto[];
+}) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<AdminOrderRequestDto | null>(null);
 
@@ -73,6 +82,15 @@ export function OrderRequestsTable({ orders }: { orders: AdminOrderRequestDto[] 
       ),
     },
     {
+      key: "assignedTo",
+      header: "Phụ trách",
+      cell: (row) => (
+        <span className={row.assignedToUserName ? "text-zinc-700" : "text-zinc-400"}>
+          {row.assignedToUserName ?? "Chưa gán"}
+        </span>
+      ),
+    },
+    {
       key: "createdAt",
       header: "Ngày tạo",
       cell: (row) => formatDate(row.createdAt),
@@ -85,6 +103,7 @@ export function OrderRequestsTable({ orders }: { orders: AdminOrderRequestDto[] 
         const suspendedItemId = getFirstSuspendedItemId(row.items);
         return (
           <div className="flex justify-end items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity duration-200">
+            {row.isFlaggedForReview && <ClearFlagButton orderId={row.id} />}
             {suspendedItemId !== null && <LiftSuspensionButton itemId={suspendedItemId} />}
             <Button
               variant="ghost"
@@ -104,7 +123,7 @@ export function OrderRequestsTable({ orders }: { orders: AdminOrderRequestDto[] 
   return (
     <>
       <DataTable columns={columns} data={orders} emptyMessage="Chưa có đơn hàng nào." getRowKey={(row) => row.id} />
-      <OrderStatusDialog open={dialogOpen} onOpenChange={setDialogOpen} order={selectedOrder} />
+      <OrderStatusDialog open={dialogOpen} onOpenChange={setDialogOpen} order={selectedOrder} staffUsers={staffUsers} />
     </>
   );
 }

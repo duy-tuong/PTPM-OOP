@@ -26,6 +26,11 @@ export default async function ContactPage({
     tldPricingId?: string;
     domainName?: string;
     intent?: string;
+    // Cấu hình gói Custom khách đã kéo thanh trượt trước khi bấm "Triển Khai Ngay" (Đợt 10, Phần 3) -
+    // xem CustomPlanConfiguratorCard.tsx. Tuỳ chọn - thiếu thì AutoAddFromQuery tự fallback về min.
+    vcpu?: string;
+    ramMb?: string;
+    diskGb?: string;
   }>;
 }) {
   const params = await searchParams;
@@ -44,14 +49,20 @@ export default async function ContactPage({
   const defaultTldPricing = Number.isFinite(tldPricingId) ? (tldPricing.find((t) => t.id === tldPricingId) ?? null) : null;
   const defaultTab =
     params.intent === "tu-van" ? "tu-van" : params.intent === "ten-mien" ? "dat-ten-mien" : "dat-dich-vu";
+  const queryCustomSelection = {
+    vcpu: params.vcpu ? Number(params.vcpu) : undefined,
+    ramMb: params.ramMb ? Number(params.ramMb) : undefined,
+    diskGb: params.diskGb ? Number(params.diskGb) : undefined,
+  };
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:px-8">
       <AutoAddFromQuery
-        key={defaultPlan?.id ?? defaultTldPricing?.id ?? "none"}
+        key={`${defaultPlan?.id ?? defaultTldPricing?.id ?? "none"}-${params.vcpu ?? ""}-${params.ramMb ?? ""}-${params.diskGb ?? ""}`}
         defaultPlan={defaultPlan}
         defaultTldPricing={defaultTldPricing}
         defaultDomainName={params.domainName ?? ""}
+        queryCustomSelection={queryCustomSelection}
       />
 
       <div className="mb-10 text-center">
