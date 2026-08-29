@@ -5,7 +5,9 @@ using CloudServiceStore.Application.Features.Sales.OrderRequests.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+
 namespace CloudServiceStore.WebApi.Controllers;
+
 
 // Đặt hàng bắt buộc đăng nhập (role "Customer") - đơn luôn gắn CustomerId, không còn luồng ẩn danh.
 // Lý do: toàn bộ giá trị hậu-mãi (Tier 3 xem lại IP/mật khẩu bàn giao, Tier 4 tự gia hạn) đều đứng sau
@@ -18,11 +20,13 @@ public class OrderRequestsController : ControllerBase
     private readonly IOrderRequestService _service;
     private readonly IPlanChangeService _planChangeService;
 
+
     public OrderRequestsController(IOrderRequestService service, IPlanChangeService planChangeService)
     {
         _service = service;
         _planChangeService = planChangeService;
     }
+
 
     [HttpPost]
     [Authorize(Roles = "Customer")]
@@ -34,6 +38,7 @@ public class OrderRequestsController : ControllerBase
         return CreatedAtAction(nameof(Create), new { id = result.Id }, result);
     }
 
+
     [HttpGet("mine")]
     [Authorize(Roles = "Customer")]
     public async Task<ActionResult<PagedResult<MyOrderRequestDto>>> GetMine([FromQuery] PaginationParams query, CancellationToken cancellationToken)
@@ -43,6 +48,7 @@ public class OrderRequestsController : ControllerBase
         return Ok(await _service.GetMineAsync(customerId, query, cancellationToken));
     }
 
+
     // Công khai (không [Authorize]) - dùng cho trang /thanh-toan/{orderCode} mà link đã gửi qua email
     // xác nhận đơn hàng có thể mở lại được mà không cần đăng nhập.
     [HttpGet("by-code/{orderCode}")]
@@ -50,6 +56,18 @@ public class OrderRequestsController : ControllerBase
     {
         return Ok(await _service.GetByCodeAsync(orderCode, cancellationToken));
     }
+
+
+    // Đợt 13, Phần 1 (A2) - khách tự huỷ đơn CHƯA thanh toán của chính mình.
+    [HttpPost("{id:int}/cancel")]
+    [Authorize(Roles = "Customer")]
+    public async Task<ActionResult<OrderRequestDto>> CancelMine(int id, CancellationToken cancellationToken)
+    {
+        var sub = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        var customerId = Guid.Parse(sub!);
+        return Ok(await _service.CancelMineAsync(id, customerId, cancellationToken));
+    }
+
 
     // Gia hạn (Tier 4) - luôn đòi hỏi đăng nhập (khác Create, không có luồng ẩn danh) vì cần biết
     // đúng chủ đơn để kiểm tra quyền sở hữu item gốc + tự điền thông tin khách hàng từ hồ sơ.
@@ -63,6 +81,7 @@ public class OrderRequestsController : ControllerBase
         return CreatedAtAction(nameof(Create), new { id = result.Id }, result);
     }
 
+
     // Tier 4 - "Dịch vụ của tôi": danh sách dịch vụ đang sống (không phải lịch sử đơn hàng) để khách
     // thấy ExpiresAt + bấm gia hạn.
     [HttpGet("mine/services")]
@@ -74,6 +93,7 @@ public class OrderRequestsController : ControllerBase
         return Ok(await _service.GetMyServicesAsync(customerId, query, cancellationToken));
     }
 
+
     // Đổi gói (Phần 6) - Preview trả AmountDue để khách xác nhận trước khi thực sự đổi, không ghi gì
     // xuống DB.
     [HttpPost("items/{itemId}/change-plan/preview")]
@@ -84,6 +104,7 @@ public class OrderRequestsController : ControllerBase
         var customerId = Guid.Parse(sub!);
         return Ok(await _planChangeService.PreviewChangeAsync(itemId, dto.TargetPlanId, customerId, cancellationToken));
     }
+
 
     [HttpPost("items/{itemId}/change-plan")]
     [Authorize(Roles = "Customer")]
