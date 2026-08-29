@@ -1,6 +1,7 @@
 using CloudServiceStore.Application.Common.Exceptions;
 using CloudServiceStore.Application.Common.Interfaces;
 using CloudServiceStore.Application.Common.Models;
+using CloudServiceStore.Application.Common.Services;
 using CloudServiceStore.Application.Features.Sales.OrderRequests;
 using CloudServiceStore.Application.Features.Sales.OrderRequests.Dtos;
 using CloudServiceStore.Domain.Entities.Catalog;
@@ -9,6 +10,7 @@ using CloudServiceStore.Domain.Entities.Marketing;
 using CloudServiceStore.Domain.Entities.Sales;
 using CloudServiceStore.Domain.Enums;
 using CloudServiceStore.Infrastructure.Persistence;
+using CloudServiceStore.Infrastructure.Services;
 using CloudServiceStore.Tests.TestHelpers;
 using Moq;
 
@@ -43,12 +45,25 @@ public class OrderRequestServiceTests
         _qrCodeFactoryMock.Setup(q => q.GenerateFromContent(It.IsAny<string>())).Returns("data:image/png;base64,test");
     }
 
-    private OrderRequestService CreateSut(AppDbContext context) => new(
-        TestDbContextFactory.CreateUnitOfWork(context),
-        _emailServiceMock.Object,
-        _appSettingsMock.Object,
-        _paymentGatewayServiceMock.Object,
-        _qrCodeFactoryMock.Object);
+    private OrderRequestService CreateSut(AppDbContext context)
+    {
+        var unitOfWork = TestDbContextFactory.CreateUnitOfWork(context);
+        // Đợt 13, Phần 1 (A2) - CancelMineAsync đi qua transition service thật (không mock) để entity
+        // thật sự đổi trạng thái trong context, mirror cách AdminOrderRequestServiceTests dựng
+        // transitionService. Không có observer nào gắn (mảng rỗng) - các test ở file này không assert
+        // hành vi Observer, việc đó đã có OrderRequestStatusTransitionServiceTests/AdminOrderRequestServiceTests
+        // riêng.
+        var transitionService = new OrderRequestStatusTransitionService(
+            unitOfWork, new OrderStatusNotifier([]), new FakeProvisioningGenerator());
+
+        return new OrderRequestService(
+            unitOfWork,
+            _emailServiceMock.Object,
+            _appSettingsMock.Object,
+            _paymentGatewayServiceMock.Object,
+            _qrCodeFactoryMock.Object,
+            transitionService);
+    }
 
     // Id/slug cố ý khác dữ liệu HasData (ServicePlan Id 1-2, PlanPrice Id 1-4) đã seed sẵn trong model
     // để test không phụ thuộc vào việc InMemory provider có tự nạp seed data hay không.
@@ -2036,5 +2051,77 @@ public class OrderRequestServiceTests
         var renewalItem = context.OrderRequestItems.Single(i => i.RenewsFromItemId == originalItem.Id);
         Assert.Equal(originalItem.SshPublicKeySnapshot, renewalItem.SshPublicKeySnapshot);
         Assert.Equal(result.Id, renewalItem.OrderRequestId);
+    }
+
+    // Đợt 13, Phần 1 (A2) - khách tự huỷ đơn CHƯA thanh toán của chính mình.
+    private static async Task<OrderRequest> SeedOwnOrderAsync(AppDbContext context, Guid customerId, OrderRequestStatus status)
+    {
+        var order = new OrderRequest
+        {
+            OrderCode = $"ORD-CANCEL-{Guid.NewGuid():N}",
+            CustomerId = customerId,
+            CustomerType = CustomerType.Individual,
+            CustomerName = "Cancel Test Customer",
+            CustomerEmail = "cancel-test@example.com",
+            CustomerPhone = "0900000001",
+            TotalPrice = 100000m,
+            Status = status,
+            CreatedAt = DateTime.UtcNow,
+        };
+        context.OrderRequests.Add(order);
+        await context.SaveChangesAsync();
+        return order;
+    }
+
+    [Fact]
+    public async Task CancelMineAsync_OrderNotFound_ThrowsNotFoundException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var sut = CreateSut(context);
+
+        await Assert.ThrowsAsync<NotFoundException>(() => sut.CancelMineAsync(9999, Guid.NewGuid()));
+    }
+
+    [Fact]
+    public async Task CancelMineAsync_NotOwner_ThrowsNotFoundException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var order = await SeedOwnOrderAsync(context, Guid.NewGuid(), OrderRequestStatus.New);
+        var sut = CreateSut(context);
+
+        await Assert.ThrowsAsync<NotFoundException>(() => sut.CancelMineAsync(order.Id, Guid.NewGuid()));
+    }
+
+    [Theory]
+    [InlineData(OrderRequestStatus.Paid)]
+    [InlineData(OrderRequestStatus.Provisioning)]
+    [InlineData(OrderRequestStatus.Completed)]
+    [InlineData(OrderRequestStatus.Cancelled)]
+    public async Task CancelMineAsync_OrderAlreadyBeyondBeforePaid_ThrowsValidationException(OrderRequestStatus status)
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var customerId = Guid.NewGuid();
+        var order = await SeedOwnOrderAsync(context, customerId, status);
+        var sut = CreateSut(context);
+
+        await Assert.ThrowsAsync<ValidationException>(() => sut.CancelMineAsync(order.Id, customerId));
+    }
+
+    [Theory]
+    [InlineData(OrderRequestStatus.New)]
+    [InlineData(OrderRequestStatus.Contacted)]
+    [InlineData(OrderRequestStatus.Confirmed)]
+    public async Task CancelMineAsync_OwnerAndBeforePaid_CancelsOrder(OrderRequestStatus status)
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var customerId = Guid.NewGuid();
+        var order = await SeedOwnOrderAsync(context, customerId, status);
+        var sut = CreateSut(context);
+
+        var result = await sut.CancelMineAsync(order.Id, customerId);
+
+        Assert.Equal(nameof(OrderRequestStatus.Cancelled), result.Status);
+        var persisted = context.OrderRequests.Single(o => o.Id == order.Id);
+        Assert.Equal(OrderRequestStatus.Cancelled, persisted.Status);
     }
 }

@@ -13,7 +13,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Resend;
 
+
 namespace CloudServiceStore.Infrastructure;
+
 
 public static class DependencyInjection
 {
@@ -33,7 +35,9 @@ public static class DependencyInjection
                         errorNumbersToAdd: null))
                 .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning)));
 
+
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+
 
         services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
         services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
@@ -41,6 +45,7 @@ public static class DependencyInjection
         services.AddSingleton<ISiteSettingsCache, SiteSettingsCache>();
         services.AddSingleton<IQrCodeFactory, QrCodeFactory>();
         services.AddSingleton<IFileStorageService, LocalFileStorageService>();
+
 
         // Resend chỉ được dùng khi có ResendApiKey thật (máy dev/CI không cấu hình thì giữ nguyên hành
         // vi giả lập cũ, không throw lúc khởi động). IEmailService đăng ký Scoped (không phải Singleton
@@ -59,6 +64,7 @@ public static class DependencyInjection
             services.AddScoped<IEmailService, LoggingEmailService>();
         }
 
+
         services.AddSingleton<IAppSettings, AppSettings>();
         services.AddSingleton<IPaymentGatewayService, PayOsPaymentGatewayService>();
         services.AddScoped<IOrderStatusObserver, AuditLogOrderObserver>();
@@ -69,11 +75,17 @@ public static class DependencyInjection
         services.AddScoped<IConsultationStatusObserver, NotificationConsultationObserver>();
         services.AddScoped<IOrderRequestExportService, OrderRequestExportService>();
 
+
         services.AddSingleton<IFakeProvisioningGenerator, FakeProvisioningGenerator>();
         services.AddHostedService<OrderAutoProvisioningBackgroundService>();
         services.AddHostedService<RenewalReminderBackgroundService>();
         services.AddHostedService<DunningBackgroundService>();
+        services.AddHostedService<StaleOrderCleanupBackgroundService>();
+
 
         return services;
     }
 }
+
+
+

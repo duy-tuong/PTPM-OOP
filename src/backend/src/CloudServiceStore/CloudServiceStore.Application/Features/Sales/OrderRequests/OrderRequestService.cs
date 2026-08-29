@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+ using System.Text.RegularExpressions;
 using CloudServiceStore.Application.Common.Exceptions;
 using CloudServiceStore.Application.Common.Interfaces;
 using CloudServiceStore.Application.Common.Models;
@@ -11,7 +11,9 @@ using CloudServiceStore.Domain.Entities.Sales;
 using CloudServiceStore.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
+
 namespace CloudServiceStore.Application.Features.Sales.OrderRequests;
+
 
 public class OrderRequestService : IOrderRequestService
 {
@@ -19,25 +21,31 @@ public class OrderRequestService : IOrderRequestService
     // chỉ chữ/số/gạch ngang, tối đa 63 ký tự (giới hạn nhãn DNS chuẩn).
     private static readonly Regex DomainLabelPattern = new(@"^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$", RegexOptions.Compiled);
 
+
     private readonly IUnitOfWork _unitOfWork;
     private readonly IEmailService _emailService;
     private readonly IAppSettings _appSettings;
     private readonly IPaymentGatewayService _paymentGatewayService;
     private readonly IQrCodeFactory _qrCodeFactory;
+    private readonly IOrderRequestStatusTransitionService _transitionService;
+
 
     public OrderRequestService(
         IUnitOfWork unitOfWork,
         IEmailService emailService,
         IAppSettings appSettings,
         IPaymentGatewayService paymentGatewayService,
-        IQrCodeFactory qrCodeFactory)
+        IQrCodeFactory qrCodeFactory,
+        IOrderRequestStatusTransitionService transitionService)
     {
         _unitOfWork = unitOfWork;
         _emailService = emailService;
         _appSettings = appSettings;
         _paymentGatewayService = paymentGatewayService;
         _qrCodeFactory = qrCodeFactory;
+        _transitionService = transitionService;
     }
+
 
     public async Task<OrderRequestDto> CreateAsync(CreateOrderRequestDto dto, Guid? customerId = null, CancellationToken cancellationToken = default)
     {
@@ -52,25 +60,30 @@ public class OrderRequestService : IOrderRequestService
                 throw new NotFoundException(nameof(Promotion), dto.PromotionId.Value);
             }
 
+
             var now = DateTime.UtcNow;
             var isEligible = promotion.IsActive
                 && promotion.StartDate <= now
                 && promotion.EndDate >= now
                 && (promotion.UsageLimit == null || promotion.UsageCount < promotion.UsageLimit);
 
+
             if (!isEligible)
             {
                 throw new ValidationException("Mã khuyến mãi không còn hiệu lực.");
             }
 
+
             if (promotion.CustomerEligibility != PromotionCustomerEligibility.All)
             {
                 var hasCompletedOrderBefore = await HasCompletedOrderBeforeAsync(customerId, dto.CustomerEmail, cancellationToken);
+
 
                 if (promotion.CustomerEligibility == PromotionCustomerEligibility.NewCustomersOnly && hasCompletedOrderBefore)
                 {
                     throw new ValidationException("Mã giảm giá chỉ áp dụng cho khách hàng mới.");
                 }
+
 
                 if (promotion.CustomerEligibility == PromotionCustomerEligibility.ExistingCustomersOnly && !hasCompletedOrderBefore)
                 {
@@ -79,10 +92,12 @@ public class OrderRequestService : IOrderRequestService
             }
         }
 
+
         var items = new List<OrderRequestItem>();
         // Song song với items - lưu (planId, categoryId) của từng dòng để tính khuyến mãi theo dòng mà
         // không phải tra cứu lại DB (ServicePlan/TldPricing đã có sẵn từ vòng lặp validate bên dưới).
         var itemScopes = new List<(int? PlanId, int? CategoryId)>();
+
 
         foreach (var itemDto in dto.Items)
         {
@@ -91,20 +106,24 @@ public class OrderRequestService : IOrderRequestService
                 throw new ValidationException("Mỗi dòng trong đơn hàng phải chọn đúng 1 trong 2: gói dịch vụ hoặc tên miền.");
             }
 
+
             var provisioning = new NewPurchaseProvisioningInput(itemDto.OsImageId, itemDto.SshPublicKeyId, itemDto.Hostname, itemDto.Tags);
             var (item, planId, categoryId) = itemDto.ServicePlanId is not null
                 ? await BuildServicePlanItemAsync(itemDto.ServicePlanId.Value, itemDto.PeriodMonths, itemDto.Quantity, isRenewal: false, grandfatheredPlanPriceId: null, itemDto.Addons, itemDto.ChosenVcpu, itemDto.ChosenRamMb, itemDto.ChosenDiskGb, customerId, provisioning, cancellationToken)
                 : await BuildTldItemAsync(itemDto.TldPricingId!.Value, itemDto.DomainName, itemDto.Quantity, isRenewal: false, cancellationToken);
 
+
             items.Add(item);
             itemScopes.Add((planId, categoryId));
         }
+
 
         var grandSubtotal = items.Sum(i => i.LineTotal);
         // Addon không tham gia khuyến mãi (giữ đơn giản, xem quyết định phạm vi ở Phần 4) - cộng thẳng
         // vào tổng SAU khi tính discount trên grandSubtotal, không đi qua ComputeDiscount/MatchesScope.
         var addonsTotal = items.Sum(i => i.Addons.Sum(a => a.LineTotal));
         var totalPrice = grandSubtotal + addonsTotal;
+
 
         if (promotion is not null)
         {
@@ -115,21 +134,26 @@ public class OrderRequestService : IOrderRequestService
                 .Where(x => x.Matches)
                 .Sum(x => x.LineTotal);
 
+
             if (matchedSubtotal == 0)
             {
                 throw new ValidationException("Mã khuyến mãi không áp dụng cho sản phẩm nào trong đơn.");
             }
+
 
             if (promotion.MinOrderValue is not null && matchedSubtotal < promotion.MinOrderValue)
             {
                 throw new ValidationException($"Đơn hàng cần tối thiểu {promotion.MinOrderValue:N0}đ để áp dụng mã khuyến mãi này.");
             }
 
+
             var discount = ComputeDiscount(promotion, matchedSubtotal);
             totalPrice = Math.Max(0, grandSubtotal - discount) + addonsTotal;
         }
 
+
         var (isFlagged, flagReason) = await EvaluateFraudRiskAsync(dto, totalPrice, customerId, cancellationToken);
+
 
         var orderRequest = new OrderRequest
         {
@@ -151,9 +175,11 @@ public class OrderRequestService : IOrderRequestService
             FlagReason = flagReason
         };
 
+
         var orderRepository = _unitOfWork.Repository<OrderRequest, int>();
         await orderRepository.AddAsync(orderRequest, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
 
         // Email lúc tạo đơn gửi trực tiếp ở đây (không qua Observer) vì tạo mới không phải "đổi trạng
         // thái" - IOrderStatusObserver chỉ chạy khi Admin đổi Status ở bước sau (xem EmailOrderObserver).
@@ -163,6 +189,7 @@ public class OrderRequestService : IOrderRequestService
             "Đã nhận đơn hàng - Cloudverse",
             $"Cảm ơn bạn đã đặt hàng. Đơn {orderRequest.OrderCode} đang chờ thanh toán, xem hướng dẫn tại: {paymentUrl}",
             cancellationToken);
+
 
         return new OrderRequestDto
         {
@@ -174,9 +201,11 @@ public class OrderRequestService : IOrderRequestService
         };
     }
 
+
     public async Task<PagedResult<MyOrderRequestDto>> GetMineAsync(Guid customerId, PaginationParams query, CancellationToken cancellationToken = default)
     {
         var repository = _unitOfWork.Repository<OrderRequest, int>();
+
 
         var baseQuery = repository.Query()
             .Include(o => o.Items).ThenInclude(i => i.ServicePlan)
@@ -185,11 +214,13 @@ public class OrderRequestService : IOrderRequestService
             .Where(o => o.CustomerId == customerId)
             .OrderByDescending(o => o.CreatedAt);
 
+
         var totalCount = await baseQuery.CountAsync(cancellationToken);
         var entities = await baseQuery
             .Skip((query.PageNumber - 1) * query.PageSize)
             .Take(query.PageSize)
             .ToListAsync(cancellationToken);
+
 
         var dtos = entities.Select(o => new MyOrderRequestDto
         {
@@ -201,12 +232,15 @@ public class OrderRequestService : IOrderRequestService
             CreatedAt = o.CreatedAt
         }).ToList();
 
+
         return PagedResult<MyOrderRequestDto>.Create(dtos, totalCount, query.PageNumber, query.PageSize);
     }
+
 
     public async Task<PagedResult<MyServiceItemDto>> GetMyServicesAsync(Guid customerId, PaginationParams query, CancellationToken cancellationToken = default)
     {
         var repository = _unitOfWork.Repository<OrderRequestItem, int>();
+
 
         // RenewsFromItemId == null - lọc bỏ các dòng "biên lai gia hạn" (Tier 4), chỉ hiện dịch vụ
         // đang sống. Sắp theo ExpiresAt tăng dần (sắp hết hạn nhất lên đầu), item chưa có ExpiresAt
@@ -220,11 +254,13 @@ public class OrderRequestService : IOrderRequestService
             .OrderBy(i => i.ExpiresAt == null)
             .ThenBy(i => i.ExpiresAt);
 
+
         var totalCount = await baseQuery.CountAsync(cancellationToken);
         var entities = await baseQuery
             .Skip((query.PageNumber - 1) * query.PageSize)
             .Take(query.PageSize)
             .ToListAsync(cancellationToken);
+
 
         var now = DateTime.UtcNow;
         var dtos = entities.Select(i => new MyServiceItemDto
@@ -253,8 +289,10 @@ public class OrderRequestService : IOrderRequestService
             ProvisionedNameservers = i.ProvisionedNameservers
         }).ToList();
 
+
         return PagedResult<MyServiceItemDto>.Create(dtos, totalCount, query.PageNumber, query.PageSize);
     }
+
 
     public async Task<OrderLookupDto> GetByCodeAsync(string orderCode, CancellationToken cancellationToken = default)
     {
@@ -265,6 +303,7 @@ public class OrderRequestService : IOrderRequestService
             .Include(o => o.Items).ThenInclude(i => i.Addons).ThenInclude(a => a.Addon)
             .FirstOrDefaultAsync(o => o.OrderCode == orderCode, cancellationToken)
             ?? throw new NotFoundException(nameof(OrderRequest), orderCode);
+
 
         string? qrCodeImage = null;
         if (IsBeforePaid(order.Status))
@@ -287,8 +326,10 @@ public class OrderRequestService : IOrderRequestService
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
             }
 
+
             qrCodeImage = order.PayOsQrCode is not null ? _qrCodeFactory.GenerateFromContent(order.PayOsQrCode) : null;
         }
+
 
         return new OrderLookupDto
         {
@@ -317,8 +358,49 @@ public class OrderRequestService : IOrderRequestService
         };
     }
 
+
     private static bool IsBeforePaid(OrderRequestStatus status) =>
         status is OrderRequestStatus.New or OrderRequestStatus.Contacted or OrderRequestStatus.Confirmed;
+
+
+    // Đợt 13, Phần 1 (A2) - khách tự huỷ đơn CHƯA thanh toán (New/Contacted/Confirmed). Không dùng cho
+    // đơn đã Paid trở lên - dùng chung 1 luồng huỷ duy nhất qua IOrderRequestStatusTransitionService để
+    // Observer (audit log/email/notification) luôn chạy nhất quán bất kể ai/cái gì kích hoạt huỷ đơn
+    // (Admin qua AdminOrderRequestService, hệ thống qua StaleOrderCleanupBackgroundService, hay khách
+    // qua đây).
+    public async Task<OrderRequestDto> CancelMineAsync(int orderId, Guid customerId, CancellationToken cancellationToken = default)
+    {
+        var repository = _unitOfWork.Repository<OrderRequest, int>();
+        var order = await repository.GetByIdAsync(orderId, cancellationToken);
+
+
+        // 404 chung cho cả "không tồn tại" lẫn "không phải chủ đơn" - đúng pattern chống lộ thông tin đã
+        // dùng ở CreateRenewalAsync (không cho khách đoán được đơn của người khác tồn tại).
+        if (order is null || order.CustomerId != customerId)
+        {
+            throw new NotFoundException(nameof(OrderRequest), orderId);
+        }
+
+
+        if (!IsBeforePaid(order.Status))
+        {
+            throw new ValidationException("Đơn hàng đã được xử lý, không thể tự huỷ. Vui lòng liên hệ hỗ trợ nếu cần hỗ trợ thêm.");
+        }
+
+
+        var updated = await _transitionService.TransitionAsync(order.Id, OrderRequestStatus.Cancelled, changedByUserId: null, cancellationToken);
+
+
+        return new OrderRequestDto
+        {
+            Id = updated.Id,
+            OrderCode = updated.OrderCode,
+            Status = updated.Status.ToString(),
+            TotalPrice = updated.TotalPrice,
+            CreatedAt = updated.CreatedAt
+        };
+    }
+
 
     public async Task<OrderRequestDto> CreateRenewalAsync(CreateRenewalOrderRequestDto dto, Guid customerId, CancellationToken cancellationToken = default)
     {
@@ -329,12 +411,14 @@ public class OrderRequestService : IOrderRequestService
             .Include(i => i.Addons)
             .FirstOrDefaultAsync(i => i.Id == dto.OrderRequestItemId, cancellationToken);
 
+
         // Dùng chung 404 cho cả "không tồn tại" lẫn "không phải chủ đơn" - đúng tinh thần tránh lộ
         // thông tin đã áp dụng ở OrderLookupDto (không cho khách đoán được item của người khác tồn tại).
         if (original is null || original.OrderRequest.CustomerId != customerId)
         {
             throw new NotFoundException(nameof(OrderRequestItem), dto.OrderRequestItemId);
         }
+
 
         // Item gia hạn (RenewsFromItemId đã có giá trị) không có ExpiresAt riêng - gia hạn tiếp từ 1
         // "biên lai" như vậy sẽ phá vỡ bất biến "chỉ item đang sống mới có ExpiresAt".
@@ -343,6 +427,7 @@ public class OrderRequestService : IOrderRequestService
             throw new ValidationException("Không thể gia hạn từ 1 đơn gia hạn khác - vui lòng chọn đúng dịch vụ gốc.");
         }
 
+
         // Dunning (Phần 8) - dịch vụ đã bị hủy hẳn (quá hạn quá lâu, dữ liệu bàn giao đã bị xoá) không
         // tự gia hạn lại được qua luồng thông thường, tránh cấp "ExpiresAt mới" cho dữ liệu đã mất.
         if (original.TerminatedAt is not null)
@@ -350,8 +435,10 @@ public class OrderRequestService : IOrderRequestService
             throw new ValidationException("Dịch vụ đã bị hủy do quá hạn thanh toán quá lâu, vui lòng liên hệ hỗ trợ để được khôi phục.");
         }
 
+
         var customer = await _unitOfWork.Repository<Customer, Guid>().GetByIdAsync(customerId, cancellationToken)
             ?? throw new NotFoundException(nameof(Customer), customerId);
+
 
         // Grandfathering: chỉ giữ giá cũ khi gia hạn ĐÚNG chu kỳ đã mua trước đó (đổi chu kỳ = thoả
         // thuận mới, tính giá sống) và plan còn bật chính sách này. original.PlanPriceId null nghĩa là
@@ -364,11 +451,13 @@ public class OrderRequestService : IOrderRequestService
                 ? original.PlanPriceId
                 : null;
 
+
         // Addon gia hạn theo đúng lựa chọn cũ, tính lại theo đơn giá addon HIỆN HÀNH (không
         // Grandfathering cho addon - quyết định phạm vi đã chốt, xem Addon.cs).
         var renewedAddonSelections = original.Addons
             .Select(a => new AddonSelectionDto { AddonId = a.AddonId, Quantity = a.Quantity })
             .ToList();
+
 
         // OS Image (Phần 11) - giữ nguyên OS đã chọn lúc mua đầu (đổi OS coi như dùng luồng "Đổi gói",
         // không hỗ trợ đổi qua gia hạn thường), nhưng phí Windows tính lại theo giá HIỆN HÀNH (không
@@ -380,11 +469,14 @@ public class OrderRequestService : IOrderRequestService
             ? await BuildServicePlanItemAsync(original.ServicePlanId.Value, effectivePeriodMonths, original.Quantity, isRenewal: true, grandfatheredPlanPriceId, renewedAddonSelections, original.ChosenVcpu, original.ChosenRamMb, original.ChosenDiskGb, customerId, provisioning, cancellationToken)
             : await BuildTldItemAsync(original.TldPricingId!.Value, original.DomainName, dto.Years ?? original.Quantity, isRenewal: true, cancellationToken);
 
+
         // SSH Key (Phần 12) - copy trực tiếp snapshot text từ item gốc, không re-validate format (dữ
         // liệu đã snapshot hợp lệ từ lần mua trước, có thể khác định dạng nếu backend đổi rule sau này).
         item.SshPublicKeySnapshot = original.SshPublicKeySnapshot;
 
+
         item.RenewsFromItemId = original.Id;
+
 
         var orderRequest = new OrderRequest
         {
@@ -402,9 +494,11 @@ public class OrderRequestService : IOrderRequestService
             Items = { item }
         };
 
+
         var orderRepository = _unitOfWork.Repository<OrderRequest, int>();
         await orderRepository.AddAsync(orderRequest, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
 
         var paymentUrl = $"{_appSettings.PublicBaseUrl}/thanh-toan/{orderRequest.OrderCode}";
         await _emailService.SendAsync(
@@ -412,6 +506,7 @@ public class OrderRequestService : IOrderRequestService
             "Đã nhận đơn hàng - Cloudverse",
             $"Cảm ơn bạn đã gia hạn dịch vụ. Đơn {orderRequest.OrderCode} đang chờ thanh toán, xem hướng dẫn tại: {paymentUrl}",
             cancellationToken);
+
 
         return new OrderRequestDto
         {
@@ -422,6 +517,7 @@ public class OrderRequestService : IOrderRequestService
             CreatedAt = orderRequest.CreatedAt
         };
     }
+
 
     // Dùng chung cho CreateAsync (mỗi dòng trong giỏ, isRenewal=false) và CreateRenewalAsync (item gia
     // hạn, isRenewal=true) - trả kèm (planId, categoryId) để caller tính khuyến mãi theo dòng mà không
@@ -445,9 +541,11 @@ public class OrderRequestService : IOrderRequestService
             throw new NotFoundException(nameof(ServicePlan), servicePlanId);
         }
 
+
         var isAvailable = isRenewal
             ? plan.Status is ServicePlanStatus.Active or ServicePlanStatus.OutOfStock or ServicePlanStatus.Deprecated
             : plan.Status == ServicePlanStatus.Active;
+
 
         if (!isAvailable)
         {
@@ -455,6 +553,7 @@ public class OrderRequestService : IOrderRequestService
                 ? "Gói dịch vụ này hiện không thể gia hạn."
                 : "Gói dịch vụ này hiện không khả dụng để đặt mua.");
         }
+
 
         PlanPrice? price;
         if (grandfatheredPlanPriceId is not null)
@@ -466,15 +565,18 @@ public class OrderRequestService : IOrderRequestService
             var priceQuery = _unitOfWork.Repository<PlanPrice, int>().Query()
                 .Where(p => p.PlanId == servicePlanId && p.IsCurrent && p.IsActive);
 
+
             price = periodMonths is not null
                 ? await priceQuery.FirstOrDefaultAsync(p => p.PeriodMonths == periodMonths.Value, cancellationToken)
                 : await priceQuery.FirstOrDefaultAsync(p => p.IsDefault, cancellationToken);
         }
 
+
         if (price is null)
         {
             throw new ValidationException("Gói dịch vụ chưa có giá cho kỳ hạn đã chọn.");
         }
+
 
         // Custom: không dùng price.Price/PromotionalPrice (bị bỏ qua với PackageType=Custom, xem
         // PlanPrice.DiscountPercent) - tính từ đơn giá vCPU/RAM/Disk của plan x cấu hình khách chọn,
@@ -484,6 +586,7 @@ public class OrderRequestService : IOrderRequestService
         int? itemChosenVcpu = null;
         int? itemChosenRamMb = null;
         int? itemChosenDiskGb = null;
+
 
         if (plan.PackageType == ServicePlanPackageType.Custom)
         {
@@ -498,6 +601,7 @@ public class OrderRequestService : IOrderRequestService
             unitPrice = price.PromotionalPrice ?? price.Price;
         }
 
+
         // OS Image (Đợt 3, Phần 11) - chỉ validate "nằm trong danh sách cho phép của plan" nếu plan
         // ĐÓ có cấu hình ≥1 OS (mirror đúng cách BuildOrderItemAddonsAsync suy luận addon được phép từ
         // chính bảng nối, không thêm cờ RequiresOsImage riêng để tránh 2 nguồn sự thật lệch nhau) - plan
@@ -507,6 +611,7 @@ public class OrderRequestService : IOrderRequestService
         {
             unitPrice += osLicenseFee.Value;
         }
+
 
         // SSH Key & Hostname/Tags (Đợt 3, Phần 12) - chỉ có ý nghĩa lúc mua MỚI thật sự (isRenewal=true
         // vẫn đi qua nhánh này để tính lại phí OS, nhưng SshPublicKeyId luôn null từ CreateRenewalAsync
@@ -518,6 +623,7 @@ public class OrderRequestService : IOrderRequestService
         {
             throw new ValidationException("Tags tối đa 255 ký tự.");
         }
+
 
         var item = new OrderRequestItem
         {
@@ -539,13 +645,16 @@ public class OrderRequestService : IOrderRequestService
             Addons = await BuildOrderItemAddonsAsync(plan.Id, price.PeriodMonths, addonSelections, cancellationToken)
         };
 
+
         return (item, plan.Id, plan.CategoryId);
     }
+
 
     // Gộp 4 field chỉ có ý nghĩa lúc mua MỚI (Đợt 3, Phần 11+12) - tránh BuildServicePlanItemAsync phình
     // thêm tham số int?/string? cùng kiểu rời rạc, dễ nhầm vị trí khi gọi. CreateRenewalAsync luôn
     // truyền SshPublicKeyId: null (xem ghi chú tại đó).
     private sealed record NewPurchaseProvisioningInput(int? OsImageId, int? SshPublicKeyId, string? Hostname, string? Tags);
+
 
     // customerId null (về lý thuyết - controller thực tế luôn bắt đăng nhập) + sshPublicKeyId có giá trị
     // = từ chối rõ ràng thay vì âm thầm bỏ qua, tránh khách tưởng nhầm key đã được áp dụng.
@@ -556,27 +665,33 @@ public class OrderRequestService : IOrderRequestService
             return null;
         }
 
+
         if (customerId is null)
         {
             throw new ValidationException("Cần đăng nhập để dùng SSH Key đã lưu.");
         }
 
+
         var sshKey = await _unitOfWork.Repository<CustomerSshKey, int>().Query()
             .FirstOrDefaultAsync(k => k.Id == sshPublicKeyId.Value && k.CustomerId == customerId.Value, cancellationToken);
+
 
         if (sshKey is null)
         {
             throw new ValidationException("SSH Key đã chọn không tồn tại hoặc không thuộc về tài khoản của bạn.");
         }
 
+
         return sshKey.PublicKey;
     }
+
 
     // Hostname kiểu VPS (vd "web-prod-01.domain.com") - cho phép nhiều nhãn phân tách dấu chấm, mỗi
     // nhãn theo đúng luật DNS như DomainLabelPattern (không bắt đầu/kết thúc bằng gạch ngang).
     private static readonly Regex HostnamePattern = new(
         @"^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$",
         RegexOptions.Compiled);
+
 
     private static string? ValidateAndNormalizeHostname(string? hostname)
     {
@@ -585,14 +700,17 @@ public class OrderRequestService : IOrderRequestService
             return null;
         }
 
+
         var trimmed = hostname.Trim();
         if (trimmed.Length > 100 || !HostnamePattern.IsMatch(trimmed))
         {
             throw new ValidationException("Hostname không hợp lệ (chỉ chữ, số, gạch ngang, dấu chấm, tối đa 100 ký tự).");
         }
 
+
         return trimmed;
     }
+
 
     // Trả về (OsImage đã chọn, phí bản quyền ĐÃ nhân periodMonths cần cộng vào UnitPrice) - osImageId
     // null (khách không chọn OS, hoặc plan không cấu hình OS nào) trả (null, null). WindowsLicenseFeePerMonth
@@ -605,6 +723,7 @@ public class OrderRequestService : IOrderRequestService
             .Select(pi => pi.OsImageId)
             .ToListAsync(cancellationToken);
 
+
         // Plan không cấu hình OS nào (Storage/Firewall...) - BỎ QUA hoàn toàn lựa chọn của khách nếu có
         // (khác Addon: danh sách rỗng ở đây nghĩa là "không OS nào được phép", không phải "mọi OS đều
         // được phép" - tránh lỗ hổng chấp nhận OsImageId bất kỳ khi plan chưa từng khai báo OS nào).
@@ -613,10 +732,12 @@ public class OrderRequestService : IOrderRequestService
             return (null, null);
         }
 
+
         if (!allowedOsImageIds.Contains(osImageId.Value))
         {
             throw new ValidationException("Hệ điều hành đã chọn không thuộc gói dịch vụ này.");
         }
+
 
         var osImage = await _unitOfWork.Repository<OsImage, int>().GetByIdAsync(osImageId.Value, cancellationToken);
         if (osImage is null || !osImage.IsActive)
@@ -624,12 +745,15 @@ public class OrderRequestService : IOrderRequestService
             throw new ValidationException("Hệ điều hành đã chọn hiện không khả dụng.");
         }
 
+
         var licenseFee = osImage.Family == OsFamily.Windows && osImage.WindowsLicenseFeePerMonth is not null
             ? osImage.WindowsLicenseFeePerMonth.Value * periodMonths
             : (decimal?)null;
 
+
         return (osImage, licenseFee);
     }
+
 
     private static void ValidateCustomSelection(ServicePlan plan, int? vcpu, int? ramMb, int? diskGb)
     {
@@ -638,10 +762,12 @@ public class OrderRequestService : IOrderRequestService
             throw new ValidationException("Vui lòng chọn cấu hình vCPU/RAM/Disk cho gói tuỳ biến.");
         }
 
+
         ValidateCustomValue("vCPU", vcpu.Value, plan.MinVcpu, plan.MaxVcpu, plan.StepVcpu);
         ValidateCustomValue("RAM", ramMb.Value, plan.MinRamMb, plan.MaxRamMb, plan.StepRamMb);
         ValidateCustomValue("Disk", diskGb.Value, plan.MinDiskGb, plan.MaxDiskGb, plan.StepDiskGb);
     }
+
 
     private static void ValidateCustomValue(string label, int value, int? min, int? max, int? step)
     {
@@ -651,6 +777,7 @@ public class OrderRequestService : IOrderRequestService
             throw new ValidationException($"Giá trị {label} đã chọn không hợp lệ.");
         }
     }
+
 
     // Validate + tính giá addon mua kèm 1 dòng ServicePlan - dùng chung cho mua mới (lựa chọn từ
     // khách) và gia hạn (copy lại lựa chọn cũ, xem CreateRenewalAsync). Không grandfathering: luôn
@@ -663,7 +790,9 @@ public class OrderRequestService : IOrderRequestService
             return new List<OrderRequestItemAddon>();
         }
 
+
         var addonIds = selections.Select(s => s.AddonId).Distinct().ToList();
+
 
         // ServicePlanAddon là bảng nối composite key (PlanId, AddonId) - TKey generic của
         // Repository<TEntity,TKey> chỉ thật sự dùng cho GetByIdAsync (xem Repository.cs), không ảnh
@@ -672,9 +801,11 @@ public class OrderRequestService : IOrderRequestService
             .Where(pa => pa.PlanId == servicePlanId && addonIds.Contains(pa.AddonId))
             .ToDictionaryAsync(pa => pa.AddonId, cancellationToken);
 
+
         var addons = await _unitOfWork.Repository<Addon, int>().Query()
             .Where(a => addonIds.Contains(a.Id))
             .ToDictionaryAsync(a => a.Id, cancellationToken);
+
 
         var result = new List<OrderRequestItemAddon>();
         foreach (var selection in selections)
@@ -684,15 +815,18 @@ public class OrderRequestService : IOrderRequestService
                 throw new ValidationException($"Addon #{selection.AddonId} không thuộc gói dịch vụ này.");
             }
 
+
             if (!addons.TryGetValue(selection.AddonId, out var addon) || !addon.IsActive)
             {
                 throw new ValidationException($"Addon #{selection.AddonId} hiện không khả dụng.");
             }
 
+
             if (selection.Quantity < 1 || selection.Quantity > planAddon.MaxQuantity)
             {
                 throw new ValidationException($"Số lượng addon '{addon.Name}' vượt quá giới hạn cho phép ({planAddon.MaxQuantity}).");
             }
+
 
             var unitPrice = addon.PricePerMonth * periodMonths;
             result.Add(new OrderRequestItemAddon
@@ -704,8 +838,10 @@ public class OrderRequestService : IOrderRequestService
             });
         }
 
+
         return result;
     }
+
 
     // isRenewal chọn RenewPrice (gia hạn) thay vì RegisterPrice (mua mới) - lần đầu tiên RenewPrice
     // được dùng để tính tiền thật trong hệ thống (trước đó chỉ hiển thị ở bảng giá Admin).
@@ -718,6 +854,7 @@ public class OrderRequestService : IOrderRequestService
             throw new NotFoundException(nameof(TldPricing), tldPricingId);
         }
 
+
         // isRenewal: cùng chính sách khoan dung với BuildServicePlanItemAsync (Deprecated vẫn cho gia
         // hạn) - TldPricing không có enum Status nhiều bậc như ServicePlan nên tái dùng thẳng
         // IsActive=false làm "Deprecated": chặn đăng ký mới, KHÔNG chặn khách cũ gia hạn tên miền đang
@@ -727,11 +864,13 @@ public class OrderRequestService : IOrderRequestService
             throw new ValidationException("Tên miền này hiện không khả dụng để đặt mua.");
         }
 
+
         var trimmedDomain = domainName?.Trim();
         if (string.IsNullOrEmpty(trimmedDomain) || !DomainLabelPattern.IsMatch(trimmedDomain))
         {
             throw new ValidationException("Vui lòng nhập tên miền hợp lệ (chỉ chữ, số, gạch ngang, không có dấu chấm).");
         }
+
 
         var unitPrice = isRenewal ? tldPricing.RenewPrice : tldPricing.RegisterPrice;
         var item = new OrderRequestItem
@@ -743,8 +882,10 @@ public class OrderRequestService : IOrderRequestService
             LineTotal = unitPrice * quantity
         };
 
+
         return (item, null, tldPricing.ServiceCategoryId);
     }
+
 
     // Fraud Review (Đợt 2, Phần 9) - rule-based, chỉ dựa dữ liệu đã có trong hệ thống (không gọi threat-
     // intel/API bên ngoài nào - hệ thống không chạm dữ liệu thẻ tín dụng, PayOS là cổng thanh toán duy
@@ -757,12 +898,14 @@ public class OrderRequestService : IOrderRequestService
         var reasons = new List<string>();
         var orderRepository = _unitOfWork.Repository<OrderRequest, int>();
 
+
         // Rule 1: số lượng bất thường trên 1 dòng.
         var maxLineQuantity = dto.Items.Count == 0 ? 0 : dto.Items.Max(i => i.Quantity);
         if (maxLineQuantity > _appSettings.FraudMaxQuantityPerLine)
         {
             reasons.Add($"Số lượng 1 dòng vượt ngưỡng ({maxLineQuantity} > {_appSettings.FraudMaxQuantityPerLine}).");
         }
+
 
         // Rule 2: tần suất đặt hàng bất thường - cùng email/phone tạo nhiều đơn trong khoảng thời gian
         // ngắn. recentOrderCount là số đơn ĐÃ có trước đó trong cửa sổ - đơn đang tạo sẽ là đơn thứ
@@ -776,11 +919,13 @@ public class OrderRequestService : IOrderRequestService
             reasons.Add($"Tần suất đặt hàng bất thường ({recentOrderCount + 1} đơn trong {_appSettings.FraudOrderWindowMinutes} phút).");
         }
 
+
         // Rule 3: giá trị đơn cao bất thường với khách MỚI (chưa từng có đơn Completed nào trước đó) -
         // khách quen mua giá trị lớn không bị gắn cờ, chỉ khách lần đầu xuất hiện với đơn giá trị cao.
         if (totalPrice > _appSettings.FraudNewCustomerHighValueThreshold)
         {
             var hasCompletedOrderBefore = await HasCompletedOrderBeforeAsync(customerId, dto.CustomerEmail, cancellationToken);
+
 
             if (!hasCompletedOrderBefore)
             {
@@ -788,8 +933,10 @@ public class OrderRequestService : IOrderRequestService
             }
         }
 
+
         return reasons.Count > 0 ? (true, string.Join(" ", reasons)) : (false, null);
     }
+
 
     // Dùng chung cho Fraud Review Rule 3 (Đợt 2, Phần 9) và điều kiện khách mới/khách cũ của mã giảm
     // giá (Đợt 3, Phần 13) - "khách mới" nghĩa là chưa từng có đơn nào Completed. Match theo CustomerId
@@ -802,6 +949,7 @@ public class OrderRequestService : IOrderRequestService
             : await orderRepository.Query().AnyAsync(o => o.CustomerEmail == email && o.Status == OrderRequestStatus.Completed, cancellationToken);
     }
 
+
     // planId: chỉ set khi đặt ServicePlan (PromotionScope.ServicePlanId chỉ FK tới ServicePlan, TLD
     // không có scope riêng theo từng tên miền - chỉ theo ServiceCategory hoặc "Toàn bộ").
     private static bool MatchesScope(Promotion promotion, int? planId, int? categoryId) =>
@@ -812,16 +960,19 @@ public class OrderRequestService : IOrderRequestService
             || (s.ScopeType == ScopeType.Plan && planId is not null && s.ServicePlanId == planId)
             || (s.ScopeType == ScopeType.Category && categoryId is not null && s.ServiceCategoryId == categoryId));
 
+
     private static decimal ComputeDiscount(Promotion promotion, decimal subtotal)
     {
         var discount = promotion.DiscountType == DiscountType.Percentage
             ? subtotal * promotion.DiscountValue / 100m
             : promotion.DiscountValue;
 
+
         if (promotion.MaxDiscountAmount is not null && discount > promotion.MaxDiscountAmount)
         {
             discount = promotion.MaxDiscountAmount.Value;
         }
+
 
         return discount;
     }

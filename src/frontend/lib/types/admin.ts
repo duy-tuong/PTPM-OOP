@@ -16,12 +16,14 @@ import type {
   ServicePlanStatus,
 } from "./enums";
 
+
 // ---- Admin Catalog: Service Categories ----
 // Khớp Application/Features/Admin/Catalog/ServiceCategories/Dtos/*.cs
 export interface ServiceCategoryQueryParams extends PaginationParams {
   // Tìm theo tên hoặc slug danh mục dịch vụ.
   search?: string;
 }
+
 
 export interface AdminServiceCategoryDto {
   id: number;
@@ -33,6 +35,7 @@ export interface AdminServiceCategoryDto {
   isActive: boolean;
 }
 
+
 export interface CreateServiceCategoryDto {
   name: string;
   slug: string;
@@ -42,7 +45,9 @@ export interface CreateServiceCategoryDto {
   isActive: boolean;
 }
 
+
 export type UpdateServiceCategoryDto = CreateServiceCategoryDto;
+
 
 // ---- Admin Catalog: Service Plans ----
 // Khớp Application/Features/Admin/Catalog/ServicePlans/Dtos/*.cs
@@ -73,6 +78,7 @@ export interface AdminServicePlanDto extends ServicePlanCustomConfigFields {
   osImages: PlanOsImageDto[];
 }
 
+
 export interface PlanFeatureInputDto {
   featureKey: string;
   featureLabel: string;
@@ -82,6 +88,7 @@ export interface PlanFeatureInputDto {
   displayOrder: number;
   isHighlighted: boolean;
 }
+
 
 export interface PlanPriceInputDto {
   periodMonths: number;
@@ -94,15 +101,18 @@ export interface PlanPriceInputDto {
   discountPercent?: number;
 }
 
+
 export interface PlanAddonInputDto {
   addonId: number;
   maxQuantity: number;
 }
 
+
 export interface PlanOsImageInputDto {
   osImageId: number;
   isDefault: boolean;
 }
+
 
 export interface CreateServicePlanDto {
   categoryId: number;
@@ -141,7 +151,9 @@ export interface CreateServicePlanDto {
   osImages: PlanOsImageInputDto[];
 }
 
+
 export type UpdateServicePlanDto = CreateServicePlanDto;
+
 
 // ---- Admin Catalog: Addons ----
 // Khớp Application/Features/Admin/Catalog/Addons/Dtos/*.cs
@@ -149,6 +161,7 @@ export interface AddonQueryParams extends PaginationParams {
   // Tìm theo tên hoặc SKU của addon.
   search?: string;
 }
+
 
 export interface AdminAddonDto {
   id: number;
@@ -162,6 +175,7 @@ export interface AdminAddonDto {
   isActive: boolean;
 }
 
+
 export interface CreateAddonDto {
   name: string;
   sku: string;
@@ -172,7 +186,9 @@ export interface CreateAddonDto {
   isActive: boolean;
 }
 
+
 export type UpdateAddonDto = CreateAddonDto;
+
 
 // ---- Admin Catalog: OS Images ----
 // Khớp Application/Features/Admin/Catalog/OsImages/Dtos/*.cs (Đợt 3, Phần 11)
@@ -180,6 +196,7 @@ export interface OsImageQueryParams extends PaginationParams {
   // Tìm theo tên hoặc slug hệ điều hành.
   search?: string;
 }
+
 
 export interface AdminOsImageDto {
   id: number;
@@ -192,6 +209,7 @@ export interface AdminOsImageDto {
   displayOrder: number;
 }
 
+
 export interface CreateOsImageDto {
   name: string;
   slug: string;
@@ -201,7 +219,9 @@ export interface CreateOsImageDto {
   displayOrder: number;
 }
 
+
 export type UpdateOsImageDto = CreateOsImageDto;
+
 
 // ---- Admin Marketing: Promotions ----
 // Khớp Application/Features/Admin/Marketing/Promotions/Dtos/*.cs
@@ -213,17 +233,20 @@ export interface PromotionScopeDto {
   servicePlanName?: string | null;
 }
 
+
 export interface PromotionScopeInputDto {
   scopeType: ScopeType;
   serviceCategoryId?: number;
   servicePlanId?: number;
 }
 
+
 // Không thêm field lọc riêng nào - chỉ cần phân trang thuần.
 export interface PromotionQueryParams extends PaginationParams {
   // Tìm theo mã hoặc tên khuyến mãi.
   search?: string;
 }
+
 
 export interface AdminPromotionDto {
   id: number;
@@ -243,6 +266,7 @@ export interface AdminPromotionDto {
   scopes: PromotionScopeDto[];
 }
 
+
 export interface CreatePromotionDto {
   code: string;
   name: string;
@@ -259,7 +283,9 @@ export interface CreatePromotionDto {
   scopes: PromotionScopeInputDto[];
 }
 
+
 export type UpdatePromotionDto = CreatePromotionDto;
+
 
 // ---- Admin Content: Content Pages ----
 // Khớp Application/Features/Admin/Content/ContentPages/Dtos/*.cs
@@ -267,6 +293,7 @@ export interface ContentPageQueryParams extends PaginationParams {
   // Tìm theo tiêu đề hoặc slug trang nội dung.
   search?: string;
 }
+
 
 export interface AdminContentPageDto {
   id: number;
@@ -281,6 +308,7 @@ export interface AdminContentPageDto {
   displayOrder: number;
 }
 
+
 export interface CreateContentPageDto {
   slug: string;
   title: string;
@@ -291,7 +319,9 @@ export interface CreateContentPageDto {
   displayOrder: number;
 }
 
+
 export type UpdateContentPageDto = CreateContentPageDto;
+
 
 // ---- Admin Content: FAQs ----
 // Khớp Application/Features/Admin/Content/Faqs/Dtos/*.cs
@@ -299,6 +329,7 @@ export interface FaqQueryParams extends PaginationParams {
   // Tìm theo câu hỏi hoặc câu trả lời.
   search?: string;
 }
+
 
 export interface AdminFaqDto {
   id: number;
@@ -309,6 +340,7 @@ export interface AdminFaqDto {
   isActive: boolean;
 }
 
+
 export interface CreateFaqDto {
   question: string;
   answer: string;
@@ -317,7 +349,9 @@ export interface CreateFaqDto {
   isActive: boolean;
 }
 
+
 export type UpdateFaqDto = CreateFaqDto;
+
 
 // ---- Admin Content: News Categories ----
 // Khớp Application/Features/Admin/Content/NewsCategories/Dtos/*.cs
@@ -325,6 +359,7 @@ export interface NewsCategoryQueryParams extends PaginationParams {
   // Tìm theo tên hoặc slug danh mục tin tức.
   search?: string;
 }
+
 
 export interface AdminNewsCategoryDto {
   id: number;
@@ -335,6 +370,7 @@ export interface AdminNewsCategoryDto {
   isActive: boolean;
 }
 
+
 export interface CreateNewsCategoryDto {
   name: string;
   slug: string;
@@ -343,7 +379,9 @@ export interface CreateNewsCategoryDto {
   isActive: boolean;
 }
 
+
 export type UpdateNewsCategoryDto = CreateNewsCategoryDto;
+
 
 // ---- Admin Content: News Articles ----
 // Khớp Application/Features/Admin/Content/NewsArticles/Dtos/*.cs
@@ -363,6 +401,7 @@ export interface AdminNewsArticleDto {
   tags: string[];
 }
 
+
 export interface CreateNewsArticleDto {
   newsCategoryId: number;
   title: string;
@@ -376,7 +415,9 @@ export interface CreateNewsArticleDto {
   tagNames: string[];
 }
 
+
 export type UpdateNewsArticleDto = CreateNewsArticleDto;
+
 
 // Query params dùng chung cho GET /api/admin/service-plans, /admin/news-articles (thêm ở Phase 6.0)
 export interface AdminServicePlanQueryParams extends PaginationParams {
@@ -388,11 +429,13 @@ export interface AdminServicePlanQueryParams extends PaginationParams {
   search?: string;
 }
 
+
 export interface AdminNewsArticleQueryParams extends PaginationParams {
   categorySlug?: string;
   tagSlug?: string;
   search?: string;
 }
+
 
 // ---- Admin Sales: Order Requests ----
 // Khớp Application/Features/Admin/Sales/OrderRequests/Dtos/*.cs
@@ -415,7 +458,11 @@ export interface AdminOrderRequestDto {
   // Fraud Review (Đợt 2, Phần 9) - xem OrderRequestService.EvaluateFraudRiskAsync (backend).
   isFlaggedForReview: boolean;
   flagReason?: string | null;
+  // Đợt 13, Phần 4 (D1/D2) - null nếu đơn chưa Paid.
+  paidAt?: string | null;
+  payOsPaymentLinkId?: string | null;
 }
+
 
 export interface OrderRequestQueryParams extends PaginationParams {
   status?: OrderRequestStatus;
@@ -425,14 +472,17 @@ export interface OrderRequestQueryParams extends PaginationParams {
   search?: string;
 }
 
+
 export interface UpdateOrderRequestStatusDto {
   newStatus: OrderRequestStatus;
 }
+
 
 // Gán/gỡ người phụ trách thủ công (Đợt 10, Phần 1). null = bỏ gán.
 export interface AssignOrderRequestDto {
   assignedToUserId: string | null;
 }
+
 
 // ---- Admin Sales: Consultation Requests ----
 // Khớp Application/Features/Admin/Sales/ConsultationRequests/Dtos/*.cs
@@ -440,6 +490,7 @@ export interface ConsultationRequestQueryParams extends PaginationParams {
   // Tìm theo mã yêu cầu, tên hoặc email khách.
   search?: string;
 }
+
 
 export interface AdminConsultationRequestDto {
   id: number;
@@ -455,9 +506,11 @@ export interface AdminConsultationRequestDto {
   createdAt: string;
 }
 
+
 export interface UpdateConsultationRequestStatusDto {
   newStatus: ConsultationStatus;
 }
+
 
 // ---- Admin Sales: Affiliate Applications ----
 // Khớp Application/Features/Admin/Sales/AffiliateApplications/Dtos/*.cs
@@ -465,6 +518,7 @@ export interface AffiliateApplicationQueryParams extends PaginationParams {
   // Tìm theo họ tên, email hoặc số điện thoại.
   search?: string;
 }
+
 
 export interface AdminAffiliateApplicationDto {
   id: number;
@@ -480,10 +534,12 @@ export interface AdminAffiliateApplicationDto {
   createdAt: string;
 }
 
+
 export interface UpdateAffiliateApplicationStatusDto {
   newStatus: AffiliateApplicationStatus;
   reviewNote?: string;
 }
+
 
 // ---- Admin Reporting ----
 // Khớp Application/Features/Admin/Reporting/DashboardStats/Dtos/*.cs
@@ -493,11 +549,13 @@ export interface MonthlyRequestStatDto {
   consultationRequestCount: number;
 }
 
+
 export interface TopServicePlanStatDto {
   servicePlanId: number;
   servicePlanName: string;
   requestCount: number;
 }
+
 
 // ---- Admin: Tìm kiếm toàn cục (Command Palette) ----
 // Khớp Application/Features/Admin/Search/Dtos/AdminSearchResultDto.cs
@@ -507,6 +565,7 @@ export interface AdminSearchResultItemDto {
   subtitle?: string | null;
   url: string;
 }
+
 
 export interface AdminSearchResultDto {
   customers: AdminSearchResultItemDto[];
@@ -518,6 +577,7 @@ export interface AdminSearchResultDto {
   promotions: AdminSearchResultItemDto[];
 }
 
+
 export interface DashboardStatsDto {
   totalOrderRequests: number;
   totalConsultationRequests: number;
@@ -526,6 +586,7 @@ export interface DashboardStatsDto {
   monthlyStats: MonthlyRequestStatDto[];
   topServicePlans: TopServicePlanStatDto[];
 }
+
 
 // Khớp Application/Features/Admin/Reporting/RevenueAnalytics/Dtos/*.cs (Đợt 2 - Kinh doanh, Phần 7)
 export interface RevenueAnalyticsSummaryDto {
@@ -539,20 +600,24 @@ export interface RevenueAnalyticsSummaryDto {
   ltv: number;
 }
 
+
 export interface MrrTrendPointDto {
   month: string;
   newMrrBookings: number;
 }
+
 
 export interface RevenueByProductLineDto {
   productLine: string;
   revenue: number;
 }
 
+
 export interface RevenueByRegionDto {
   regionName: string;
   revenue: number;
 }
+
 
 export interface ArAgingBucketDto {
   bucketLabel: string;
@@ -560,10 +625,12 @@ export interface ArAgingBucketDto {
   orderCount: number;
 }
 
+
 // Khớp Application/Features/Admin/Reporting/AuditLogs/Dtos/*.cs
 export interface AuditLogQueryParams extends PaginationParams {
   entityName?: string;
 }
+
 
 export interface AdminAuditLogDto {
   id: number;
@@ -577,12 +644,14 @@ export interface AdminAuditLogDto {
   timestamp: string;
 }
 
+
 // ---- Admin Content: Testimonials ----
 // Khớp Application/Features/Admin/Content/Testimonials/Dtos/*.cs
 export interface TestimonialQueryParams extends PaginationParams {
   // Tìm theo tên người đánh giá hoặc nội dung nhận xét.
   search?: string;
 }
+
 
 export interface AdminTestimonialDto {
   id: number;
@@ -595,6 +664,7 @@ export interface AdminTestimonialDto {
   isActive: boolean;
 }
 
+
 export interface CreateTestimonialDto {
   displayName: string;
   companyName?: string;
@@ -605,7 +675,9 @@ export interface CreateTestimonialDto {
   isActive: boolean;
 }
 
+
 export type UpdateTestimonialDto = CreateTestimonialDto;
+
 
 // ---- Admin Content: Partners ----
 // Khớp Application/Features/Admin/Content/Partners/Dtos/*.cs
@@ -613,6 +685,7 @@ export interface PartnerQueryParams extends PaginationParams {
   // Tìm theo tên đối tác.
   search?: string;
 }
+
 
 export interface AdminPartnerDto {
   id: number;
@@ -623,6 +696,7 @@ export interface AdminPartnerDto {
   isActive: boolean;
 }
 
+
 export interface CreatePartnerDto {
   name: string;
   logoUrl: string;
@@ -631,7 +705,9 @@ export interface CreatePartnerDto {
   isActive: boolean;
 }
 
+
 export type UpdatePartnerDto = CreatePartnerDto;
+
 
 // ---- Admin Catalog: TLD Pricing ----
 // Khớp Application/Features/Admin/Catalog/TldPricings/Dtos/*.cs
@@ -639,6 +715,7 @@ export interface TldPricingQueryParams extends PaginationParams {
   // Tìm theo đuôi tên miền.
   search?: string;
 }
+
 
 export interface AdminTldPricingDto {
   id: number;
@@ -651,6 +728,7 @@ export interface AdminTldPricingDto {
   isActive: boolean;
 }
 
+
 export interface CreateTldPricingDto {
   tld: string;
   serviceCategoryId?: number;
@@ -661,7 +739,9 @@ export interface CreateTldPricingDto {
   isActive: boolean;
 }
 
+
 export type UpdateTldPricingDto = CreateTldPricingDto;
+
 
 // ---- Admin Content: News Comments ----
 // Khớp Application/Features/Admin/Content/NewsComments/Dtos/*.cs
@@ -677,6 +757,7 @@ export interface AdminNewsCommentDto {
   createdAt: string;
 }
 
+
 export interface NewsCommentQueryParams extends PaginationParams {
   newsArticleId?: number;
   isApproved?: boolean;
@@ -684,9 +765,11 @@ export interface NewsCommentQueryParams extends PaginationParams {
   search?: string;
 }
 
+
 export interface UpdateNewsCommentApprovalDto {
   isApproved: boolean;
 }
+
 
 // ---- Admin Identity: Customers ----
 // Khớp Application/Features/Admin/Identity/Customers/Dtos/*.cs
@@ -710,6 +793,7 @@ export interface AdminCustomerDto {
   assignedSalesRepUserName?: string | null;
 }
 
+
 // Khớp Application/Features/Admin/Identity/Customers/Dtos/UpdateCustomerDto.cs - PUT ghi đè toàn bộ
 // field, assignedSalesRepUserId=null nghĩa là "bỏ gán" (không phải "không đổi").
 export interface UpdateCustomerDto {
@@ -720,6 +804,7 @@ export interface UpdateCustomerDto {
   assignedSalesRepUserId?: string | null;
 }
 
+
 export interface CustomerQueryParams extends PaginationParams {
   search?: string;
   // CRM: Hồ sơ B2B & Sales Rep (Đợt 2, Phần 10).
@@ -727,9 +812,11 @@ export interface CustomerQueryParams extends PaginationParams {
   assignedSalesRepUserId?: string;
 }
 
+
 export interface UpdateCustomerActiveStatusDto {
   isActive: boolean;
 }
+
 
 // ---- Admin Identity: Users (nhân viên - Admin/Editor) ----
 // Khớp Application/Features/Admin/Identity/Users/Dtos/*.cs
@@ -738,6 +825,7 @@ export interface UserQueryParams extends PaginationParams {
   // Tìm theo tên đăng nhập, email hoặc họ tên.
   search?: string;
 }
+
 
 export interface AdminUserDto {
   id: string;
@@ -750,6 +838,7 @@ export interface AdminUserDto {
   createdAt: string;
 }
 
+
 export interface CreateUserDto {
   username: string;
   email: string;
@@ -759,6 +848,7 @@ export interface CreateUserDto {
   roleIds: number[];
 }
 
+
 export interface UpdateUserDto {
   fullName: string;
   email: string;
@@ -767,9 +857,11 @@ export interface UpdateUserDto {
   roleIds: number[];
 }
 
+
 export interface ResetUserPasswordDto {
   newPassword: string;
 }
+
 
 // ---- Admin System: Site Settings ----
 // Khớp Application/Features/Admin/System/SiteSettings/Dtos/*.cs
@@ -782,6 +874,7 @@ export interface AdminSiteSettingDto {
   updatedAt?: string | null;
 }
 
+
 export interface CreateSiteSettingDto {
   settingKey: string;
   settingValue: string;
@@ -789,4 +882,8 @@ export interface CreateSiteSettingDto {
   dataType: string;
 }
 
+
 export type UpdateSiteSettingDto = CreateSiteSettingDto;
+
+
+

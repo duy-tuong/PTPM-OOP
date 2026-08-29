@@ -1,5 +1,6 @@
 "use client";
 
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -13,10 +14,12 @@ import { ProvisioningDetailsCard } from "@/components/account/ProvisioningDetail
 import { updateOrderRequestStatusAction, assignOrderRequestAction } from "@/app/admin/order-requests/actions";
 import { OrderRequestStatus, ORDER_REQUEST_STATUS_LABELS } from "@/lib/types/enums";
 import { formatOrderItemLabel } from "@/lib/utils/orderItems";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
 import type { AdminOrderRequestDto, AdminUserDto } from "@/lib/types/admin";
 
+
 const NO_ASSIGNEE_VALUE = "none";
+
 
 interface OrderStatusDialogProps {
   open: boolean;
@@ -26,6 +29,7 @@ interface OrderStatusDialogProps {
   // phụ trách" trong trường hợp đó, xem comment ở page.tsx.
   staffUsers: AdminUserDto[];
 }
+
 
 // Cho chọn tự do cả 5 giá trị (không disable option nào) - backend tự chặn transition không hợp lệ
 // (đơn đã Hoàn tất/Đã huỷ không cho chuyển tiếp, xem AdminOrderRequestService.UpdateStatusAsync) và trả
@@ -38,6 +42,7 @@ export function OrderStatusDialog({ open, onOpenChange, order, staffUsers }: Ord
   const [assignedToUserId, setAssignedToUserId] = useState(NO_ASSIGNEE_VALUE);
   const [initialAssignedToUserId, setInitialAssignedToUserId] = useState(NO_ASSIGNEE_VALUE);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
 
   useEffect(() => {
     function syncFromOrder() {
@@ -53,8 +58,10 @@ export function OrderStatusDialog({ open, onOpenChange, order, staffUsers }: Ord
     syncFromOrder();
   }, [open, order]);
 
+
   async function handleSubmit() {
     if (!order) return;
+
 
     setIsSubmitting(true);
     try {
@@ -68,6 +75,7 @@ export function OrderStatusDialog({ open, onOpenChange, order, staffUsers }: Ord
         }
       }
 
+
       if (assignedToUserId !== initialAssignedToUserId) {
         const result = await assignOrderRequestAction(order.id, {
           assignedToUserId: assignedToUserId === NO_ASSIGNEE_VALUE ? null : assignedToUserId,
@@ -78,10 +86,12 @@ export function OrderStatusDialog({ open, onOpenChange, order, staffUsers }: Ord
         }
       }
 
+
       if (newStatus === initialStatus && assignedToUserId === initialAssignedToUserId) {
         onOpenChange(false);
         return;
       }
+
 
       toast.success("Đã cập nhật đơn hàng");
       onOpenChange(false);
@@ -91,7 +101,9 @@ export function OrderStatusDialog({ open, onOpenChange, order, staffUsers }: Ord
     }
   }
 
+
   if (!order) return null;
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -99,6 +111,7 @@ export function OrderStatusDialog({ open, onOpenChange, order, staffUsers }: Ord
         <DialogHeader>
           <DialogTitle>Cập nhật trạng thái đơn hàng</DialogTitle>
         </DialogHeader>
+
 
         <FieldGroup className="py-4">
           <div className="rounded-2xl border border-zinc-200/60 bg-zinc-50/50 p-4 text-sm">
@@ -145,7 +158,23 @@ export function OrderStatusDialog({ open, onOpenChange, order, staffUsers }: Ord
               <span className="text-zinc-500">Tổng tiền</span>
               <span className="font-mono font-medium text-zinc-900">{formatCurrency(order.totalPrice)}</span>
             </div>
+            {/* Đợt 13, Phần 4 (D1/D2) - trước đây 2 field này đã có sẵn ở backend (set lúc webhook PayOS
+                xác nhận thanh toán) nhưng chưa từng hiện ở đâu - Admin không biết đơn đã thu tiền lúc
+                nào, cũng không đối chiếu được với PayOS. Tự ẩn khi đơn chưa Paid (cả 2 đều null). */}
+            {order.paidAt && (
+              <div className="mt-1 flex justify-between gap-4">
+                <span className="text-zinc-500">Đã thanh toán lúc</span>
+                <span className="font-medium text-zinc-900">{formatDate(order.paidAt)}</span>
+              </div>
+            )}
+            {order.payOsPaymentLinkId && (
+              <div className="mt-1 flex justify-between gap-4">
+                <span className="text-zinc-500">Mã giao dịch PayOS</span>
+                <span className="font-mono text-xs font-medium text-zinc-900">{order.payOsPaymentLinkId}</span>
+              </div>
+            )}
           </div>
+
 
           <Field>
             <Label htmlFor="order-new-status">Trạng thái mới</Label>
@@ -170,6 +199,20 @@ export function OrderStatusDialog({ open, onOpenChange, order, staffUsers }: Ord
             </Select>
           </Field>
 
+
+          {/* Đợt 13, Phần 4 (D3) - trước đây Admin có thể huỷ 1 đơn ĐÃ thu tiền (Paid/Provisioning) mà
+              không thấy cảnh báo gì, dễ quên bước hoàn tiền thủ công (hệ thống không tự hoàn tiền qua
+              PayOS). Không chặn hành động - Admin vẫn toàn quyền quyết định, chỉ đảm bảo họ nhìn thấy
+              trước khi bấm "Cập nhật". Dùng order.paidAt (không phải order.status hiện tại) làm điều
+              kiện - khớp đúng tín hiệu backend dùng để phân biệt email huỷ đơn (D4). */}
+          {newStatus === OrderRequestStatus.Cancelled && newStatus !== initialStatus && order.paidAt && (
+            <div className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              ⚠ Đơn này đã thu tiền lúc {formatDate(order.paidAt)}. Huỷ đơn KHÔNG tự động hoàn tiền - bạn
+              cần chủ động hoàn tiền thủ công qua PayOS/chuyển khoản ngân hàng.
+            </div>
+          )}
+
+
           {staffUsers.length > 0 && (
             <Field>
               <Label htmlFor="order-assignee">Người phụ trách</Label>
@@ -190,6 +233,7 @@ export function OrderStatusDialog({ open, onOpenChange, order, staffUsers }: Ord
           )}
         </FieldGroup>
 
+
         <DialogFooter>
           <Button
             onClick={handleSubmit}
@@ -203,3 +247,6 @@ export function OrderStatusDialog({ open, onOpenChange, order, staffUsers }: Ord
     </Dialog>
   );
 }
+
+
+

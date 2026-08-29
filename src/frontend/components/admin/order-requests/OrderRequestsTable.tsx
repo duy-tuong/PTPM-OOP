@@ -1,5 +1,6 @@
 "use client";
 
+
 import { useState } from "react";
 import { Pencil, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,9 +10,16 @@ import { LifecycleStatusBadge } from "@/components/admin/LifecycleStatusBadge";
 import { OrderStatusDialog } from "@/components/admin/order-requests/OrderStatusDialog";
 import { LiftSuspensionButton } from "@/components/admin/order-requests/LiftSuspensionButton";
 import { ClearFlagButton } from "@/components/admin/order-requests/ClearFlagButton";
-import { formatOrderProductSummary, getWorstLifecycleStatus, getFirstSuspendedItemId } from "@/lib/utils/orderItems";
+import {
+  formatOrderProductSummary,
+  getWorstLifecycleStatus,
+  getFirstSuspendedItemId,
+  isStaleNewOrder,
+  STALE_ORDER_DAYS,
+} from "@/lib/utils/orderItems";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { AdminOrderRequestDto, AdminUserDto } from "@/lib/types/admin";
+
 
 // Không có Create/Delete cho resource này - Dialog chỉ dùng để đổi trạng thái, mirror pattern
 // Manager của Phase 6.7/6.8 nhưng rút gọn.
@@ -27,10 +35,12 @@ export function OrderRequestsTable({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<AdminOrderRequestDto | null>(null);
 
+
   function openStatusDialog(order: AdminOrderRequestDto) {
     setSelectedOrder(order);
     setDialogOpen(true);
   }
+
 
   const columns: DataTableColumn<AdminOrderRequestDto>[] = [
     {
@@ -76,7 +86,18 @@ export function OrderRequestsTable({
       header: "Trạng thái",
       cell: (row) => (
         <div className="flex flex-col gap-1">
-          <OrderStatusBadge status={row.status} />
+          <div className="flex items-center gap-1.5">
+            <OrderStatusBadge status={row.status} />
+            {/* Đợt 13, Phần 3 (C1) - đơn "New" bị bỏ quên quá lâu, chưa được liên hệ/thanh toán. */}
+            {isStaleNewOrder(row.status, row.createdAt) && (
+              <span
+                title={`Đơn này chưa được xử lý sau ${STALE_ORDER_DAYS}+ ngày`}
+                className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[11px] font-medium text-amber-700"
+              >
+                ⏱ Chờ lâu
+              </span>
+            )}
+          </div>
           <LifecycleStatusBadge status={getWorstLifecycleStatus(row.items)} />
         </div>
       ),
@@ -120,6 +141,7 @@ export function OrderRequestsTable({
     },
   ];
 
+
   return (
     <>
       <DataTable columns={columns} data={orders} emptyMessage="Chưa có đơn hàng nào." getRowKey={(row) => row.id} />
@@ -127,3 +149,6 @@ export function OrderRequestsTable({
     </>
   );
 }
+
+
+
