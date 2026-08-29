@@ -8,12 +8,15 @@ using CloudServiceStore.Domain.Entities.Identity;
 using CloudServiceStore.Domain.Entities.Sales;
 using Microsoft.EntityFrameworkCore;
 
+
 namespace CloudServiceStore.Application.Features.Admin.Sales.OrderRequests;
+
 
 public class AdminOrderRequestService : IAdminOrderRequestService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IOrderRequestStatusTransitionService _transitionService;
+
 
     public AdminOrderRequestService(IUnitOfWork unitOfWork, IOrderRequestStatusTransitionService transitionService)
     {
@@ -21,9 +24,11 @@ public class AdminOrderRequestService : IAdminOrderRequestService
         _transitionService = transitionService;
     }
 
+
     public async Task<PagedResult<AdminOrderRequestDto>> GetListAsync(OrderRequestQueryParams query, CancellationToken cancellationToken = default)
     {
         var repository = _unitOfWork.Repository<OrderRequest, int>();
+
 
         var baseQuery = repository.Query()
             .Include(o => o.Items).ThenInclude(i => i.ServicePlan)
@@ -35,21 +40,25 @@ public class AdminOrderRequestService : IAdminOrderRequestService
             .Where(o => query.Search == null || o.OrderCode.Contains(query.Search) || o.CustomerName.Contains(query.Search) || o.CustomerEmail.Contains(query.Search))
             .OrderByDescending(o => o.CreatedAt);
 
+
         var totalCount = await baseQuery.CountAsync(cancellationToken);
         var entities = await baseQuery
             .Skip((query.PageNumber - 1) * query.PageSize)
             .Take(query.PageSize)
             .ToListAsync(cancellationToken);
 
+
         var dtos = entities.Select(o => MapToDto(o)).ToList();
         return PagedResult<AdminOrderRequestDto>.Create(dtos, totalCount, query.PageNumber, query.PageSize);
     }
+
 
     public async Task<AdminOrderRequestDto> UpdateStatusAsync(int id, UpdateOrderRequestStatusDto dto, Guid changedByUserId, CancellationToken cancellationToken = default)
     {
         var entity = await _transitionService.TransitionAsync(id, dto.NewStatus, changedByUserId, cancellationToken);
         return MapToDto(entity);
     }
+
 
     public async Task<AdminOrderRequestDto> LiftSuspensionAsync(int itemId, CancellationToken cancellationToken = default)
     {
@@ -61,32 +70,39 @@ public class AdminOrderRequestService : IAdminOrderRequestService
             .Include(i => i.OrderRequest).ThenInclude(o => o.AssignedToUser)
             .FirstOrDefaultAsync(i => i.Id == itemId, cancellationToken);
 
+
         if (item is null)
         {
             throw new NotFoundException(nameof(OrderRequestItem), itemId);
         }
+
 
         if (item.TerminatedAt is not null)
         {
             throw new ValidationException("Dịch vụ đã bị hủy hẳn (quá hạn quá lâu, dữ liệu bàn giao đã bị xoá) - không thể gỡ khóa, cần tạo gia hạn/bàn giao lại thủ công nếu muốn khôi phục.");
         }
 
+
         if (item.SuspendedAt is null && item.TerminationWarningSentAt is null)
         {
             throw new ValidationException("Dịch vụ này hiện không bị tạm khóa.");
         }
+
 
         item.SuspendedAt = null;
         item.TerminationWarningSentAt = null;
         itemRepository.Update(item);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+
         return MapToDto(item.OrderRequest);
     }
+
 
     public async Task<AdminOrderRequestDto> AssignAsync(int id, AssignOrderRequestDto dto, CancellationToken cancellationToken = default)
     {
         var entity = await LoadOrderAsync(id, cancellationToken);
+
 
         if (dto.AssignedToUserId is not null)
         {
@@ -98,9 +114,11 @@ public class AdminOrderRequestService : IAdminOrderRequestService
             }
         }
 
+
         entity.AssignedToUserId = dto.AssignedToUserId;
         _unitOfWork.Repository<OrderRequest, int>().Update(entity);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
 
         // Navigation AssignedToUser có thể chưa phản ánh Id vừa gán (EF không tự reload navigation sau
         // khi chỉ đổi FK) - tra lại tên trực tiếp để trả DTO đúng ngay, mirror
@@ -109,25 +127,31 @@ public class AdminOrderRequestService : IAdminOrderRequestService
             ? null
             : (await _unitOfWork.Repository<AppUser, Guid>().GetByIdAsync(dto.AssignedToUserId.Value, cancellationToken))?.FullName;
 
+
         return MapToDto(entity, assignedToUserName);
     }
+
 
     public async Task<AdminOrderRequestDto> ClearFraudFlagAsync(int id, CancellationToken cancellationToken = default)
     {
         var entity = await LoadOrderAsync(id, cancellationToken);
+
 
         if (!entity.IsFlaggedForReview)
         {
             throw new ValidationException("Đơn này hiện không bị đánh dấu nghi vấn.");
         }
 
+
         entity.IsFlaggedForReview = false;
         entity.FlagReason = null;
         _unitOfWork.Repository<OrderRequest, int>().Update(entity);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+
         return MapToDto(entity);
     }
+
 
     private async Task<OrderRequest> LoadOrderAsync(int id, CancellationToken cancellationToken)
     {
@@ -138,13 +162,16 @@ public class AdminOrderRequestService : IAdminOrderRequestService
             .Include(o => o.AssignedToUser)
             .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
 
+
         if (entity is null)
         {
             throw new NotFoundException(nameof(OrderRequest), id);
         }
 
+
         return entity;
     }
+
 
     private static AdminOrderRequestDto MapToDto(OrderRequest order, string? assignedToUserNameOverride = null)
     {
@@ -166,7 +193,12 @@ public class AdminOrderRequestService : IAdminOrderRequestService
             Source = order.Source,
             CreatedAt = order.CreatedAt,
             IsFlaggedForReview = order.IsFlaggedForReview,
-            FlagReason = order.FlagReason
+            FlagReason = order.FlagReason,
+            PaidAt = order.PaidAt,
+            PayOsPaymentLinkId = order.PayOsPaymentLinkId
         };
     }
 }
+
+
+
