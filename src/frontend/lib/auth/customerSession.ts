@@ -1,68 +1,27 @@
 import { cookies } from "next/headers";
-import type { NextResponse } from "next/server";
-import type { CustomerAuthResponse, CustomerSessionUser } from "@/lib/types/customerAuth";
+import type { CustomerSessionUser } from "@/lib/types/customerAuth";
 import {
   CUSTOMER_ACCESS_TOKEN_COOKIE,
   CUSTOMER_REFRESH_TOKEN_COOKIE,
   CUSTOMER_SESSION_COOKIE,
-  CUSTOMER_REFRESH_TOKEN_MAX_AGE_SECONDS,
+  CUSTOMER_ACCESS_EXPIRES_AT_COOKIE,
+  CUSTOMER_REMEMBER_COOKIE,
+  applyCustomerAuthCookies,
+  clearCustomerAuthCookies,
 } from "@/lib/auth/customerAuthCookies";
 
-export { CUSTOMER_ACCESS_TOKEN_COOKIE, CUSTOMER_REFRESH_TOKEN_COOKIE, CUSTOMER_SESSION_COOKIE };
-
-// Dùng chung cho Route Handler register + login (app/api/customer-auth/{register,login}/route.ts) -
-// set 2 cookie httpOnly (access/refresh token thật) + 1 cookie thường (customer_session, chỉ để Navbar
-// hiển thị tên, không dùng để authorize). `persistent=false` (checkbox "Ghi nhớ đăng nhập" bỏ tick ở
-// LoginForm) bỏ qua maxAge cho refresh/session cookie -> thành session cookie, tự xoá khi đóng trình
-// duyệt thay vì tồn tại 7 ngày; access token luôn giữ đúng hạn thật bất kể lựa chọn này.
-export function applyCustomerAuthCookies(
-  response: NextResponse,
-  result: CustomerAuthResponse,
-  options: { persistent?: boolean } = {},
-): void {
-  const persistent = options.persistent ?? true;
-  const accessTokenMaxAge = CUSTOMER_REFRESH_TOKEN_MAX_AGE_SECONDS;
-  // secure: chỉ bật ở production (Vercel/Docker build với NODE_ENV=production) - dev local vẫn chạy
-  // http://localhost nên không thể bật secure ở đó (trình duyệt sẽ âm thầm từ chối set cookie).
-  const secure = process.env.NODE_ENV === "production";
-  response.cookies.set(CUSTOMER_ACCESS_TOKEN_COOKIE, result.accessToken, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure,
-    path: "/",
-    maxAge: accessTokenMaxAge,
-  });
-  response.cookies.set(CUSTOMER_REFRESH_TOKEN_COOKIE, result.refreshToken, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure,
-    path: "/",
-    ...(persistent ? { maxAge: CUSTOMER_REFRESH_TOKEN_MAX_AGE_SECONDS } : {}),
-  });
-  // KHÔNG tự encodeURIComponent() giá trị JSON ở đây - NextResponse.cookies.set() (qua thư viện `cookie`
-  // Next.js dùng nội bộ) đã tự động percent-encode value khi serialize Set-Cookie. Tự encode thêm 1 lớp
-  // nữa gây double-encode: server đọc lại qua cookies() (tự động decode tương ứng) vẫn parse JSON đúng
-  // (chỉ dư 1 lớp encode CỦA CHÍNH MÌNH thêm vào, decode thủ công 1 lần ở getCustomerSession() undo đúng
-  // lớp đó) NHƯNG phía client đọc qua document.cookie (KHÔNG tự decode gì cả, khác cookies() ở server) -
-  // readCustomerSessionCookie() chỉ decodeURIComponent 1 lần nên còn dư đúng 1 lớp encode, JSON.parse
-  // luôn fail âm thầm (raw vẫn bắt đầu bằng "%7B" chứ không phải "{"), Navbar không bao giờ đọc được
-  // session dù cookie đã set đúng - bug thật, phát hiện khi thêm bước kiểm tra cookie sau login (xem
-  // components/auth/LoginForm.tsx).
-  response.cookies.set(CUSTOMER_SESSION_COOKIE, JSON.stringify({ fullName: result.fullName }), {
-    httpOnly: false,
-    sameSite: "lax",
-    secure,
-    path: "/",
-    ...(persistent ? { maxAge: CUSTOMER_REFRESH_TOKEN_MAX_AGE_SECONDS } : {}),
-  });
-}
-
-// Dùng cho Route Handler logout - xoá cả 3 cookie.
-export function clearCustomerAuthCookies(response: NextResponse): void {
-  response.cookies.set(CUSTOMER_ACCESS_TOKEN_COOKIE, "", { path: "/", maxAge: 0 });
-  response.cookies.set(CUSTOMER_REFRESH_TOKEN_COOKIE, "", { path: "/", maxAge: 0 });
-  response.cookies.set(CUSTOMER_SESSION_COOKIE, "", { path: "/", maxAge: 0 });
-}
+// Re-export - hằng số + logic set/xoá cookie thật sự sống ở customerAuthCookies.ts (file đó KHÔNG import
+// next/headers nên middleware Edge (proxy.ts) import được trực tiếp, khác file này). Giữ re-export ở
+// đây để mọi Route Handler đang import từ customerSession.ts không phải sửa gì (Đợt 12).
+export {
+  CUSTOMER_ACCESS_TOKEN_COOKIE,
+  CUSTOMER_REFRESH_TOKEN_COOKIE,
+  CUSTOMER_SESSION_COOKIE,
+  CUSTOMER_ACCESS_EXPIRES_AT_COOKIE,
+  CUSTOMER_REMEMBER_COOKIE,
+  applyCustomerAuthCookies,
+  clearCustomerAuthCookies,
+};
 
 // Server-only - đọc cookie "customer_session" cho Server Component nào thật sự cần biết trạng thái
 // đăng nhập trước khi render (vd 1 trang customer-only sau này). KHÔNG dùng ở app/(public)/layout.tsx

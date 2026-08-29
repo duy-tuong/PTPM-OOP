@@ -322,6 +322,21 @@
   border: 1px solid color-mix(in oklch, var(--primary) 12%, var(--border));
 }
 
+/* Panel "Aurora" luôn tối (FinalCtaSection.tsx) - trước đây hardcode 1 hex cố định (#0F172A) bất kể
+   theme, không dùng token nào cả. Giờ trộn 3 tông thương hiệu (primary/accent-purple/accent-cyan) với
+   đen qua color-mix() - vẫn LUÔN đủ tối để chữ trắng/slate-* (cố định, không đổi theo theme) giữ đúng
+   tương phản ở CẢ 2 theme, nhưng màu gốc lấy đúng theo token đang active nên sắc thái đổi nhẹ theo theme
+   (Light: primary/accent-purple/accent-cyan đậm hơn -> panel ngả xanh dương-tím; Dark: các token này nhạt
+   hơn -> panel ngả xanh dương-cyan) thay vì 1 màu chết cứng không liên quan gì tới theme. */
+.cta-gradient {
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklch, var(--primary) 55%, black) 0%,
+    color-mix(in oklch, var(--accent-purple) 45%, black) 50%,
+    color-mix(in oklch, var(--accent-cyan) 40%, black) 100%
+  );
+}
+
 /* Ánh sáng lướt ngang khi hover (Hero CTA, pivot 2 Cloudverse) - dải sáng chéo quét qua nút bằng
    ::after + hover-triggered translateX, không cần JS. */
 .btn-shine {

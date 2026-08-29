@@ -8,33 +8,49 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Field, FieldGroup } from "@/components/ui/field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { updateOrderRequestStatusAction } from "@/app/admin/order-requests/actions";
+import { OrderItemConfigSummary } from "@/components/account/OrderItemConfigSummary";
+import { ProvisioningDetailsCard } from "@/components/account/ProvisioningDetailsCard";
+import { updateOrderRequestStatusAction, assignOrderRequestAction } from "@/app/admin/order-requests/actions";
 import { OrderRequestStatus, ORDER_REQUEST_STATUS_LABELS } from "@/lib/types/enums";
 import { formatOrderItemLabel } from "@/lib/utils/orderItems";
 import { formatCurrency } from "@/lib/utils";
-import type { AdminOrderRequestDto } from "@/lib/types/admin";
+import type { AdminOrderRequestDto, AdminUserDto } from "@/lib/types/admin";
+
+const NO_ASSIGNEE_VALUE = "none";
 
 interface OrderStatusDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   order: AdminOrderRequestDto | null;
+  // Rỗng nếu người xem không phải Admin (GET /admin/users chỉ Admin gọi được) - ẩn hẳn Select "Người
+  // phụ trách" trong trường hợp đó, xem comment ở page.tsx.
+  staffUsers: AdminUserDto[];
 }
 
 // Cho chọn tự do cả 5 giá trị (không disable option nào) - backend tự chặn transition không hợp lệ
 // (đơn đã Hoàn tất/Đã huỷ không cho chuyển tiếp, xem AdminOrderRequestService.UpdateStatusAsync) và trả
 // lỗi rõ ràng qua toast nếu chọn sai, không cần UI đoán trước state-machine.
-export function OrderStatusDialog({ open, onOpenChange, order }: OrderStatusDialogProps) {
+export function OrderStatusDialog({ open, onOpenChange, order, staffUsers }: OrderStatusDialogProps) {
   const router = useRouter();
   const [newStatus, setNewStatus] = useState<OrderRequestStatus>(OrderRequestStatus.New);
+  const [initialStatus, setInitialStatus] = useState<OrderRequestStatus>(OrderRequestStatus.New);
+  // Người phụ trách (Đợt 10, Phần 1) - value dạng string cho Select, null gán trở lại thành "Chưa gán".
+  const [assignedToUserId, setAssignedToUserId] = useState(NO_ASSIGNEE_VALUE);
+  const [initialAssignedToUserId, setInitialAssignedToUserId] = useState(NO_ASSIGNEE_VALUE);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    function syncStatus() {
+    function syncFromOrder() {
       if (open && order) {
-        setNewStatus(OrderRequestStatus[order.status as keyof typeof OrderRequestStatus] ?? OrderRequestStatus.New);
+        const status = OrderRequestStatus[order.status as keyof typeof OrderRequestStatus] ?? OrderRequestStatus.New;
+        const assignee = order.assignedToUserId ?? NO_ASSIGNEE_VALUE;
+        setNewStatus(status);
+        setInitialStatus(status);
+        setAssignedToUserId(assignee);
+        setInitialAssignedToUserId(assignee);
       }
     }
-    syncStatus();
+    syncFromOrder();
   }, [open, order]);
 
   async function handleSubmit() {
@@ -42,12 +58,32 @@ export function OrderStatusDialog({ open, onOpenChange, order }: OrderStatusDial
 
     setIsSubmitting(true);
     try {
-      const result = await updateOrderRequestStatusAction(order.id, { newStatus });
-      if (!result.success) {
-        toast.error(result.message);
+      // Chỉ gọi đúng action(s) tương ứng với field thực sự thay đổi - tránh gọi API thừa khi Admin chỉ
+      // đổi 1 trong 2 (đổi trạng thái, hoặc chỉ gán lại người phụ trách).
+      if (newStatus !== initialStatus) {
+        const result = await updateOrderRequestStatusAction(order.id, { newStatus });
+        if (!result.success) {
+          toast.error(result.message);
+          return;
+        }
+      }
+
+      if (assignedToUserId !== initialAssignedToUserId) {
+        const result = await assignOrderRequestAction(order.id, {
+          assignedToUserId: assignedToUserId === NO_ASSIGNEE_VALUE ? null : assignedToUserId,
+        });
+        if (!result.success) {
+          toast.error(result.message);
+          return;
+        }
+      }
+
+      if (newStatus === initialStatus && assignedToUserId === initialAssignedToUserId) {
+        onOpenChange(false);
         return;
       }
-      toast.success("Đã cập nhật trạng thái đơn hàng");
+
+      toast.success("Đã cập nhật đơn hàng");
       onOpenChange(false);
       router.refresh();
     } finally {
@@ -74,12 +110,33 @@ export function OrderStatusDialog({ open, onOpenChange, order }: OrderStatusDial
               <span className="text-zinc-500">Khách hàng</span>
               <span className="font-medium text-zinc-900">{order.customerName}</span>
             </div>
-            <div className="mt-1 flex flex-col gap-1">
+            <div className="mt-1 flex flex-col gap-2">
               <span className="text-zinc-500">Sản phẩm</span>
-              <ul className="flex flex-col gap-0.5">
+              {/* Đợt 10, Phần 5 - trước đây chỉ in "tên x số lượng" (formatOrderItemLabel), Admin không
+                  xem được OS/Hostname/Tags/cấu hình Custom/Add-ons/thông tin bàn giao (IP, mật khẩu
+                  root...) của đơn qua bất kỳ đâu trong UI dù backend đã trả về đầy đủ - dùng lại đúng 2
+                  component đã dùng cho phía khách hàng để không lệch dữ liệu hiển thị giữa 2 phía. */}
+              <ul className="flex flex-col gap-2">
                 {order.items.map((item) => (
-                  <li key={item.id} className="font-medium text-zinc-900">
-                    {formatOrderItemLabel(item)}
+                  <li key={item.id} className="rounded-xl border border-zinc-200/60 bg-white px-3 py-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="font-medium text-zinc-900">{formatOrderItemLabel(item)}</span>
+                      <span className="font-mono text-xs text-zinc-500">{formatCurrency(item.lineTotal)}</span>
+                    </div>
+                    {item.hostname && <p className="mt-1 text-xs text-zinc-500">Hostname: {item.hostname}</p>}
+                    {item.tags && <p className="text-xs text-zinc-500">Tags: {item.tags}</p>}
+                    <OrderItemConfigSummary
+                      osImageName={item.osImageName}
+                      chosenVcpu={item.chosenVcpu}
+                      chosenRamMb={item.chosenRamMb}
+                      chosenDiskGb={item.chosenDiskGb}
+                      addons={item.addons}
+                    />
+                    <ProvisioningDetailsCard
+                      provisionedIpAddress={item.provisionedIpAddress}
+                      provisionedRootPassword={item.provisionedRootPassword}
+                      provisionedNameservers={item.provisionedNameservers}
+                    />
                   </li>
                 ))}
               </ul>
@@ -112,6 +169,25 @@ export function OrderStatusDialog({ open, onOpenChange, order }: OrderStatusDial
               </SelectContent>
             </Select>
           </Field>
+
+          {staffUsers.length > 0 && (
+            <Field>
+              <Label htmlFor="order-assignee">Người phụ trách</Label>
+              <Select value={assignedToUserId} onValueChange={(v) => setAssignedToUserId(v ?? NO_ASSIGNEE_VALUE)}>
+                <SelectTrigger id="order-assignee" className="w-full">
+                  <SelectValue placeholder="Chưa gán" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NO_ASSIGNEE_VALUE}>Chưa gán</SelectItem>
+                  {staffUsers.map((user) => (
+                    <SelectItem key={user.id} value={user.id}>
+                      {user.fullName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+          )}
         </FieldGroup>
 
         <DialogFooter>

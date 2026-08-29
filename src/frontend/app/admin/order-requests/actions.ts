@@ -5,8 +5,13 @@ import { revalidatePath } from "next/cache";
 import { getApiUrl } from "@/lib/api/config";
 import { ApiError } from "@/lib/api/http";
 import { ADMIN_ACCESS_TOKEN_COOKIE } from "@/lib/auth/adminAuthCookies";
-import { updateAdminOrderRequestStatus, liftAdminOrderRequestItemSuspension } from "@/lib/api/admin/order-requests";
-import type { AdminOrderRequestDto, UpdateOrderRequestStatusDto } from "@/lib/types/admin";
+import {
+  updateAdminOrderRequestStatus,
+  liftAdminOrderRequestItemSuspension,
+  assignAdminOrderRequest,
+  clearAdminOrderRequestFraudFlag,
+} from "@/lib/api/admin/order-requests";
+import type { AdminOrderRequestDto, AssignOrderRequestDto, UpdateOrderRequestStatusDto } from "@/lib/types/admin";
 
 type ActionResult<T> = { success: true; data: T } | { success: false; message: string };
 
@@ -34,6 +39,33 @@ export async function updateOrderRequestStatusAction(
 export async function liftOrderRequestItemSuspensionAction(itemId: number): Promise<ActionResult<AdminOrderRequestDto>> {
   try {
     const data = await liftAdminOrderRequestItemSuspension(getApiUrl(), itemId, await getToken());
+    revalidatePath("/admin/order-requests");
+    return { success: true, data };
+  } catch (error) {
+    if (error instanceof ApiError) return { success: false, message: error.message };
+    throw error;
+  }
+}
+
+// Gán/gỡ người phụ trách thủ công (Đợt 10, Phần 1).
+export async function assignOrderRequestAction(
+  id: number,
+  dto: AssignOrderRequestDto,
+): Promise<ActionResult<AdminOrderRequestDto>> {
+  try {
+    const data = await assignAdminOrderRequest(getApiUrl(), id, dto, await getToken());
+    revalidatePath("/admin/order-requests");
+    return { success: true, data };
+  } catch (error) {
+    if (error instanceof ApiError) return { success: false, message: error.message };
+    throw error;
+  }
+}
+
+// Gỡ cờ Fraud Review thủ công sau khi Admin đã xác minh đơn không gian lận (Đợt 10, Phần 2).
+export async function clearOrderRequestFlagAction(id: number): Promise<ActionResult<AdminOrderRequestDto>> {
+  try {
+    const data = await clearAdminOrderRequestFraudFlag(getApiUrl(), id, await getToken());
     revalidatePath("/admin/order-requests");
     return { success: true, data };
   } catch (error) {

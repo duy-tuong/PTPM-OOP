@@ -4,6 +4,7 @@ using CloudServiceStore.Application.Common.Models;
 using CloudServiceStore.Application.Features.Admin.Sales.OrderRequests.Dtos;
 using CloudServiceStore.Application.Features.Sales.OrderRequests;
 using CloudServiceStore.Application.Features.Sales.OrderRequests.Dtos;
+using CloudServiceStore.Domain.Entities.Identity;
 using CloudServiceStore.Domain.Entities.Sales;
 using Microsoft.EntityFrameworkCore;
 
@@ -40,7 +41,7 @@ public class AdminOrderRequestService : IAdminOrderRequestService
             .Take(query.PageSize)
             .ToListAsync(cancellationToken);
 
-        var dtos = entities.Select(MapToDto).ToList();
+        var dtos = entities.Select(o => MapToDto(o)).ToList();
         return PagedResult<AdminOrderRequestDto>.Create(dtos, totalCount, query.PageNumber, query.PageSize);
     }
 
@@ -83,7 +84,69 @@ public class AdminOrderRequestService : IAdminOrderRequestService
         return MapToDto(item.OrderRequest);
     }
 
-    private static AdminOrderRequestDto MapToDto(OrderRequest order)
+    public async Task<AdminOrderRequestDto> AssignAsync(int id, AssignOrderRequestDto dto, CancellationToken cancellationToken = default)
+    {
+        var entity = await LoadOrderAsync(id, cancellationToken);
+
+        if (dto.AssignedToUserId is not null)
+        {
+            var userExists = await _unitOfWork.Repository<AppUser, Guid>().Query()
+                .AnyAsync(u => u.Id == dto.AssignedToUserId.Value, cancellationToken);
+            if (!userExists)
+            {
+                throw new ValidationException("Nhân viên được chọn không tồn tại.");
+            }
+        }
+
+        entity.AssignedToUserId = dto.AssignedToUserId;
+        _unitOfWork.Repository<OrderRequest, int>().Update(entity);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Navigation AssignedToUser có thể chưa phản ánh Id vừa gán (EF không tự reload navigation sau
+        // khi chỉ đổi FK) - tra lại tên trực tiếp để trả DTO đúng ngay, mirror
+        // AdminCustomerService.UpdateAsync xử lý AssignedSalesRepUser.
+        var assignedToUserName = dto.AssignedToUserId is null
+            ? null
+            : (await _unitOfWork.Repository<AppUser, Guid>().GetByIdAsync(dto.AssignedToUserId.Value, cancellationToken))?.FullName;
+
+        return MapToDto(entity, assignedToUserName);
+    }
+
+    public async Task<AdminOrderRequestDto> ClearFraudFlagAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var entity = await LoadOrderAsync(id, cancellationToken);
+
+        if (!entity.IsFlaggedForReview)
+        {
+            throw new ValidationException("Đơn này hiện không bị đánh dấu nghi vấn.");
+        }
+
+        entity.IsFlaggedForReview = false;
+        entity.FlagReason = null;
+        _unitOfWork.Repository<OrderRequest, int>().Update(entity);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return MapToDto(entity);
+    }
+
+    private async Task<OrderRequest> LoadOrderAsync(int id, CancellationToken cancellationToken)
+    {
+        var entity = await _unitOfWork.Repository<OrderRequest, int>().Query()
+            .Include(o => o.Items).ThenInclude(i => i.ServicePlan)
+            .Include(o => o.Items).ThenInclude(i => i.TldPricing)
+            .Include(o => o.Items).ThenInclude(i => i.Addons).ThenInclude(a => a.Addon)
+            .Include(o => o.AssignedToUser)
+            .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
+
+        if (entity is null)
+        {
+            throw new NotFoundException(nameof(OrderRequest), id);
+        }
+
+        return entity;
+    }
+
+    private static AdminOrderRequestDto MapToDto(OrderRequest order, string? assignedToUserNameOverride = null)
     {
         return new AdminOrderRequestDto
         {
@@ -99,7 +162,7 @@ public class AdminOrderRequestService : IAdminOrderRequestService
             Note = order.Note,
             Status = order.Status.ToString(),
             AssignedToUserId = order.AssignedToUserId,
-            AssignedToUserName = order.AssignedToUser?.FullName,
+            AssignedToUserName = assignedToUserNameOverride ?? order.AssignedToUser?.FullName,
             Source = order.Source,
             CreatedAt = order.CreatedAt,
             IsFlaggedForReview = order.IsFlaggedForReview,

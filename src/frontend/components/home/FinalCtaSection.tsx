@@ -6,11 +6,14 @@ export function FinalCtaSection() {
   return (
     <section className="px-4 py-16 sm:px-6 lg:px-8 mb-12">
       <ScrollReveal>
-        <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[32px] bg-[#0F172A] px-6 py-20 text-center shadow-2xl">
-          {/* Subtle B2B gradient overlay */}
+        {/* Nền lấy từ .cta-gradient (globals.css) - trộn primary/accent-purple/accent-cyan với đen qua
+            color-mix(), luôn đủ tối để chữ trắng/slate-* cố định bên dưới giữ đúng tương phản ở cả 2
+            theme, thay vì hardcode 1 hex (#0F172A) không liên quan gì tới theme như trước. */}
+        <div className="cta-gradient relative mx-auto max-w-6xl overflow-hidden rounded-[32px] px-6 py-20 text-center shadow-2xl">
+          {/* Ánh sáng chéo nhẹ thêm chiều sâu */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/25 via-transparent to-accent-cyan/20"
+            className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-white/5"
           />
 
           <div className="relative z-10 mx-auto max-w-3xl flex flex-col items-center gap-6">

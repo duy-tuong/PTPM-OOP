@@ -24,8 +24,16 @@ public class MyServiceItemDto
     public string LifecycleStatus { get; init; } = DunningPolicy.StatusActive;
     // Hệ điều hành đã chọn lúc mua (Đợt 3, Phần 11) - null nếu không chọn.
     public string? OsImageName { get; init; }
-    // Hostname bàn giao (Đợt 3, Phần 12) - null nếu không nhập.
+    // Hostname/Tags bàn giao (Đợt 3, Phần 12) - null nếu không nhập.
     public string? Hostname { get; init; }
+    public string? Tags { get; init; }
+    // Cấu hình gói Custom (Đợt 1, Phần 5) - null nếu là gói Fixed. Trước đây (Đợt 10, Phần 4) thiếu hẳn
+    // ở DTO này, khiến khách không xem lại được cấu hình vCPU/RAM/Disk đã mua ở trang "Dịch vụ của tôi".
+    public int? ChosenVcpu { get; init; }
+    public int? ChosenRamMb { get; init; }
+    public int? ChosenDiskGb { get; init; }
+    // Add-ons đã mua kèm (Đợt 1, Phần 4) - tương tự, thiếu ở DTO này trước Đợt 10.
+    public List<OrderItemAddonDto> Addons { get; init; } = new();
     public string? ProvisionedIpAddress { get; init; }
     public string? ProvisionedRootPassword { get; init; }
     public string? ProvisionedNameservers { get; init; }

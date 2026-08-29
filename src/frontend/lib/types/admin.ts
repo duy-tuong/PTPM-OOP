@@ -429,6 +429,11 @@ export interface UpdateOrderRequestStatusDto {
   newStatus: OrderRequestStatus;
 }
 
+// Gán/gỡ người phụ trách thủ công (Đợt 10, Phần 1). null = bỏ gán.
+export interface AssignOrderRequestDto {
+  assignedToUserId: string | null;
+}
+
 // ---- Admin Sales: Consultation Requests ----
 // Khớp Application/Features/Admin/Sales/ConsultationRequests/Dtos/*.cs
 export interface ConsultationRequestQueryParams extends PaginationParams {

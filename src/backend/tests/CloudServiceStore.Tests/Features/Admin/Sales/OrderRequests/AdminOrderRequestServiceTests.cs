@@ -4,6 +4,7 @@ using CloudServiceStore.Application.Common.Services;
 using CloudServiceStore.Application.Features.Admin.Sales.OrderRequests;
 using CloudServiceStore.Application.Features.Admin.Sales.OrderRequests.Dtos;
 using CloudServiceStore.Application.Features.Sales.OrderRequests;
+using CloudServiceStore.Domain.Entities.Identity;
 using CloudServiceStore.Domain.Entities.Sales;
 using CloudServiceStore.Domain.Enums;
 using CloudServiceStore.Infrastructure.Persistence;
@@ -187,5 +188,98 @@ public class AdminOrderRequestServiceTests
         var reloaded = context.OrderRequestItems.Single(i => i.Id == item.Id);
         Assert.Null(reloaded.SuspendedAt);
         Assert.Null(reloaded.TerminationWarningSentAt);
+    }
+
+    // Gán người phụ trách thủ công (Đợt 10, Phần 1).
+    [Fact]
+    public async Task AssignAsync_OrderNotFound_ThrowsNotFoundException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var sut = CreateSut(context, new Mock<IOrderStatusObserver>());
+
+        await Assert.ThrowsAsync<NotFoundException>(() =>
+            sut.AssignAsync(9999, new AssignOrderRequestDto { AssignedToUserId = Guid.NewGuid() }));
+    }
+
+    [Fact]
+    public async Task AssignAsync_UserDoesNotExist_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var order = await SeedOrderRequestAsync(context);
+        var sut = CreateSut(context, new Mock<IOrderStatusObserver>());
+
+        await Assert.ThrowsAsync<ValidationException>(() =>
+            sut.AssignAsync(order.Id, new AssignOrderRequestDto { AssignedToUserId = Guid.NewGuid() }));
+    }
+
+    [Fact]
+    public async Task AssignAsync_ValidUser_SetsAssignedToUserIdAndName()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var order = await SeedOrderRequestAsync(context);
+        var staff = new AppUser { Username = "editor1", Email = "editor1@example.com", FullName = "Nguyễn Văn A" };
+        context.AppUsers.Add(staff);
+        await context.SaveChangesAsync();
+        var sut = CreateSut(context, new Mock<IOrderStatusObserver>());
+
+        var result = await sut.AssignAsync(order.Id, new AssignOrderRequestDto { AssignedToUserId = staff.Id });
+
+        Assert.Equal(staff.Id, result.AssignedToUserId);
+        Assert.Equal("Nguyễn Văn A", result.AssignedToUserName);
+        var persisted = context.OrderRequests.Single(o => o.Id == order.Id);
+        Assert.Equal(staff.Id, persisted.AssignedToUserId);
+    }
+
+    [Fact]
+    public async Task AssignAsync_NullUserId_ClearsAssignee()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var order = await SeedOrderRequestAsync(context, assignedToUserId: Guid.NewGuid());
+        var sut = CreateSut(context, new Mock<IOrderStatusObserver>());
+
+        var result = await sut.AssignAsync(order.Id, new AssignOrderRequestDto { AssignedToUserId = null });
+
+        Assert.Null(result.AssignedToUserId);
+        Assert.Null(result.AssignedToUserName);
+    }
+
+    // Gỡ cờ Fraud Review thủ công (Đợt 10, Phần 2).
+    [Fact]
+    public async Task ClearFraudFlagAsync_OrderNotFound_ThrowsNotFoundException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var sut = CreateSut(context, new Mock<IOrderStatusObserver>());
+
+        await Assert.ThrowsAsync<NotFoundException>(() => sut.ClearFraudFlagAsync(9999));
+    }
+
+    [Fact]
+    public async Task ClearFraudFlagAsync_NotFlagged_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var order = await SeedOrderRequestAsync(context);
+        var sut = CreateSut(context, new Mock<IOrderStatusObserver>());
+
+        await Assert.ThrowsAsync<ValidationException>(() => sut.ClearFraudFlagAsync(order.Id));
+    }
+
+    [Fact]
+    public async Task ClearFraudFlagAsync_Flagged_ClearsFlagAndReason()
+    {
+        using var context = TestDbContextFactory.CreateContext();
+        var order = await SeedOrderRequestAsync(context);
+        order.IsFlaggedForReview = true;
+        order.FlagReason = "Số lượng bất thường";
+        context.OrderRequests.Update(order);
+        await context.SaveChangesAsync();
+        var sut = CreateSut(context, new Mock<IOrderStatusObserver>());
+
+        var result = await sut.ClearFraudFlagAsync(order.Id);
+
+        Assert.False(result.IsFlaggedForReview);
+        Assert.Null(result.FlagReason);
+        var persisted = context.OrderRequests.Single(o => o.Id == order.Id);
+        Assert.False(persisted.IsFlaggedForReview);
+        Assert.Null(persisted.FlagReason);
     }
 }

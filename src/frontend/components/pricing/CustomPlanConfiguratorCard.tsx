@@ -89,7 +89,23 @@ export function CustomPlanConfiguratorCard({
         </ul>
       )}
 
-      <Button className="w-full" nativeButton={false} render={<Link href={`/lien-he?planId=${plan.id}`}>Triển Khai Ngay</Link>} />
+      <Button
+        className="w-full"
+        nativeButton={false}
+        render={
+          // Mang theo cấu hình khách vừa kéo (Đợt 10, Phần 3) - AutoAddFromQuery.tsx đọc lại 3 tham số
+          // này để thêm đúng vCPU/RAM/Disk khách chọn vào giỏ hàng, thay vì luôn fallback về min.
+          <Link
+            href={
+              selection
+                ? `/lien-he?planId=${plan.id}&vcpu=${selection.vcpu}&ramMb=${selection.ramMb}&diskGb=${selection.diskGb}`
+                : `/lien-he?planId=${plan.id}`
+            }
+          >
+            Triển Khai Ngay
+          </Link>
+        }
+      />
     </div>
   );
 }

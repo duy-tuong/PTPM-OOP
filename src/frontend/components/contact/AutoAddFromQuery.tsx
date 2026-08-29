@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { priceFor } from "@/components/pricing/PlanConfiguratorSlider";
+import { computeCustomPlanUnitPrice, resolveCustomPlanSelection } from "@/lib/pricing/customPlanPricing";
 import { useCart } from "@/lib/cart/CartContext";
 import { readCustomerSessionCookie } from "@/lib/auth/customerSessionClient";
 import type { ServicePlanListItemDto, TldPricingDto } from "@/lib/types/catalog";
@@ -26,16 +27,26 @@ function defaultPeriod(plan: ServicePlanListItemDto): number | null {
 // sản phẩm đã chọn ban đầu, không mất lựa chọn của khách.
 //
 // Không render UI, chỉ effect chạy đúng 1 lần lúc mount (deps rỗng có chủ đích) - nơi gọi (page.tsx)
-// cần tự remount component này bằng key={defaultPlan?.id ?? defaultTldPricing?.id ?? "none"} để add
+// cần tự remount component này bằng key={...} (bao gồm cả vcpu/ramMb/diskGb, xem page.tsx) để add
 // đúng sản phẩm mới khi query param đổi giữa các lần điều hướng tới cùng route.
+//
+// Đợt 10, Phần 3 - khi defaultPlan là gói Custom (packageType="Custom"), BẮT BUỘC resolve
+// chosenVcpu/RamMb/DiskGb trước khi addItem (qua resolveCustomPlanSelection, dùng queryCustomSelection
+// nếu CTA gọi tới có mang theo, hoặc fallback về cấu hình tối thiểu của plan) - thiếu bước này khiến
+// đơn Custom-plan chắc chắn bị backend từ chối ở bước checkout (xem
+// OrderRequestService.BuildServicePlanItemAsync). Sửa 1 lần ở đây fix được cho toàn bộ 9 điểm gọi.
 export function AutoAddFromQuery({
   defaultPlan,
   defaultTldPricing,
   defaultDomainName,
+  queryCustomSelection,
 }: {
   defaultPlan: ServicePlanListItemDto | null;
   defaultTldPricing: TldPricingDto | null;
   defaultDomainName: string;
+  // Cấu hình gói Custom mang theo từ query string (Đợt 10, Phần 3) - xem CustomPlanConfiguratorCard.tsx.
+  // Bỏ qua nếu defaultPlan là gói Fixed.
+  queryCustomSelection?: { vcpu?: number; ramMb?: number; diskGb?: number };
 }) {
   const cart = useCart();
   const router = useRouter();
@@ -51,6 +62,39 @@ export function AutoAddFromQuery({
     if (defaultPlan) {
       const periodMonths = defaultPeriod(defaultPlan);
       if (periodMonths === null) return;
+
+      // Gói Custom (Đợt 10, Phần 3) - BẮT BUỘC set chosenVcpu/RamMb/DiskGb, nếu không backend từ chối
+      // đơn ở bước checkout (OrderRequestService.BuildServicePlanItemAsync yêu cầu 3 field này cho mọi
+      // gói packageType=Custom). Trước đây nhánh này thiếu hoàn toàn, khiến MỌI CTA "Triển khai ngay"
+      // trỏ tới 1 gói Custom đều tạo ra giỏ hàng không thể checkout được.
+      if (defaultPlan.packageType === "Custom") {
+        const selection = resolveCustomPlanSelection(defaultPlan, queryCustomSelection);
+        if (!selection) {
+          toast.error("Gói này chưa được cấu hình đầy đủ thông số tuỳ biến");
+          return;
+        }
+        const priceRow = defaultPlan.prices.find((p) => p.periodMonths === periodMonths);
+        cart.addItem({
+          servicePlanId: defaultPlan.id,
+          periodMonths,
+          quantity: 1,
+          label: `${defaultPlan.categoryName} - ${defaultPlan.name}`,
+          unitPriceDisplay: computeCustomPlanUnitPrice(
+            defaultPlan,
+            selection.vcpu,
+            selection.ramMb,
+            selection.diskGb,
+            periodMonths,
+            priceRow?.discountPercent,
+          ),
+          chosenVcpu: selection.vcpu,
+          chosenRamMb: selection.ramMb,
+          chosenDiskGb: selection.diskGb,
+        });
+        toast.success("Đã thêm vào giỏ hàng");
+        return;
+      }
+
       cart.addItem({
         servicePlanId: defaultPlan.id,
         periodMonths,

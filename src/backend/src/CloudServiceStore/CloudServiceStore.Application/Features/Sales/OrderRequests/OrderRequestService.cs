@@ -215,6 +215,7 @@ public class OrderRequestService : IOrderRequestService
             .Include(i => i.OrderRequest)
             .Include(i => i.ServicePlan).ThenInclude(p => p!.Category)
             .Include(i => i.TldPricing)
+            .Include(i => i.Addons).ThenInclude(a => a.Addon)
             .Where(i => i.OrderRequest.CustomerId == customerId && i.RenewsFromItemId == null && i.ChangesFromItemId == null)
             .OrderBy(i => i.ExpiresAt == null)
             .ThenBy(i => i.ExpiresAt);
@@ -242,6 +243,11 @@ public class OrderRequestService : IOrderRequestService
             LifecycleStatus = DunningPolicy.ComputeLifecycleStatus(i.ExpiresAt, i.SuspendedAt, i.TerminatedAt, now),
             OsImageName = i.OsImageName,
             Hostname = i.Hostname,
+            Tags = i.Tags,
+            ChosenVcpu = i.ChosenVcpu,
+            ChosenRamMb = i.ChosenRamMb,
+            ChosenDiskGb = i.ChosenDiskGb,
+            Addons = i.Addons.Select(OrderItemAddonDto.FromEntity).ToList(),
             ProvisionedIpAddress = i.ProvisionedIpAddress,
             ProvisionedRootPassword = i.ProvisionedRootPassword,
             ProvisionedNameservers = i.ProvisionedNameservers
