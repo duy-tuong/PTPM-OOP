@@ -3,25 +3,18 @@ import { safeFetch } from "@/lib/api/safe";
 import { FallbackImage } from "@/components/shared/FallbackImage";
 import { Marquee } from "@/components/shared/Marquee";
 import type { PartnerDto } from "@/lib/types/content";
-import { Hexagon, Globe, Cloud, Database, ShieldCheck } from "@phosphor-icons/react/dist/ssr";
 import { AnimatedNumber } from "@/components/shared/AnimatedNumber";
 
-const DUMMY_PARTNERS = [
-  { id: "d1", name: "Acme Corp", icon: <Hexagon weight="fill" className="size-6" /> },
-  { id: "d2", name: "GlobalTech", icon: <Globe weight="fill" className="size-6" /> },
-  { id: "d3", name: "Nexis Cloud", icon: <Cloud weight="fill" className="size-6" /> },
-  { id: "d4", name: "DataFlow", icon: <Database weight="fill" className="size-6" /> },
-  { id: "d5", name: "SecureNet", icon: <ShieldCheck weight="fill" className="size-6" /> },
-  { id: "d6", name: "Synapse", icon: <Hexagon weight="fill" className="size-6" /> },
-];
-
-// Section 2/9 của Trang chủ (pivot 2 - theme "Cloudverse"). 
+// Section 2/9 của Trang chủ (pivot 2 - theme "Cloudverse").
 // Bổ sung Metrics theo chuẩn B2B SaaS.
 export async function TrustStrip() {
   const partners = await safeFetch(() => getPartners({ revalidate: 3600 }), []);
-  
+
+  // Trước đây có DUMMY_PARTNERS (6 công ty bịa: Acme Corp, GlobalTech...) hiện ra khi getPartners() trả
+  // rỗng - khách thật thấy "đối tác" hoàn toàn giả. Đã bỏ - đúng nguyên tắc không bịa dữ liệu nghiệp vụ,
+  // mirror cách TestimonialsGridSection.tsx đang xử lý (return null khi rỗng thay vì fallback giả).
   const hasRealPartners = partners.length > 0;
-  const shouldMarquee = hasRealPartners ? partners.length > 1 : true;
+  const shouldMarquee = partners.length > 1;
 
   return (
     <section className="border-y border-border/50 bg-background py-12 sm:py-16">
@@ -47,27 +40,27 @@ export async function TrustStrip() {
           </div>
         </div>
 
-        {/* Partners */}
-        <p className="mb-10 text-center text-xs font-semibold tracking-widest text-muted-foreground uppercase">
-          Được tin dùng bởi các doanh nghiệp trên khắp Việt Nam
-        </p>
+        {/* Partners - tự ẩn hẳn khối này (kể cả tiêu đề) khi chưa có Đối tác thật, không còn fallback giả. */}
+        {hasRealPartners && (
+          <>
+            <p className="mb-10 text-center text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+              Được tin dùng bởi các doanh nghiệp trên khắp Việt Nam
+            </p>
 
-        {shouldMarquee ? (
-          <Marquee>
-            {hasRealPartners
-              ? partners.map((partner) => (
+            {shouldMarquee ? (
+              <Marquee>
+                {partners.map((partner) => (
                   <PartnerLogo key={partner.id} partner={partner} />
-                ))
-              : DUMMY_PARTNERS.map((partner) => (
-                  <DummyPartnerLogo key={partner.id} partner={partner} />
                 ))}
-          </Marquee>
-        ) : (
-          <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6">
-            {partners.map((partner) => (
-              <PartnerLogo key={partner.id} partner={partner} />
-            ))}
-          </div>
+              </Marquee>
+            ) : (
+              <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6">
+                {partners.map((partner) => (
+                  <PartnerLogo key={partner.id} partner={partner} />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
     </section>
@@ -90,14 +83,5 @@ function PartnerLogo({ partner }: { partner: PartnerDto }) {
     </a>
   ) : (
     image
-  );
-}
-
-function DummyPartnerLogo({ partner }: { partner: { name: string; icon: React.ReactNode } }) {
-  return (
-    <div className="flex items-center gap-2 px-12 text-muted-foreground/40 grayscale transition-all duration-300 hover:text-foreground/70 hover:grayscale-0 cursor-default">
-      {partner.icon}
-      <span className="text-xl font-bold tracking-tight">{partner.name}</span>
-    </div>
   );
 }
