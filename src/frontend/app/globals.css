@@ -206,7 +206,16 @@
   }
 }
 .animate-marquee {
-  animation: marquee 30s linear infinite;
+  /* Viết dạng longhand, KHÔNG dùng animation shorthand - rule này nằm ngoài mọi @layer (CSS "không
+     lớp"), nên theo CSS Cascade Layers sẽ LUÔN thắng .group-hover\:[animation-play-state\:paused]
+     (Tailwind utility, nằm trong @layer utilities) bất kể specificity, vì shorthand `animation` ngầm
+     reset animation-play-state về "running" mỗi lần áp dụng. Bỏ animation-play-state khỏi đây để nó
+     không có rule nào cạnh tranh ngoài rule pause lúc hover - marquee mới thực sự dừng khi hover
+     (Marquee.tsx, pauseOnHover). Xem TestimonialsGridSection.tsx - nơi phát hiện lỗi này. */
+  animation-name: marquee;
+  animation-duration: 30s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
 }
 
 /* Hero image bồng bềnh + bóng mờ bên dưới */

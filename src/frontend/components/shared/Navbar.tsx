@@ -98,7 +98,10 @@ export function Navbar() {
 
   async function handleLogout() {
     await fetch("/api/customer-auth/logout", { method: "POST" });
-    cart.clear();
+    // KHÔNG cart.clear() ở đây - giỏ hàng lưu trong localStorage, độc lập với phiên đăng nhập (đúng kiểu
+    // giỏ hàng ẩn danh, giữ được cả khi chưa đăng nhập). Trước đây xoá cả giỏ mỗi lần đăng xuất khiến
+    // khách mất giỏ hàng dù chỉ đăng xuất rồi đăng nhập lại cùng 1 tài khoản - không có comment giải
+    // thích lý do, nhiều khả năng là sơ suất chứ không phải chủ đích bảo mật.
     notifyCustomerSessionChanged();
     router.push("/");
   }
