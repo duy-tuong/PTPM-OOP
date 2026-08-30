@@ -16,13 +16,17 @@ export interface CustomerAuthResponse {
   refreshToken: string;
   expiresAtUtc: string;
   fullName: string;
+  // Định danh ổn định theo tài khoản (unique) - dùng để tách riêng giỏ hàng từng khách trên cùng 1
+  // trình duyệt, xem CartContext.tsx.
+  email: string;
 }
 
 // Payload không nhạy cảm trả về từ Route Handler register/login (app/api/customer-auth/*.ts) cho
 // client stash vào cookie "customer_session" (KHÔNG httpOnly) - chỉ dùng để hiển thị UI (Navbar chào
-// tên), KHÔNG dùng để authorize API call.
+// tên) và làm khoá giỏ hàng riêng theo tài khoản (CartContext.tsx), KHÔNG dùng để authorize API call.
 export interface CustomerSessionUser {
   fullName: string;
+  email: string;
 }
 
 // Khớp Application/Features/Customers/Auth/Dtos/CustomerProfileDto.cs - customerType là chuỗi tên

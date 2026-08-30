@@ -1,8 +1,50 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { CUSTOMER_SESSION_CHANGED_EVENT, readCustomerSessionCookie } from "@/lib/auth/customerSessionClient";
+
+// useLayoutEffect chỉ chạy được ở client (SSR gọi sẽ in warning "does nothing on the server") - CartProvider
+// LUÔN được server-render 1 lần đầu (Client Component vẫn qua SSR như bình thường) nên phải tự chọn lại
+// useEffect khi typeof window === "undefined". Bắt buộc dùng layout effect (không phải effect thường)
+// cho bước đăng nhập/khoá giỏ hàng - useEffect chạy theo thứ tự CON TRƯỚC CHA trong CÙNG 1 lượt effect,
+// nhưng useLayoutEffect của CartProvider (cha) vẫn luôn chạy xong TRƯỚC MỌI useEffect thường trong cây
+// (kể cả của con), nên phải dùng layout effect ở đây để đảm bảo cartKeyRef/hydrated đã đúng trước khi
+// AutoAddFromQuery.tsx (dùng useEffect thường) kịp gọi addItem() - nếu không, effect nạp giỏ hàng của
+// CartProvider chạy SAU, đọc lại localStorage (chưa kịp ghi) rồi setItems() đè mất item vừa thêm.
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 export const CART_STORAGE_KEY = "cloudverse-cart";
+// Giỏ hàng của khách CHƯA đăng nhập - bucket riêng, KHÔNG dùng chung với bất kỳ tài khoản nào. Cho phép
+// khách vãng lai thêm sản phẩm trước khi đăng nhập (khớp đúng lời hứa ở CartCheckoutPanel.tsx: "Giỏ
+// hàng của bạn vẫn được giữ nguyên trong lúc đăng nhập") nhưng KHÔNG BAO GIỜ hiện lẫn sang tài khoản nào
+// khác - chỉ được "nhận" (merge) vào ĐÚNG 1 tài khoản ở lần đăng nhập kế tiếp rồi bucket này bị xoá sạch.
+const GUEST_CART_KEY = `${CART_STORAGE_KEY}:guest`;
+
+// Mỗi tài khoản 1 khoá localStorage riêng theo email (duy nhất, ổn định - xem CustomerSessionUser).
+// Trước đây CHỈ 1 khoá dùng chung cho cả trình duyệt (không phân biệt ai đang đăng nhập) - trên máy
+// dùng chung, khách B đăng nhập sau sẽ thấy đúng giỏ hàng khách A vừa thêm, không đúng chủ. Đăng xuất
+// (email = null) trả về bucket khách vãng lai - "ai đó" đăng nhập lại vẫn còn giỏ hàng, nhưng CHƯA đăng
+// nhập thì không thấy giỏ hàng của bất kỳ tài khoản nào đã dùng máy này trước đó.
+function cartKeyFor(email: string | null): string {
+  return email ? `${CART_STORAGE_KEY}:${email.toLowerCase()}` : GUEST_CART_KEY;
+}
+
+function readStoredCart(key: string): CartItem[] {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as CartItem[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeStoredCart(key: string, items: CartItem[]) {
+  try {
+    localStorage.setItem(key, JSON.stringify(items));
+  } catch {
+    // localStorage có thể bị chặn (chế độ riêng tư/trình duyệt chặn cookie) - bỏ qua.
+  }
+}
 
 // Giỏ hàng chỉ lưu thông tin hiển thị (label, đơn giá hiển thị) song song ID sản phẩm - giá hiển thị
 // chỉ để UI, giá thật luôn được backend tính lại từ ServicePlanId/TldPricingId lúc đặt hàng (đúng
@@ -57,30 +99,54 @@ const CartContext = createContext<CartContextValue | null>(null);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  // Khoá localStorage đang "sở hữu" state `items` hiện tại - đổi mỗi khi đăng nhập/đăng xuất (xem
+  // syncForSession bên dưới). Dùng ref (không phải state) vì effect ghi giỏ hàng cần đọc giá trị MỚI
+  // NHẤT ngay lập tức, không đợi thêm 1 lượt render như state thường.
+  const cartKeyRef = useRef<string>(GUEST_CART_KEY);
 
-  // Nạp giỏ hàng từ localStorage đúng 1 lần lúc mount. Cờ `hydrated` chặn effect ghi lại (bên dưới)
-  // không chạy trước khi nạp xong - tránh ghi đè "[]" lên giỏ hàng đã lưu từ trước.
-  useEffect(() => {
-    function loadCart() {
-      try {
-        const raw = localStorage.getItem(CART_STORAGE_KEY);
-        if (raw) setItems(JSON.parse(raw));
-      } catch {
-        // localStorage có thể bị chặn (chế độ riêng tư/trình duyệt chặn cookie) - bỏ qua, giỏ hàng rỗng.
+  // Nạp đúng giỏ hàng của tài khoản đang đăng nhập (hoặc bucket khách vãng lai nếu chưa đăng nhập) lúc
+  // mount, và nạp lại mỗi khi trạng thái đăng nhập đổi (CUSTOMER_SESSION_CHANGED_EVENT - bắn ra từ
+  // LoginForm/RegisterForm/Navbar sau khi gọi API đăng nhập/đăng xuất, xem customerSessionClient.ts).
+  // Cờ `hydrated` chặn effect ghi lại (bên dưới) không chạy trước khi nạp xong lần đầu. BẮT BUỘC dùng
+  // useIsomorphicLayoutEffect (không phải useEffect thường) - xem comment ở khai báo hàm này phía trên.
+  useIsomorphicLayoutEffect(() => {
+    function syncForSession() {
+      const session = readCustomerSessionCookie();
+      const nextKey = cartKeyFor(session?.email ?? null);
+      if (nextKey === cartKeyRef.current) return; // trạng thái đăng nhập không đổi, không làm gì thêm.
+
+      let nextItems = readStoredCart(nextKey);
+      if (session?.email) {
+        // Vừa xác định được 1 tài khoản đang đăng nhập - "nhận" giỏ hàng khách vãng lai (nếu khách vừa
+        // thêm gì đó TRƯỚC khi đăng nhập) vào đúng tài khoản này, rồi xoá bucket khách đi. Ưu tiên giữ
+        // giỏ hàng ĐÃ LƯU của tài khoản (vd đăng nhập lại) nếu có, tránh giỏ khách vãng lai cũ đè mất.
+        const guestItems = readStoredCart(GUEST_CART_KEY);
+        if (guestItems.length > 0) {
+          nextItems = nextItems.length > 0 ? nextItems : guestItems;
+          writeStoredCart(nextKey, nextItems);
+          localStorage.removeItem(GUEST_CART_KEY);
+        }
       }
+
+      cartKeyRef.current = nextKey;
+      setItems(nextItems);
+    }
+
+    // Bọc lần gọi đầu trong 1 hàm riêng (không setState trực tiếp ở thân effect) - mirror đúng cách
+    // loadCart() cũ đã làm, tránh react-hooks/set-state-in-effect.
+    function init() {
+      syncForSession();
       setHydrated(true);
     }
 
-    loadCart();
+    init();
+    window.addEventListener(CUSTOMER_SESSION_CHANGED_EVENT, syncForSession);
+    return () => window.removeEventListener(CUSTOMER_SESSION_CHANGED_EVENT, syncForSession);
   }, []);
 
   useEffect(() => {
     if (!hydrated) return;
-    try {
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
-    } catch {
-      // ignore
-    }
+    writeStoredCart(cartKeyRef.current, items);
   }, [items, hydrated]);
 
   function addItem(item: Omit<CartItem, "key">) {
