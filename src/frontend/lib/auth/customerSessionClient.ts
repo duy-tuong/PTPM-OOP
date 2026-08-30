@@ -24,8 +24,13 @@ export function readCustomerSessionCookie(): CustomerSessionUser | null {
 
   try {
     const raw = decodeURIComponent(match.slice(CUSTOMER_SESSION_COOKIE.length + 1));
-    const parsed = JSON.parse(raw) as CustomerSessionUser;
-    return typeof parsed.fullName === "string" ? parsed : null;
+    const parsed = JSON.parse(raw) as Partial<CustomerSessionUser>;
+    // email bắt buộc phải có (không chỉ fullName) - CartContext.tsx dùng nó làm khoá giỏ hàng riêng
+    // theo tài khoản; cookie cũ (set trước khi thêm field này) sẽ tự hết hạn/được ghi đè lại đúng khi
+    // middleware làm mới token hoặc lần đăng nhập kế tiếp, không cần xử lý di trú thủ công.
+    return typeof parsed.fullName === "string" && typeof parsed.email === "string"
+      ? (parsed as CustomerSessionUser)
+      : null;
   } catch {
     return null;
   }

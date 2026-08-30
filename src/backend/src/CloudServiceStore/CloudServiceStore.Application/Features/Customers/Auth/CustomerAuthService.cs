@@ -307,7 +307,8 @@ public class CustomerAuthService : ICustomerAuthService
             AccessToken = accessToken,
             RefreshToken = refreshToken,
             ExpiresAtUtc = DateTime.UtcNow.Add(_jwtTokenService.AccessTokenLifetime),
-            FullName = customer.FullName
+            FullName = customer.FullName,
+            Email = customer.Email
         };
     }
 }

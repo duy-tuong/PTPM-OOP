@@ -84,7 +84,7 @@ export function applyCustomerAuthCookies(
   // luôn fail âm thầm (raw vẫn bắt đầu bằng "%7B" chứ không phải "{"), Navbar không bao giờ đọc được
   // session dù cookie đã set đúng - bug thật, phát hiện khi thêm bước kiểm tra cookie sau login (xem
   // components/auth/LoginForm.tsx).
-  response.cookies.set(CUSTOMER_SESSION_COOKIE, JSON.stringify({ fullName: result.fullName }), {
+  response.cookies.set(CUSTOMER_SESSION_COOKIE, JSON.stringify({ fullName: result.fullName, email: result.email }), {
     httpOnly: false,
     sameSite: "lax",
     secure,
