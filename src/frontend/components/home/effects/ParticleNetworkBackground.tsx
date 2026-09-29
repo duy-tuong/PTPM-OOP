@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import { useReducedMotion } from "motion/react";
+
+const emptySubscribe = () => () => {};
 
 interface Particle {
   x: number;
@@ -16,7 +18,7 @@ export function ParticleNetworkBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pathname = usePathname();
   const prefersReducedMotion = useReducedMotion();
-  const [isClient, setIsClient] = useState(false);
+  const isClient = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
 
   const shouldHide = () => {
@@ -37,17 +39,15 @@ export function ParticleNetworkBackground() {
     return hiddenExactPaths.includes(pathname);
   };
 
-  // Client init & Theme observer
+  // Theme observer
   useEffect(() => {
-    setIsClient(true);
-    
     // Initialize theme based on root html class
     const checkTheme = () => {
       const isDark = document.documentElement.classList.contains('dark');
       setTheme(isDark ? 'dark' : 'light');
     };
     
-    checkTheme();
+    const rafId = requestAnimationFrame(checkTheme);
     
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
@@ -58,7 +58,10 @@ export function ParticleNetworkBackground() {
     });
     
     observer.observe(document.documentElement, { attributes: true });
-    return () => observer.disconnect();
+    return () => {
+      cancelAnimationFrame(rafId);
+      observer.disconnect();
+    };
   }, []);
 
   // Canvas animation logic

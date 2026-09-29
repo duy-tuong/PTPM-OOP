@@ -1,8 +1,8 @@
 # Cloudverse — Cloud Service Store
 
 Nền tảng bán dịch vụ Cloud (VPS, Hosting, Domain, SSL, Firewall, Cloud Backup...) theo mô hình thương mại điện tử: khách hàng duyệt bảng giá, đặt hàng, thanh toán qua PayOS (QR chuyển khoản), Admin/Editor quản trị đơn hàng - danh mục - nội dung qua trang quản trị riêng. Đồ án bài tập lớn cuối kỳ môn **Phát triển phần mềm hướng đối tượng** (IN4211).
-
-🌐 **Demo trực tuyến:** https://dichvucloud.duckdns.org
+🌐 **Triển khai Cloud thực tế:** Đã thử nghiệm và deploy thành công trên Google Cloud VM (Docker Compose + Nginx Reverse Proxy + SSL Let's Encrypt).
+*(Để chạy thử nghiệm local, hệ thống hỗ trợ khởi động nhanh toàn bộ qua Docker Compose: `docker compose up --build`)*
 
 ## Kiến trúc hệ thống
 

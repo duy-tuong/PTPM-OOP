@@ -92,7 +92,7 @@ export function Navbar() {
 
     window.addEventListener("scroll", onScroll, { passive: true });
     // Initial check
-    setScrolled(window.scrollY > 20);
+    onScroll();
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
